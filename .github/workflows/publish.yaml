@@ -8,9 +8,7 @@ env:
   dotnet-version: 6.0.x
   python-version: 3.8
   project: Jellyfin.Plugin.MetaShark/Jellyfin.Plugin.MetaShark.csproj
-  branch: main
   artifact: metashark
-  manifest: https://github.com/cxfksword/jellyfin-plugin-metashark/releases/download/manifest/manifest.json
 
 jobs:
   build:
@@ -25,8 +23,24 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ env.dotnet-version }}
-      - name: Restore nuget packages
-        run: dotnet restore ${{ env.project }} # 需要指定项目，要不然会同时build多个项目导致出错
+      - name: Initialize workflow variables
+        id: vars
+        run: |
+          VERSION=$(echo "${GITHUB_REF#refs/*/}" | sed s/^v//)
+          VERSION="$VERSION.0"
+          echo ::set-output name=VERSION::${VERSION}
+          echo ::set-output name=APP_NAME::$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')
+      - name: Install dependencies
+        run: dotnet restore ${{ env.project }} --no-cache
+      - name: Build
+        run: dotnet publish --nologo --no-restore --configuration=Release --framework=net6.0 --output=artifacts -p:Version=${{steps.vars.outputs.VERSION}} ${{ env.project }}
+      - name: Compress build files
+        uses: thedoctor0/zip-release@main
+        with:
+          type: "zip"
+          directory: "artifacts"
+          filename: "artifacts.zip"
+          exclusions: "*.json *.pdb"
       - name: Setup python
         uses: actions/setup-python@v2
         with:
@@ -34,25 +48,19 @@ jobs:
       - name: Install JPRM
         run: python -m pip install jprm
       - name: Run JPRM
-        run: chmod +x ./build_plugin.sh && ./build_plugin.sh ${{ env.artifact }} ${GITHUB_REF#refs/*/}
-      - name: Update release
+        run: chmod +x ./build_plugin.sh && ./build_plugin.sh ${{ env.artifact }} ${{steps.vars.outputs.VERSION}} ${GITHUB_REF#refs/*/}
+      - name: Publish release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./artifacts/${{ env.artifact }}_*.zip
+          file: ./${{ env.artifact }}/${{ env.artifact }}_*.zip
           tag: ${{ github.ref }}
           file_glob: true
-      - name: Update manifest
+      - name: Publish manifest
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./*.json
+          file: ./manifest*.json
           tag: "manifest"
           overwrite: true
           file_glob: true
-      # - name: Update manifest
-      #   uses: stefanzweifel/git-auto-commit-action@v4
-      #   with:
-      #     branch: ${{ env.branch }}
-      #     commit_message: Update repo manifest
-      #     file_pattern: "*.json"

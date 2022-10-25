@@ -1,0 +1,13 @@
+{
+  "category": "Metadata",
+  "changelog": "NA",
+  "description": "jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TMDB补充缺失的季数据和剧集数据。",
+  "guid": "9a19103f-16f7-4668-be54-9a1e7a4f7556",
+  "imageUrl": "https://github.com/cxfksword/jellyfin-plugin-metashark/raw/main/doc/logo.png",
+  "name": "MetaShark",
+  "overview": "jellyfin电影元数据插件",
+  "owner": "cxfksword",
+  "targetAbi": "10.8.0.0",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "version": "1.0.0.0"
+}
