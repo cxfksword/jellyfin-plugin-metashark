@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Template</title>
+</head>
+
+<body>
+    <div id="TemplateConfigPage" data-role="page" class="page type-interior pluginConfigurationPage"
+        data-require="emby-input,emby-button,emby-select,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+
+                <div class="verticalSection verticalSection">
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h2 class="sectionTitle">MetaShark 配置</h2><span id="current_version" name="current_version"
+                            is="emby-linkbutton" class="emby-button"></span>
+                        <a is="emby-linkbutton" class="raised button-alt headerHelpButton emby-button" target="_blank"
+                            href="https://github.com/cxfksword/jellyfin-plugin-metashark">源码</a>
+                    </div>
+                </div>
+
+                <form id="TemplateConfigForm">
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="DoubanCookies">豆瓣网站cookie</label>
+                        <textarea rows="5" is="emby-input" type="text" id="DoubanCookies" name="DoubanCookies"
+                            class="emby-input"></textarea>
+                        <div class="fieldDescription">可为空，填写可搜索到需登录访问的影片.(需重启才能生效)</div>
+                    </div>
+
+                    <fieldset class="verticalSection verticalSection-extrabottompadding">
+                        <legend>
+                            <h3>TheMovieDb</h3>
+                        </legend>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="EnableTmdb" name="EnableTmdb" type="checkbox" is="emby-checkbox" />
+                                <span>启用从TheMovieDb获取元数据</span>
+                            </label>
+                            <div class="fieldDescription">勾选后，会尝试从TheMovieDb获取季度和剧集元数据</div>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="TmdbApiKey">Api Key</label>
+                            <input id="TmdbApiKey" name="TmdbApiKey" type="text" is="emby-input" />
+                            <div class="fieldDescription">填写自定义Api Key，不填写会使用默认api key.(需重启才能生效)</div>
+                        </div>
+                    </fieldset>
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                        <span>Save</span>
+                    </button>
+
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var TemplateConfig = {
+                pluginUniqueId: '9A19103F-16F7-4668-BE54-9A1E7A4F7556'
+            };
+
+            document.querySelector('#TemplateConfigPage')
+                .addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
+                        document.querySelector('#current_version').value = "v" + config.Version;
+                        document.querySelector('#DoubanCookies').value = config.DoubanCookies;
+                        document.querySelector('#EnableTmdb').checked = config.EnableTmdb;
+                        document.querySelector('#TmdbApiKey').value = config.TmdbApiKey;
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+            document.querySelector('#TemplateConfigForm')
+                .addEventListener('submit', function (e) {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
+                        config.DoubanCookies = document.querySelector('#DoubanCookies').value;
+                        config.EnableTmdb = document.querySelector('#EnableTmdb').checked;
+                        config.TmdbApiKey = document.querySelector('#TmdbApiKey').value;
+                        ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
+                    });
+
+                    e.preventDefault();
+                    return false;
+                });
+        </script>
+    </div>
+</body>
+
+</html>

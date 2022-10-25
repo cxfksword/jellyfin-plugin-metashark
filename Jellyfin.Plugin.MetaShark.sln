@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32922.545
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jellyfin.Plugin.MetaShark", "Jellyfin.Plugin.MetaShark\Jellyfin.Plugin.MetaShark.csproj", "{D921B930-CF91-406F-ACBC-08914DCD0D34}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jellyfin.Plugin.MetaShark.Test", "Jellyfin.Plugin.MetaShark.Test\Jellyfin.Plugin.MetaShark.Test.csproj", "{80814353-4291-4230-8C4A-4C45CAD4D5D3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D921B930-CF91-406F-ACBC-08914DCD0D34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D921B930-CF91-406F-ACBC-08914DCD0D34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D921B930-CF91-406F-ACBC-08914DCD0D34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D921B930-CF91-406F-ACBC-08914DCD0D34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80814353-4291-4230-8C4A-4C45CAD4D5D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80814353-4291-4230-8C4A-4C45CAD4D5D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80814353-4291-4230-8C4A-4C45CAD4D5D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80814353-4291-4230-8C4A-4C45CAD4D5D3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7D81AE36-16A1-4386-8B86-21FACCB675DF}
+	EndGlobalSection
+EndGlobal

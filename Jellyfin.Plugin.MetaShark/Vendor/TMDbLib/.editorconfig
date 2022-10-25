@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# CAC001: ConfigureAwaitChecker
+dotnet_diagnostic.CAC001.severity = error
