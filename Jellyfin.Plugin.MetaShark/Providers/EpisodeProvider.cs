@@ -53,8 +53,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
         {
             this.Log($"GetEpisodeMetadata of [name]: {info.Name} number: {info.IndexNumber}");
-            Console.WriteLine(info.ToJson());
-            Console.WriteLine(info.SeriesProviderIds.ToJson());
             var result = new MetadataResult<Episode>();
 
             // 剧集信息只有tmdb有
@@ -62,17 +60,25 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var seasonNumber = info.ParentIndexNumber; // 没有season级目录时，会为null
             var episodeNumber = info.IndexNumber;
             var indexNumberEnd = info.IndexNumberEnd;
-            Console.WriteLine($"seasonNumber:{seasonNumber} episodeNumber:{episodeNumber} indexNumberEnd:{indexNumberEnd}");
             if (episodeNumber is null or 0)
             {
                 // 从文件名获取剧集的indexNumber
                 var fileName = Path.GetFileName(info.Path) ?? string.Empty;
                 episodeNumber = this.GuessEpisodeNumber(episodeNumber, fileName);
+                if (episodeNumber.HasValue && episodeNumber.Value > 0)
+                {
+                    result.HasMetadata = true;
+                    result.Item = new Episode
+                    {
+                        IndexNumber = episodeNumber
+                    };
+                }
                 this.Log("GuessEpisodeNumber: fileName: {0} episodeNumber: {1}", fileName, episodeNumber);
             }
 
             if (episodeNumber is null or 0 || seasonNumber is null or 0 || string.IsNullOrEmpty(seriesTmdbId))
             {
+                this.Log("Lack meta message. episodeNumber: {0} seasonNumber: {1} seriesTmdbId:{2}", episodeNumber, seasonNumber, seriesTmdbId);
                 return result;
             }
 

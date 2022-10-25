@@ -4,8 +4,9 @@
 [![metashark](https://img.shields.io/badge/jellyfin-10.8.x-lightgrey)](https://github.com/cxfksword/jellyfin-plugin-metashark/releases)
 [![metashark](https://img.shields.io/github/license/cxfksword/jellyfin-plugin-metashark)](https://github.com/cxfksword/jellyfin-plugin-metashark/main/LICENSE) 
 
-jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TMDB补充缺失的季数据和剧集数据。
+jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TheMovieDb补充缺失的季数据和剧集数据。
 
+![preview](doc/logo.png)
 
 ## 安装插件
 
@@ -17,7 +18,11 @@ jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TMDB�
 
 国外访问：https://github.com/cxfksword/jellyfin-plugin-metashark/releases/download/manifest/manifest.json
 
+## 如何使用
 
+* 进入`控制台 -> 媒体库`，在元数据下载器中勾选**MetaShark**
+* 假如网络原因访问TheMovieDb比较慢，也可以到插件配置页关闭从TheMovieDb获取数据
+  
 
 ## How to build
 
@@ -29,7 +34,7 @@ jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TMDB�
 
 ```sh
 $ dotnet restore 
-$ dotnet publish -c Release Jellyfin.Plugin.MetaShark/Jellyfin.Plugin.MetaShark.csproj
+$ dotnet publish Jellyfin.Plugin.MetaShark/Jellyfin.Plugin.MetaShark.csproj
 ```
 
 
@@ -37,7 +42,7 @@ $ dotnet publish -c Release Jellyfin.Plugin.MetaShark/Jellyfin.Plugin.MetaShark.
 
 1. Build the plugin
 
-2. Create a folder, like `metashark` and copy  `bin/Release/net6.0/*.dll` into it
+2. Create a folder, like `metashark` and copy  `bin/Debug/net6.0/*.dll` into it
 
 3. Move folder `metashark` to jellyfin `data/plugin` folder
 

@@ -68,9 +68,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             info.SeriesProviderIds.TryGetValue(MetadataProvider.Tmdb.ToString(), out var seriesTmdbId);
             info.SeriesProviderIds.TryGetValue(Plugin.ProviderId, out var metaSource);
             info.SeriesProviderIds.TryGetValue(DoubanProviderId, out var sid);
-            Console.WriteLine(info.SeriesProviderIds.ToJson());
             var seasonNumber = info.IndexNumber;
-            Console.WriteLine($"seriesTmdbId: {seriesTmdbId} seasonNumber: {seasonNumber}");
 
             if (metaSource == MetaSource.Douban && !string.IsNullOrEmpty(sid))
             {

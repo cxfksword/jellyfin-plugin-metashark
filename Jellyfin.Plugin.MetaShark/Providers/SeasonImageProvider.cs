@@ -80,7 +80,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             // get image form TMDB
             var seriesTmdbId = Convert.ToInt32(series?.GetProviderId(MetadataProvider.Tmdb), CultureInfo.InvariantCulture);
-            Console.WriteLine($"seriesTmdbId={seriesTmdbId}  season?.IndexNumber={season?.IndexNumber}");
             if (seriesTmdbId <= 0 || season?.IndexNumber == null)
             {
                 return Enumerable.Empty<RemoteImageInfo>();
@@ -92,7 +91,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 .GetSeasonAsync(seriesTmdbId, season.IndexNumber.Value, language, language, cancellationToken)
                 .ConfigureAwait(false);
             var posters = seasonResult?.Images?.Posters;
-            Console.WriteLine(posters?.ToJson());
             if (posters == null)
             {
                 return Enumerable.Empty<RemoteImageInfo>();

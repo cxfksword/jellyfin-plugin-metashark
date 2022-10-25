@@ -27,6 +27,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
         private readonly ILogger<TmdbApi> _logger;
         private readonly IMemoryCache _memoryCache;
         private readonly TMDbClient _tmDbClient;
+        private readonly PluginConfiguration _config;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TmdbApi"/> class.
@@ -35,8 +36,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
         {
             _logger = loggerFactory.CreateLogger<TmdbApi>();
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
-            var config = Plugin.Instance?.Configuration ?? new PluginConfiguration();
-            var apiKey = string.IsNullOrEmpty(config.TmdbApiKey) ? DEFAULT_API_KEY : config.TmdbApiKey;
+            _config = Plugin.Instance?.Configuration ?? new PluginConfiguration();
+            var apiKey = string.IsNullOrEmpty(_config.TmdbApiKey) ? DEFAULT_API_KEY : _config.TmdbApiKey;
             _tmDbClient = new TMDbClient(apiKey);
             _tmDbClient.RequestTimeout = TimeSpan.FromSeconds(10);
             // Not really interested in NotFoundException
@@ -53,6 +54,11 @@ namespace Jellyfin.Plugin.MetaShark.Api
         /// <returns>The TMDb movie or null if not found.</returns>
         public async Task<Movie?> GetMovieAsync(int tmdbId, string language, string imageLanguages, CancellationToken cancellationToken)
         {
+            if (!this._config.EnableTmdb)
+            {
+                return null;
+            }
+
             var key = $"movie-{tmdbId.ToString(CultureInfo.InvariantCulture)}-{language}";
             if (_memoryCache.TryGetValue(key, out Movie movie))
             {
@@ -119,6 +125,11 @@ namespace Jellyfin.Plugin.MetaShark.Api
         /// <returns>The TMDb tv show information or null if not found.</returns>
         public async Task<TvShow?> GetSeriesAsync(int tmdbId, string language, string imageLanguages, CancellationToken cancellationToken)
         {
+            if (!this._config.EnableTmdb)
+            {
+                return null;
+            }
+
             var key = $"series-{tmdbId.ToString(CultureInfo.InvariantCulture)}-{language}";
             if (_memoryCache.TryGetValue(key, out TvShow series))
             {
@@ -153,10 +164,14 @@ namespace Jellyfin.Plugin.MetaShark.Api
         /// <returns>The TMDb tv season information or null if not found.</returns>
         public async Task<TvSeason?> GetSeasonAsync(int tvShowId, int seasonNumber, string language, string imageLanguages, CancellationToken cancellationToken)
         {
+            if (!this._config.EnableTmdb)
+            {
+                return null;
+            }
+
             var key = $"season-{tvShowId.ToString(CultureInfo.InvariantCulture)}-s{seasonNumber.ToString(CultureInfo.InvariantCulture)}-{language}";
             if (_memoryCache.TryGetValue(key, out TvSeason season))
             {
-                Console.WriteLine("#season from cache.");
                 return season;
             }
 
@@ -223,6 +238,11 @@ namespace Jellyfin.Plugin.MetaShark.Api
         /// <returns>The TMDb person information or null if not found.</returns>
         public async Task<Person?> GetPersonAsync(int personTmdbId, CancellationToken cancellationToken)
         {
+            if (!this._config.EnableTmdb)
+            {
+                return null;
+            }
+
             var key = $"person-{personTmdbId.ToString(CultureInfo.InvariantCulture)}";
             if (_memoryCache.TryGetValue(key, out Person person))
             {
@@ -289,6 +309,11 @@ namespace Jellyfin.Plugin.MetaShark.Api
         /// <returns>The TMDb tv show information.</returns>
         public async Task<IReadOnlyList<SearchTv>> SearchSeriesAsync(string name, string language, CancellationToken cancellationToken)
         {
+            if (!this._config.EnableTmdb)
+            {
+                return new List<SearchTv>();
+            }
+
             var key = $"searchseries-{name}-{language}";
             if (_memoryCache.TryGetValue(key, out SearchContainer<SearchTv> series))
             {
@@ -366,6 +391,11 @@ namespace Jellyfin.Plugin.MetaShark.Api
         /// <returns>The TMDb movie information.</returns>
         public async Task<IReadOnlyList<SearchMovie>> SearchMovieAsync(string name, int year, string language, CancellationToken cancellationToken)
         {
+            if (!this._config.EnableTmdb)
+            {
+                return new List<SearchMovie>();
+            }
+
             var key = $"moviesearch-{name}-{year.ToString(CultureInfo.InvariantCulture)}-{language}";
             if (_memoryCache.TryGetValue(key, out SearchContainer<SearchMovie> movies))
             {

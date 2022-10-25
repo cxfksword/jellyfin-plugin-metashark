@@ -112,14 +112,13 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
                 var key = cookieArr[0].Trim();
                 var value = cookieArr[1].Trim();
-                Console.WriteLine($"key={key} value={value}");
                 try
                 {
                     cookieContainer.Add(new Cookie(key, value, "/", ".douban.com"));
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    this._logger.LogError(ex, ex.Message);
                 }
             }
         }
@@ -495,7 +494,6 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
         protected void LimitRequestFrequently()
         {
-            var startTime = DateTime.Now;
             lock (_lock)
             {
                 var ts = DateTime.Now - lastRequestTime;
@@ -506,9 +504,6 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 }
                 lastRequestTime = DateTime.Now;
             }
-            var endTime = DateTime.Now;
-            var tt = (endTime - startTime).TotalMilliseconds;
-            Console.WriteLine(tt);
         }
 
         private string? GetText(IElement el, string css)

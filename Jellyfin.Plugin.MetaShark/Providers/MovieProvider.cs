@@ -88,7 +88,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             this.Log($"GetMovieMetadata of [name]: {info.Name}");
             var result = new MetadataResult<Movie>();
 
-            Console.WriteLine(info.ToJson());
             var sid = info.GetProviderId(DoubanProviderId);
             var tmdbId = info.GetProviderId(MetadataProvider.Tmdb);
             var metaSource = info.GetProviderId(Plugin.ProviderId);
@@ -133,7 +132,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     var movieResult = await this._tmdbApi.FindByExternalIdAsync(subject.Imdb, FindExternalSource.Imdb, null, cancellationToken).ConfigureAwait(false);
                     if (movieResult?.MovieResults != null && movieResult.MovieResults.Count > 0)
                     {
-                        Console.WriteLine(movieResult.MovieResults.ToJson());
                         this.Log($"GetMovieMetadata of found tmdb [id]: \"{movieResult.MovieResults[0].Id}\"");
                         movie.SetProviderId(MetadataProvider.Tmdb, $"{movieResult.MovieResults[0].Id}");
                     }

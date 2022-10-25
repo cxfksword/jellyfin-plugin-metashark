@@ -51,8 +51,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <inheritdoc />
         public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
         {
-            Console.WriteLine(item.ToJson());
-            Console.WriteLine(item.ProviderIds.ToJson());
             var sid = item.GetProviderId(DoubanProviderId);
             var metaSource = item.GetProviderId(Plugin.ProviderId);
             this.Log($"GetImages for item: {item.Name} [metaSource]: {metaSource}");

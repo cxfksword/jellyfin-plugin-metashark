@@ -53,7 +53,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <inheritdoc />
         public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
         {
-            Console.WriteLine(item.ProviderIds.ToJson());
             this.Log($"GetEpisodeImages for item: {item.Name} number: {item.IndexNumber}");
 
             var episode = (MediaBrowser.Controller.Entities.TV.Episode)item;
@@ -81,7 +80,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var seasonResult = await this._tmdbApi
                 .GetSeasonAsync(seriesTmdbId, seasonNumber.Value, language, language, cancellationToken)
                 .ConfigureAwait(false);
-            Console.WriteLine($"seasonResult.Episodes.Count={seasonResult?.Episodes.Count}");
             if (seasonResult == null || seasonResult.Episodes.Count < episodeNumber.Value)
             {
                 this.Log($"Not valid season data for seasonNumber: {seasonNumber} episodeNumber: {episodeNumber}");
@@ -90,7 +88,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             var result = new List<RemoteImageInfo>();
             var episodeResult = seasonResult.Episodes[episodeNumber.Value - 1];
-            Console.WriteLine(episodeResult.ToJson());
             if (!string.IsNullOrEmpty(episodeResult.StillPath))
             {
                 result.Add(new RemoteImageInfo

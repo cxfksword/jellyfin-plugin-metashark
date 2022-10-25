@@ -49,7 +49,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             MetadataResult<Person> result = new MetadataResult<Person>();
 
             var cid = info.GetProviderId(DoubanProviderId);
-            this.Log($"GetMetadata of [cid]: {cid}");
+            this.Log($"GetPersonMetadata of [cid]: {cid}");
             if (!string.IsNullOrEmpty(cid))
             {
 
@@ -83,7 +83,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             var personTmdbId = info.GetProviderId(MetadataProvider.Tmdb);
-            this.Log($"GetMetadata of [personTmdbId]: {personTmdbId}");
+            this.Log($"GetPersonMetadata of [personTmdbId]: {personTmdbId}");
             if (!string.IsNullOrEmpty(personTmdbId))
             {
                 var person = await this._tmdbApi.GetPersonAsync(personTmdbId.ToInt(), cancellationToken).ConfigureAwait(false);

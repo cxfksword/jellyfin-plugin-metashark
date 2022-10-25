@@ -57,7 +57,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }));
 
             // 尝试从tmdb搜索
-            Console.WriteLine($"info.MetadataLanguage={info.MetadataLanguage}");
             var tmdbList = await this._tmdbApi.SearchSeriesAsync(info.Name, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
             result.AddRange(tmdbList.Take(this._config.MaxSearchResult).Select(x =>
             {
