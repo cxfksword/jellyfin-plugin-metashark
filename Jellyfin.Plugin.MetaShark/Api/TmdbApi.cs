@@ -202,15 +202,12 @@ namespace Jellyfin.Plugin.MetaShark.Api
                     extraMethods: TvSeasonMethods.Credits | TvSeasonMethods.Images | TvSeasonMethods.ExternalIds | TvSeasonMethods.Videos,
                     cancellationToken: cancellationToken).ConfigureAwait(false);
 
-                if (season != null)
-                {
-                    _memoryCache.Set(key, season, TimeSpan.FromHours(CacheDurationInHours));
-                }
-
+                _memoryCache.Set(key, season, TimeSpan.FromHours(CacheDurationInHours));
                 return season;
             }
             catch (Exception ex)
             {
+                _memoryCache.Set(key, season, TimeSpan.FromHours(CacheDurationInHours));
                 this._logger.LogError(ex, ex.Message);
                 return null;
             }

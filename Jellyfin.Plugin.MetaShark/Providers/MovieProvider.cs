@@ -129,7 +129,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     movie.SetProviderId(MetadataProvider.Imdb, subject.Imdb);
 
                     // 通过imdb获取TMDB id
-                    var movieResult = await this._tmdbApi.FindByExternalIdAsync(subject.Imdb, FindExternalSource.Imdb, null, cancellationToken).ConfigureAwait(false);
+                    var movieResult = await this._tmdbApi.FindByExternalIdAsync(subject.Imdb, FindExternalSource.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
                     if (movieResult?.MovieResults != null && movieResult.MovieResults.Count > 0)
                     {
                         this.Log($"GetMovieMetadata of found tmdb [id]: \"{movieResult.MovieResults[0].Id}\"");

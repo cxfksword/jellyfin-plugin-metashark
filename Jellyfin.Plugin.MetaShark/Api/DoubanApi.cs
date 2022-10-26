@@ -70,7 +70,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
         Regex regCelebrityRole = new Regex(@"职业: \n(.+?)\n", RegexOptions.Compiled);
         Regex regNickname = new Regex(@"更多外文名: \n(.+?)\n", RegexOptions.Compiled);
         Regex regFamily = new Regex(@"家庭成员: \n(.+?)\n", RegexOptions.Compiled);
-        Regex regCelebrityImdb = new Regex(@"imdb编号: \n(.+?)\n", RegexOptions.Compiled);
+        Regex regCelebrityImdb = new Regex(@"imdb编号:\s+?(nm\d+)", RegexOptions.Compiled);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DoubanApi"/> class.
