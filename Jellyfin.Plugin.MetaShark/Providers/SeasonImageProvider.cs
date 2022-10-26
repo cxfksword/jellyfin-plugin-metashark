@@ -118,7 +118,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <inheritdoc />
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            this.Log("GetImageResponse url: {0}", url);
+            this.Log("[GetSeasonImages] GetImageResponse url: {0}", url);
             return await this._httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
         }
 

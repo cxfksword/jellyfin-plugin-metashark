@@ -115,8 +115,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var jw = new JaroWinkler();
             foreach (var item in result)
             {
-                this.Log($"GuestSeasonByDouban： name: {name} item.Name: {item.Name} score: {jw.Similarity(name, item.Name)} ");
-                if (jw.Similarity(name, item.Name) < 0.8)
+                var score = jw.Similarity(name, item.Name);
+                this.Log($"GuestSeasonByDouban： name: {name} douban_name: {item.Name} douban_sid: {item.Sid} douban_year: {item.Year} score: {score} ");
+                if (score < 0.8)
                 {
                     continue;
                 }

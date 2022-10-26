@@ -78,7 +78,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             this.Log($"GetSeriesMetadata of [name]: {info.Name} [providerIds]: {info.ProviderIds.ToJson()}");
-            info.Name = this.RemoveMetaSourcePrefix(info.Name);
             var result = new MetadataResult<Series>();
 
             var sid = info.GetProviderId(DoubanProviderId);
@@ -120,16 +119,18 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 if (!string.IsNullOrEmpty(subject.Imdb))
                 {
                     item.SetProviderId(MetadataProvider.Imdb, subject.Imdb);
-
-                    // 通过imdb获取TMDB id (豆瓣的imdb id可能是旧的，需要先从omdb接口获取最新的imdb id
-                    var omdbItem = await this._omdbApi.GetByImdbID(subject.Imdb, cancellationToken).ConfigureAwait(false);
-                    if (omdbItem != null)
+                    if (string.IsNullOrEmpty(tmdbId))
                     {
-                        var findResult = await this._tmdbApi.FindByExternalIdAsync(omdbItem.ImdbID, FindExternalSource.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-                        if (findResult?.TvResults != null && findResult.TvResults.Count > 0)
+                        // 通过imdb获取TMDB id (豆瓣的imdb id可能是旧的，需要先从omdb接口获取最新的imdb id
+                        var omdbItem = await this._omdbApi.GetByImdbID(subject.Imdb, cancellationToken).ConfigureAwait(false);
+                        if (omdbItem != null)
                         {
-                            this.Log($"GetSeriesMetadata found tmdb [id]: {findResult.TvResults[0].Id} by imdb id: {subject.Imdb}");
-                            item.SetProviderId(MetadataProvider.Tmdb, $"{findResult.TvResults[0].Id}");
+                            var findResult = await this._tmdbApi.FindByExternalIdAsync(omdbItem.ImdbID, FindExternalSource.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
+                            if (findResult?.TvResults != null && findResult.TvResults.Count > 0)
+                            {
+                                this.Log($"GetSeriesMetadata found tmdb [id]: {findResult.TvResults[0].Id} by imdb id: {subject.Imdb}");
+                                item.SetProviderId(MetadataProvider.Tmdb, $"{findResult.TvResults[0].Id}");
+                            }
                         }
                     }
                 }

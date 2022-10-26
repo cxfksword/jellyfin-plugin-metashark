@@ -69,6 +69,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             info.SeriesProviderIds.TryGetValue(Plugin.ProviderId, out var metaSource);
             info.SeriesProviderIds.TryGetValue(DoubanProviderId, out var sid);
             var seasonNumber = info.IndexNumber;
+            var seasonSid = info.GetProviderId(DoubanProviderId);
 
             if (metaSource == MetaSource.Douban && !string.IsNullOrEmpty(sid))
             {
@@ -78,56 +79,62 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     return result;
                 }
-                var seiresName = series.Name;
+                var seriesName = series.Name;
 
                 // 存在tmdbid，尝试从tmdb获取对应季的年份信息，用于从豆瓣搜索对应季数据
-                int seasonYear = 0;
-                if (!string.IsNullOrEmpty(seriesTmdbId) && seasonNumber.HasValue)
+                if (string.IsNullOrEmpty(seasonSid))
                 {
-                    var season = await this._tmdbApi
-                        .GetSeasonAsync(seriesTmdbId.ToInt(), seasonNumber.Value, info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
-                        .ConfigureAwait(false);
-                    seasonYear = season?.AirDate?.Year ?? 0;
-                }
-
-                if (!string.IsNullOrEmpty(seiresName) && seasonYear > 0)
-                {
-                    var seasonSid = await this.GuestSeasonByDoubanAsync(seiresName, seasonYear, cancellationToken).ConfigureAwait(false);
-                    if (!string.IsNullOrEmpty(seasonSid))
+                    var seasonYear = 0;
+                    if (!string.IsNullOrEmpty(seriesTmdbId) && seasonNumber.HasValue)
                     {
-                        var subject = await this._doubanApi.GetMovieAsync(seasonSid, cancellationToken).ConfigureAwait(false);
-                        if (subject != null)
-                        {
-                            subject.Celebrities = await this._doubanApi.GetCelebritiesBySidAsync(seasonSid, cancellationToken).ConfigureAwait(false);
+                        var season = await this._tmdbApi
+                            .GetSeasonAsync(seriesTmdbId.ToInt(), seasonNumber.Value, info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
+                            .ConfigureAwait(false);
+                        seasonYear = season?.AirDate?.Year ?? 0;
+                    }
 
-                            var movie = new Season
-                            {
-                                ProviderIds = new Dictionary<string, string> { { DoubanProviderId, subject.Sid } },
-                                Name = subject.Name,
-                                OriginalTitle = subject.OriginalName,
-                                CommunityRating = subject.Rating,
-                                Overview = subject.Intro,
-                                ProductionYear = subject.Year,
-                                Genres = subject.Genres,
-                                PremiereDate = subject.ScreenTime,
-                                IndexNumber = info.IndexNumber,
-                            };
-
-                            result.Item = movie;
-                            result.HasMetadata = true;
-                            subject.Celebrities.ForEach(c => result.AddPerson(new PersonInfo
-                            {
-                                Name = c.Name,
-                                Type = c.RoleType,
-                                Role = c.Role,
-                                ImageUrl = c.Img,
-                                ProviderIds = new Dictionary<string, string> { { DoubanProviderId, c.Id } },
-                            }));
-
-                            return result;
-                        }
+                    if (!string.IsNullOrEmpty(seriesName) && seasonYear > 0)
+                    {
+                        seasonSid = await this.GuestSeasonByDoubanAsync(seriesName, seasonYear, cancellationToken).ConfigureAwait(false);
                     }
                 }
+
+                // 获取季豆瓣数据
+                if (!string.IsNullOrEmpty(seasonSid))
+                {
+                    var subject = await this._doubanApi.GetMovieAsync(seasonSid, cancellationToken).ConfigureAwait(false);
+                    if (subject != null)
+                    {
+                        subject.Celebrities = await this._doubanApi.GetCelebritiesBySidAsync(seasonSid, cancellationToken).ConfigureAwait(false);
+
+                        var movie = new Season
+                        {
+                            ProviderIds = new Dictionary<string, string> { { DoubanProviderId, subject.Sid } },
+                            Name = subject.Name,
+                            OriginalTitle = subject.OriginalName,
+                            CommunityRating = subject.Rating,
+                            Overview = subject.Intro,
+                            ProductionYear = subject.Year,
+                            Genres = subject.Genres,
+                            PremiereDate = subject.ScreenTime,
+                            IndexNumber = info.IndexNumber,
+                        };
+
+                        result.Item = movie;
+                        result.HasMetadata = true;
+                        subject.Celebrities.ForEach(c => result.AddPerson(new PersonInfo
+                        {
+                            Name = c.Name,
+                            Type = c.RoleType,
+                            Role = c.Role,
+                            ImageUrl = c.Img,
+                            ProviderIds = new Dictionary<string, string> { { DoubanProviderId, c.Id } },
+                        }));
+
+                        return result;
+                    }
+                }
+
 
                 // 从豆瓣获取不到季信息，直接使用series信息
                 result.Item = new Season

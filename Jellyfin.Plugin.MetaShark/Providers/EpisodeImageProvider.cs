@@ -53,7 +53,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <inheritdoc />
         public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
         {
-            this.Log($"GetEpisodeImages for item: {item.Name} number: {item.IndexNumber}");
+            this.Log($"GetEpisodeImages of [name]: {item.Name} number: {item.IndexNumber} ParentIndexNumber: {item.ParentIndexNumber}");
 
             var episode = (MediaBrowser.Controller.Entities.TV.Episode)item;
             var series = episode.Series;
@@ -62,7 +62,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             if (seriesTmdbId <= 0)
             {
-                this.Log($"Got images failed because the seriesTmdbId is empty!");
+                this.Log($"[GetEpisodeImages] The seriesTmdbId is empty!");
                 return Enumerable.Empty<RemoteImageInfo>();
             }
 
@@ -71,7 +71,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             if (!seasonNumber.HasValue || !episodeNumber.HasValue)
             {
-                this.Log($"Got images failed because the seasonNumber or episodeNumber is empty! seasonNumber: {seasonNumber} episodeNumber: {episodeNumber}");
+                this.Log($"[GetEpisodeImages] The seasonNumber or episodeNumber is empty! seasonNumber: {seasonNumber} episodeNumber: {episodeNumber}");
                 return Enumerable.Empty<RemoteImageInfo>();
             }
             var language = item.GetPreferredMetadataLanguage();
@@ -82,7 +82,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 .ConfigureAwait(false);
             if (seasonResult == null || seasonResult.Episodes.Count < episodeNumber.Value)
             {
-                this.Log($"Not valid season data for seasonNumber: {seasonNumber} episodeNumber: {episodeNumber}");
+                this.Log($"[GetEpisodeImages] Can't get season data for seasonNumber: {seasonNumber} episodeNumber: {episodeNumber}");
                 return Enumerable.Empty<RemoteImageInfo>();
             }
 
@@ -105,7 +105,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <inheritdoc />
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            this.Log("GetImageResponse url: {0}", url);
+            this.Log("[GetEpisodeImages] GetImageResponse url: {0}", url);
             return this._httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken);
         }
 

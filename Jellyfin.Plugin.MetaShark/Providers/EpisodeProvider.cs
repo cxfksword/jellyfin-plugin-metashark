@@ -45,36 +45,53 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <inheritdoc />
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(EpisodeInfo info, CancellationToken cancellationToken)
         {
-            this.Log($"GetSearchResults of [name]: {info.Name}");
+            this.Log($"GetEpisodeSearchResults of [name]: {info.Name}");
             return await Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
         }
 
         /// <inheritdoc />
         public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
         {
-            this.Log($"GetEpisodeMetadata of [name]: {info.Name} number: {info.IndexNumber}");
+            // 重新识别时，info的IndexNumber和ParentIndexNumber是从文件路径解析出来的，假如命名不规范，就会导致解析出错误值
+            // 刷新元数据不覆盖时，IndexNumber和ParentIndexNumber是从当前的元数据获取
+            this.Log($"GetEpisodeMetadata of [name]: {info.Name} number: {info.IndexNumber} ParentIndexNumber: {info.ParentIndexNumber}");
             var result = new MetadataResult<Episode>();
+
 
             // 剧集信息只有tmdb有
             info.SeriesProviderIds.TryGetValue(MetadataProvider.Tmdb.ToString(), out var seriesTmdbId);
-            var seasonNumber = info.ParentIndexNumber; // 没有season级目录时，会为null
+            var seasonNumber = info.ParentIndexNumber;
             var episodeNumber = info.IndexNumber;
             var indexNumberEnd = info.IndexNumberEnd;
-            if (episodeNumber is null or 0)
+            // 修正anime命名格式导致的seasonNumber错误（从season元数据读取)
+            var parent = _libraryManager.FindByPath(Path.GetDirectoryName(info.Path), true);
+            if (parent is Season season)
             {
-                // 从文件名获取剧集的indexNumber
-                var fileName = Path.GetFileName(info.Path) ?? string.Empty;
-                episodeNumber = this.GuessEpisodeNumber(episodeNumber, fileName);
-                if (episodeNumber.HasValue && episodeNumber.Value > 0)
-                {
-                    result.HasMetadata = true;
-                    result.Item = new Episode
-                    {
-                        IndexNumber = episodeNumber
-                    };
-                }
-                this.Log("GuessEpisodeNumber: fileName: {0} episodeNumber: {1}", fileName, episodeNumber);
+                this.Log("FixSeasionNumber: old: {0} new: {1}", seasonNumber, season.IndexNumber);
+                seasonNumber = season.IndexNumber;
             }
+            // 没有season级目录时，会为null
+            if (seasonNumber is null or 0)
+            {
+                seasonNumber = 1;
+            }
+            // 修正anime命名格式导致的episodeNumber错误
+            var fileName = Path.GetFileName(info.Path) ?? string.Empty;
+            var newEpisodeNumber = this.GuessEpisodeNumber(fileName);
+            if (newEpisodeNumber.HasValue && newEpisodeNumber != episodeNumber)
+            {
+                episodeNumber = newEpisodeNumber;
+
+                result.HasMetadata = true;
+                result.Item = new Episode
+                {
+                    ParentIndexNumber = seasonNumber,
+                    IndexNumber = episodeNumber
+                };
+                this.Log("GuessEpisodeNumber: fileName: {0} episodeNumber: {1}", fileName, newEpisodeNumber);
+            }
+
+
 
             if (episodeNumber is null or 0 || seasonNumber is null or 0 || string.IsNullOrEmpty(seriesTmdbId))
             {
@@ -88,6 +105,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 .ConfigureAwait(false);
             if (seasonResult == null || seasonResult.Episodes.Count < episodeNumber.Value)
             {
+                this.Log("Can‘t found episode data from tmdb. Name: {0} seriesTmdbId: {1} seasonNumber: {2} episodeNumber: {3}", info.Name, seriesTmdbId, seasonNumber, episodeNumber);
                 return result;
             }
 
@@ -128,9 +146,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return _httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken);
         }
 
-        private int? GuessEpisodeNumber(int? current, string fileName, double max = double.PositiveInfinity)
+        public int? GuessEpisodeNumber(string fileName, double max = double.PositiveInfinity)
         {
-            var episodeIndex = current;
+            int? episodeIndex = null;
 
             var result = AnitomySharp.AnitomySharp.Parse(fileName).FirstOrDefault(x => x.Category == AnitomySharp.Element.ElementCategory.ElementEpisodeNumber);
             if (result != null)
@@ -146,6 +164,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     continue;
                 episodeIndex = index;
                 break;
+            }
+
+            if (episodeIndex > 1000)
+            {
+                // 可能解析了分辨率，忽略返回
+                episodeIndex = null;
             }
 
             return episodeIndex;

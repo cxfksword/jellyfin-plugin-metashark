@@ -6,6 +6,10 @@
 
 jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TheMovieDb补充缺失的季数据和剧集数据。
 
+功能：
+* 支持从豆瓣和TMDB获取元数据
+* 兼容anime动画名称格式
+
 ![preview](doc/logo.png)
 
 ## 安装插件

@@ -1,5 +1,6 @@
 
 using Jellyfin.Plugin.MetaShark.Core;
+using Emby.Naming.TV;
 
 namespace Jellyfin.Plugin.MetaShark.Test
 {
