@@ -42,6 +42,9 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
             indexNumber = provider.GuessEpisodeNumber("Fullmetal Alchemist Brotherhood.E05.1920X1080");
             Assert.AreEqual(indexNumber, 5);
+
+            indexNumber = provider.GuessEpisodeNumber("[SAIO-Raws] Neon Genesis Evangelion 05 [BD 1440x1080 HEVC-10bit OPUSx2 ASSx2].mkv");
+            Assert.AreEqual(indexNumber, 5);
         }
 
     }

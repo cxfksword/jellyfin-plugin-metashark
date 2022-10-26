@@ -122,7 +122,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
                         result.Item = movie;
                         result.HasMetadata = true;
-                        subject.Celebrities.ForEach(c => result.AddPerson(new PersonInfo
+                        subject.Celebrities.Take(this._config.MaxCastMembers).ToList().ForEach(c => result.AddPerson(new PersonInfo
                         {
                             Name = c.Name,
                             Type = c.RoleType,

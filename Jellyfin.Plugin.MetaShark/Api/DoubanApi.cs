@@ -354,7 +354,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 list.Add(celebrity);
             }
 
-            _memoryCache.Set<List<DoubanCelebrity>>(cacheKey, list.Take(15).ToList(), expiredOption);
+            _memoryCache.Set<List<DoubanCelebrity>>(cacheKey, list, expiredOption);
             return list;
         }
 

@@ -78,6 +78,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 修正anime命名格式导致的episodeNumber错误
             var fileName = Path.GetFileName(info.Path) ?? string.Empty;
             var newEpisodeNumber = this.GuessEpisodeNumber(fileName);
+            this.Log("GuessEpisodeNumber: fileName: {0} episodeNumber: {1}", fileName, newEpisodeNumber);
             if (newEpisodeNumber.HasValue && newEpisodeNumber != episodeNumber)
             {
                 episodeNumber = newEpisodeNumber;
@@ -88,7 +89,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     ParentIndexNumber = seasonNumber,
                     IndexNumber = episodeNumber
                 };
-                this.Log("GuessEpisodeNumber: fileName: {0} episodeNumber: {1}", fileName, newEpisodeNumber);
             }
 
 
@@ -156,14 +156,17 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 episodeIndex = result.Value.ToInt();
             }
 
-            foreach (var regex in EpisodeFileNameRegex)
+            if (!episodeIndex.HasValue)
             {
-                if (!regex.IsMatch(fileName))
-                    continue;
-                if (!int.TryParse(regex.Match(fileName).Groups[1].Value.Trim('.'), out var index))
-                    continue;
-                episodeIndex = index;
-                break;
+                foreach (var regex in EpisodeFileNameRegex)
+                {
+                    if (!regex.IsMatch(fileName))
+                        continue;
+                    if (!int.TryParse(regex.Match(fileName).Groups[1].Value.Trim('.'), out var index))
+                        continue;
+                    episodeIndex = index;
+                    break;
+                }
             }
 
             if (episodeIndex > 1000)

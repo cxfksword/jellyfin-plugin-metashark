@@ -56,7 +56,7 @@ namespace Jellyfin.Plugin.MetaShark.Core
             var match = reg.Match(text);
             if (match.Success && match.Groups.Count > 1)
             {
-                return match.Groups[1].Value;
+                return match.Groups[1].Value.Trim();
             }
 
             return string.Empty;
