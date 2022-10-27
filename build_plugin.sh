@@ -34,7 +34,7 @@ sed -i "s@1970-01-01T00:00:00Z@$CURRENT_DATE@" "${ARTIFACT_ZIP_FILE}.meta.json"
 jprm --verbosity=debug repo add --url=${JELLYFIN_REPO_URL} "${JELLYFIN_MANIFEST}" "${ARTIFACT_ZIP_FILE}"
 
 # fix menifest download url
-sed -i "s@/${ARTIFACT}@/$TAG@" "$JELLYFIN_MANIFEST"
+sed -i "s@/${ARTIFACT}/@/$TAG/@" "$JELLYFIN_MANIFEST"
 
 # 国内加速
 cp -f "$JELLYFIN_MANIFEST" "$JELLYFIN_MANIFEST_CN"
