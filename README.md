@@ -37,8 +37,12 @@ jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TheMov
 3. Build plugin with following command.
 
 ```sh
-$ dotnet restore 
-$ dotnet publish Jellyfin.Plugin.MetaShark/Jellyfin.Plugin.MetaShark.csproj
+dotnet restore 
+dotnet publish --output=artifacts  Jellyfin.Plugin.MetaShark/Jellyfin.Plugin.MetaShark.csproj
+
+# remove unused dll
+cd artifacts
+rm -rf MediaBrowser*.dll Microsoft*.dll Newtonsoft*.dll System*.dll Emby*.dll Jellyfin.Data*.dll Jellyfin.Extensions*.dll *.json *.pdb
 ```
 
 
@@ -46,7 +50,7 @@ $ dotnet publish Jellyfin.Plugin.MetaShark/Jellyfin.Plugin.MetaShark.csproj
 
 1. Build the plugin
 
-2. Create a folder, like `metashark` and copy  `bin/Debug/net6.0/*.dll` into it
+2. Create a folder, like `metashark` and copy  `artifacts/*.dll` into it
 
 3. Move folder `metashark` to jellyfin `data/plugin` folder
 
