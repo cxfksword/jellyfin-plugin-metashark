@@ -44,7 +44,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             // 从douban搜索
             var res = await this._doubanApi.SearchAsync(info.Name, cancellationToken).ConfigureAwait(false);
-            result.AddRange(res.Take(this._config.MaxSearchResult).Select(x =>
+            result.AddRange(res.Take(Plugin.Instance!.Configuration.MaxSearchResult).Select(x =>
             {
                 return new RemoteSearchResult
                 {
@@ -57,19 +57,22 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }));
 
             // 尝试从tmdb搜索
-            var tmdbList = await this._tmdbApi.SearchSeriesAsync(info.Name, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-            result.AddRange(tmdbList.Take(this._config.MaxSearchResult).Select(x =>
+            if (Plugin.Instance?.Configuration.EnableTmdbSearch ?? false)
             {
-                return new RemoteSearchResult
+                var tmdbList = await this._tmdbApi.SearchSeriesAsync(info.Name, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
+                result.AddRange(tmdbList.Take(Plugin.Instance!.Configuration.MaxSearchResult).Select(x =>
                 {
-                    SearchProviderName = TmdbProviderName,
-                    ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), x.Id.ToString(CultureInfo.InvariantCulture) } },
-                    Name = x.Name ?? x.OriginalName,
-                    ImageUrl = this._tmdbApi.GetPosterUrl(x.PosterPath),
-                    Overview = x.Overview,
-                    ProductionYear = x.FirstAirDate?.Year,
-                };
-            }));
+                    return new RemoteSearchResult
+                    {
+                        SearchProviderName = TmdbProviderName,
+                        ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), x.Id.ToString(CultureInfo.InvariantCulture) } },
+                        Name = x.Name ?? x.OriginalName,
+                        ImageUrl = this._tmdbApi.GetPosterUrl(x.PosterPath),
+                        Overview = x.Overview,
+                        ProductionYear = x.FirstAirDate?.Year,
+                    };
+                }));
+            }
 
             return result;
         }
@@ -82,7 +85,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             var sid = info.GetProviderId(DoubanProviderId);
             var tmdbId = info.GetProviderId(MetadataProvider.Tmdb);
-            var metaSource = info.GetProviderId(Plugin.ProviderId);
+            var metaSource = info.GetProviderId(Plugin.ProviderId); // 刷新元数据时会有值
             if (string.IsNullOrEmpty(sid) && string.IsNullOrEmpty(tmdbId))
             {
                 // 刷新元数据自动匹配搜索
@@ -139,7 +142,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 result.Item = item;
                 result.QueriedById = true;
                 result.HasMetadata = true;
-                subject.Celebrities.Take(this._config.MaxCastMembers).ToList().ForEach(c => result.AddPerson(new PersonInfo
+                subject.LimitDirectorCelebrities.Take(Plugin.Instance!.Configuration.MaxCastMembers).ToList().ForEach(c => result.AddPerson(new PersonInfo
                 {
                     Name = c.Name,
                     Type = c.RoleType,
@@ -276,7 +279,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 演员
             if (seriesResult.Credits?.Cast != null)
             {
-                foreach (var actor in seriesResult.Credits.Cast.OrderBy(a => a.Order).Take(this._config.MaxCastMembers))
+                foreach (var actor in seriesResult.Credits.Cast.OrderBy(a => a.Order).Take(Plugin.Instance!.Configuration.MaxCastMembers))
                 {
                     var personInfo = new PersonInfo
                     {

@@ -66,6 +66,19 @@ namespace Jellyfin.Plugin.MetaShark.Model
 
         public List<DoubanCelebrity> Celebrities { get; set; }
 
+        public List<DoubanCelebrity> LimitDirectorCelebrities
+        {
+            get
+            {
+                // 限制导演最多返回5个
+                var limitCelebrities = new List<DoubanCelebrity>();
+                limitCelebrities.AddRange(Celebrities.Where(x => x.RoleType == MediaBrowser.Model.Entities.PersonType.Director).Take(5));
+                limitCelebrities.AddRange(Celebrities.Where(x => x.RoleType != MediaBrowser.Model.Entities.PersonType.Director));
+
+                return limitCelebrities;
+            }
+        }
+
         [JsonIgnore]
         public string ImgMiddle
         {
@@ -83,6 +96,9 @@ namespace Jellyfin.Plugin.MetaShark.Model
                 return this.Genre.Split("/").Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToArray();
             }
         }
+
+
+
     }
 
     public class DoubanCelebrity

@@ -54,7 +54,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var sid = item.GetProviderId(DoubanProviderId);
             var metaSource = item.GetProviderId(Plugin.ProviderId);
             this.Log($"GetImages for item: {item.Name} [metaSource]: {metaSource}");
-            if (!string.IsNullOrEmpty(sid) && metaSource == MetaSource.Douban)
+            if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
                 var primary = await this._doubanApi.GetMovieAsync(sid, cancellationToken);
                 var dropback = await GetBackdrop(sid, cancellationToken);

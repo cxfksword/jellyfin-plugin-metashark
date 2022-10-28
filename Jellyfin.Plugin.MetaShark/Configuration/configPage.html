@@ -34,11 +34,19 @@
                             <h3>TheMovieDb</h3>
                         </legend>
                         <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
+                            <label class="emby-checkbox-label" for="EnableTmdb">
                                 <input id="EnableTmdb" name="EnableTmdb" type="checkbox" is="emby-checkbox" />
                                 <span>启用从TheMovieDb获取元数据</span>
                             </label>
                             <div class="fieldDescription">勾选后，会尝试从TheMovieDb获取季度和剧集元数据</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label" for="EnableTmdbSearch">
+                                <input id="EnableTmdbSearch" name="EnableTmdbSearch" type="checkbox"
+                                    is="emby-checkbox" />
+                                <span>显示TheMovieDb搜索结果</span>
+                            </label>
+                            <div class="fieldDescription">勾选后，识别时会同时返回TheMovieDb搜索结果</div>
                         </div>
                         <div class="inputContainer">
                             <label class="inputLabel inputLabelUnfocused" for="TmdbApiKey">Api Key</label>
@@ -65,6 +73,7 @@
                         document.querySelector('#current_version').value = "v" + config.Version;
                         document.querySelector('#DoubanCookies').value = config.DoubanCookies;
                         document.querySelector('#EnableTmdb').checked = config.EnableTmdb;
+                        document.querySelector('#EnableTmdbSearch').checked = config.EnableTmdbSearch;
                         document.querySelector('#TmdbApiKey').value = config.TmdbApiKey;
                         Dashboard.hideLoadingMsg();
                     });
@@ -76,6 +85,7 @@
                     ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
                         config.DoubanCookies = document.querySelector('#DoubanCookies').value;
                         config.EnableTmdb = document.querySelector('#EnableTmdb').checked;
+                        config.EnableTmdbSearch = document.querySelector('#EnableTmdbSearch').checked;
                         config.TmdbApiKey = document.querySelector('#TmdbApiKey').value;
                         ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);

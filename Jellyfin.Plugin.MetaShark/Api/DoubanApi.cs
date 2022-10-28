@@ -94,7 +94,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
         private void SetDoubanCookie(CookieContainer cookieContainer)
         {
-            var configCookie = Plugin.Instance?.Configuration.DoubanCookies.Trim() ?? string.Empty;
+            var configCookie = Plugin.Instance!.Configuration.DoubanCookies.Trim();
             if (string.IsNullOrEmpty(configCookie))
             {
                 return;

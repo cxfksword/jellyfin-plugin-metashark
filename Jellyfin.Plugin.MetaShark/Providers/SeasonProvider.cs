@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TMDbLib.Objects.Find;
 using TMDbLib.Objects.TvShows;
+using System.Text.RegularExpressions;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -26,31 +27,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
     {
 
         public SeasonProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
-            : base(httpClientFactory, loggerFactory.CreateLogger<SeriesProvider>(), libraryManager, doubanApi, tmdbApi, omdbApi)
+            : base(httpClientFactory, loggerFactory.CreateLogger<SeasonProvider>(), libraryManager, doubanApi, tmdbApi, omdbApi)
         {
         }
 
         public string Name => Plugin.PluginName;
 
-        /// <summary>
-        /// Pattern for media name filtering
-        /// </summary>
-        private string _pattern;
-        public string Pattern
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(_pattern))
-                {
-                    return Plugin.Instance?.Configuration.Pattern;
-                }
-                return _pattern;
-            }
-            set
-            {
-                _pattern = value;
-            }
-        }
 
         /// <inheritdoc />
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeasonInfo info, CancellationToken cancellationToken)
@@ -62,7 +44,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <inheritdoc />
         public async Task<MetadataResult<Season>> GetMetadata(SeasonInfo info, CancellationToken cancellationToken)
         {
-            this.Log($"GetSeasonMetaData of [name]: {info.Name}  number: {info.IndexNumber}");
+
             var result = new MetadataResult<Season>();
 
             info.SeriesProviderIds.TryGetValue(MetadataProvider.Tmdb.ToString(), out var seriesTmdbId);
@@ -70,8 +52,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             info.SeriesProviderIds.TryGetValue(DoubanProviderId, out var sid);
             var seasonNumber = info.IndexNumber;
             var seasonSid = info.GetProviderId(DoubanProviderId);
+            this.Log($"GetSeasonMetaData of [name]: {info.Name}  number: {info.IndexNumber} seriesTmdbId: {seriesTmdbId} sid: {sid} metaSource: {metaSource}");
 
-            if (metaSource == MetaSource.Douban && !string.IsNullOrEmpty(sid))
+            if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
                 // 从sereis获取正确名称，季名称有时不对
                 var series = await this._doubanApi.GetMovieAsync(sid, cancellationToken).ConfigureAwait(false);
@@ -122,7 +105,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
                         result.Item = movie;
                         result.HasMetadata = true;
-                        subject.Celebrities.Take(this._config.MaxCastMembers).ToList().ForEach(c => result.AddPerson(new PersonInfo
+                        subject.LimitDirectorCelebrities.Take(Plugin.Instance!.Configuration.MaxCastMembers).ToList().ForEach(c => result.AddPerson(new PersonInfo
                         {
                             Name = c.Name,
                             Type = c.RoleType,
@@ -157,37 +140,78 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             // series使用TMDB元数据来源
             // tmdb季级没有对应id，只通过indexNumber区分
-            if (string.IsNullOrWhiteSpace(seriesTmdbId) || !seasonNumber.HasValue)
+            if (!string.IsNullOrWhiteSpace(seriesTmdbId) && seasonNumber.HasValue)
             {
+                var seasonResult = await this._tmdbApi
+                .GetSeasonAsync(seriesTmdbId.ToInt(), seasonNumber.Value, info.MetadataLanguage, null, cancellationToken)
+                .ConfigureAwait(false);
+                if (seasonResult == null)
+                {
+                    this.Log($"Not found season from TMDB. {info.Name} seriesTmdbId: {seriesTmdbId} seasonNumber: {seasonNumber}");
+                    return result;
+                }
+
+                result.HasMetadata = true;
+                result.Item = new Season
+                {
+                    IndexNumber = seasonNumber,
+                    Overview = seasonResult.Overview,
+                    PremiereDate = seasonResult.AirDate,
+                    ProductionYear = seasonResult.AirDate?.Year,
+                };
+
+                if (!string.IsNullOrEmpty(seasonResult.ExternalIds?.TvdbId))
+                {
+                    result.Item.SetProviderId(MetadataProvider.Tvdb, seasonResult.ExternalIds.TvdbId);
+                }
+                foreach (var person in GetPersons(seasonResult))
+                {
+                    result.AddPerson(person);
+                }
+
                 return result;
             }
 
-            var seasonResult = await this._tmdbApi
-            .GetSeasonAsync(seriesTmdbId.ToInt(), seasonNumber.Value, info.MetadataLanguage, null, cancellationToken)
-            .ConfigureAwait(false);
-            if (seasonResult == null)
-            {
-                this.Log($"Not found season from TMDB. {info.Name} seriesTmdbId: {seriesTmdbId} seasonNumber: {seasonNumber}");
-                return result;
-            }
 
-            result.HasMetadata = true;
-            result.Item = new Season
-            {
-                IndexNumber = seasonNumber,
-                Overview = seasonResult.Overview,
-                PremiereDate = seasonResult.AirDate,
-                ProductionYear = seasonResult.AirDate?.Year,
-            };
+            // 季手工修正（先手工修改元数据，再刷新元数据->覆盖所有元数据），通过季名称重新搜索
+            // var guessName = Regex.Replace(info.Name, Pattern, " ");
+            // this.Log($"Try search season by name. original name: {info.Name} guess name: {guessName}");
+            // var guessSid = await this.GuestByDoubanAsync(info, cancellationToken).ConfigureAwait(false);
+            // if (!string.IsNullOrEmpty(guessSid))
+            // {
 
-            if (!string.IsNullOrEmpty(seasonResult.ExternalIds?.TvdbId))
-            {
-                result.Item.SetProviderId(MetadataProvider.Tvdb, seasonResult.ExternalIds.TvdbId);
-            }
-            foreach (var person in GetPersons(seasonResult))
-            {
-                result.AddPerson(person);
-            }
+            //     var subject = await this._doubanApi.GetMovieAsync(guessSid, cancellationToken).ConfigureAwait(false);
+            //     if (subject != null)
+            //     {
+            //         subject.Celebrities = await this._doubanApi.GetCelebritiesBySidAsync(guessSid, cancellationToken).ConfigureAwait(false);
+
+            //         var movie = new Season
+            //         {
+            //             ProviderIds = new Dictionary<string, string> { { DoubanProviderId, subject.Sid } },
+            //             Name = subject.Name,
+            //             OriginalTitle = subject.OriginalName,
+            //             CommunityRating = subject.Rating,
+            //             Overview = subject.Intro,
+            //             ProductionYear = subject.Year,
+            //             Genres = subject.Genres,
+            //             PremiereDate = subject.ScreenTime,
+            //             IndexNumber = info.IndexNumber,
+            //         };
+
+            //         result.Item = movie;
+            //         result.HasMetadata = true;
+            //         subject.Celebrities.Take(Plugin.Instance!.Configuration.MaxCastMembers).ToList().ForEach(c => result.AddPerson(new PersonInfo
+            //         {
+            //             Name = c.Name,
+            //             Type = c.RoleType,
+            //             Role = c.Role,
+            //             ImageUrl = c.Img,
+            //             ProviderIds = new Dictionary<string, string> { { DoubanProviderId, c.Id } },
+            //         }));
+
+            //         return result;
+            //     }
+            // }
 
             return result;
         }
@@ -198,7 +222,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 演员
             if (item.Credits?.Cast != null)
             {
-                foreach (var actor in item.Credits.Cast.OrderBy(a => a.Order).Take(this._config.MaxCastMembers))
+                foreach (var actor in item.Credits.Cast.OrderBy(a => a.Order).Take(Plugin.Instance!.Configuration.MaxCastMembers))
                 {
                     var personInfo = new PersonInfo
                     {

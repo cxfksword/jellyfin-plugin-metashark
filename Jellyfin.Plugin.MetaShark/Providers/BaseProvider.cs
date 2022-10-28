@@ -38,9 +38,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// </summary>
         public const string TmdbProviderName = "TheMovieDb";
 
-
-        protected readonly Configuration.PluginConfiguration _config;
-
         protected readonly ILogger _logger;
         protected readonly IHttpClientFactory _httpClientFactory;
         protected readonly DoubanApi _doubanApi;
@@ -54,7 +51,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             get
             {
-                return this._config.Pattern;
+                return Plugin.Instance!.Configuration.Pattern;
             }
         }
 
@@ -66,9 +63,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             this._libraryManager = libraryManager;
             this._logger = logger;
             this._httpClientFactory = httpClientFactory;
-            this._config = Plugin.Instance == null ?
-                               new Configuration.PluginConfiguration() :
-                               Plugin.Instance.Configuration;
         }
 
 
