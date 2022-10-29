@@ -51,7 +51,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             // 从douban搜索
             var res = await this._doubanApi.SearchAsync(info.Name, cancellationToken).ConfigureAwait(false);
-            result.AddRange(res.Take(Plugin.Instance!.Configuration.MaxSearchResult).Select(x =>
+            result.AddRange(res.Take(this.config.MaxSearchResult).Select(x =>
             {
                 return new RemoteSearchResult
                 {
@@ -68,7 +68,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (Plugin.Instance?.Configuration.EnableTmdbSearch ?? false)
             {
                 var tmdbList = await _tmdbApi.SearchMovieAsync(info.Name, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-                result.AddRange(tmdbList.Take(Plugin.Instance!.Configuration.MaxSearchResult).Select(x =>
+                result.AddRange(tmdbList.Take(this.config.MaxSearchResult).Select(x =>
                 {
                     return new RemoteSearchResult
                     {
@@ -143,7 +143,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 result.Item = movie;
                 result.QueriedById = true;
                 result.HasMetadata = true;
-                subject.LimitDirectorCelebrities.Take(Plugin.Instance!.Configuration.MaxCastMembers).ToList().ForEach(c => result.AddPerson(new PersonInfo
+                subject.LimitDirectorCelebrities.Take(this.config.MaxCastMembers).ToList().ForEach(c => result.AddPerson(new PersonInfo
                 {
                     Name = c.Name,
                     Type = c.RoleType,
@@ -220,7 +220,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 演员
             if (item.Credits?.Cast != null)
             {
-                foreach (var actor in item.Credits.Cast.OrderBy(a => a.Order).Take(Plugin.Instance!.Configuration.MaxCastMembers))
+                foreach (var actor in item.Credits.Cast.OrderBy(a => a.Order).Take(this.config.MaxCastMembers))
                 {
                     var personInfo = new PersonInfo
                     {

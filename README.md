@@ -4,7 +4,7 @@
 [![metashark](https://img.shields.io/badge/jellyfin-10.8.x-lightgrey)](https://github.com/cxfksword/jellyfin-plugin-metashark/releases)
 [![metashark](https://img.shields.io/github/license/cxfksword/jellyfin-plugin-metashark)](https://github.com/cxfksword/jellyfin-plugin-metashark/main/LICENSE) 
 
-jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TheMovieDb补充缺失的季数据和剧集数据。
+jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TheMovieDb补充缺失的剧集数据。
 
 功能：
 * 支持从豆瓣和TMDB获取元数据

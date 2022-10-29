@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using TMDbLib.Objects.General;
+using Jellyfin.Plugin.MetaShark.Configuration;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -51,7 +52,15 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             get
             {
-                return Plugin.Instance!.Configuration.Pattern;
+                return this.config.Pattern;
+            }
+        }
+
+        protected PluginConfiguration config
+        {
+            get
+            {
+                return Plugin.Instance?.Configuration ?? new PluginConfiguration();
             }
         }
 

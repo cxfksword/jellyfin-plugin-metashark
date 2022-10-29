@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MediaBrowser.Common.Configuration;
+using MediaBrowser.Model.Serialization;
 
 namespace Jellyfin.Plugin.MetaShark.Test
 {
@@ -30,21 +32,26 @@ namespace Jellyfin.Plugin.MetaShark.Test
         [TestMethod]
         public void TestGuessEpisodeNumber()
         {
-            var doubanApi = new DoubanApi(loggerFactory);
-            var tmdbApi = new TmdbApi(loggerFactory);
-            var omdbApi = new OmdbApi(loggerFactory);
             var httpClientFactory = new DefaultHttpClientFactory();
             var libraryManagerStub = new Mock<ILibraryManager>();
 
+            var doubanApi = new DoubanApi(loggerFactory);
+            var tmdbApi = new TmdbApi(loggerFactory);
+            var omdbApi = new OmdbApi(loggerFactory);
+
             var provider = new EpisodeProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, doubanApi, tmdbApi, omdbApi);
-            var indexNumber = provider.GuessEpisodeNumber("[POPGO][Stand_Alone_Complex][05][1080P][BluRay][x264_FLACx2_AC3x1][chs_jpn][D87C36B6].mkv");
-            Assert.AreEqual(indexNumber, 5);
+            var guessInfo = provider.GuessEpisodeNumber("[POPGO][Stand_Alone_Complex][05][1080P][BluRay][x264_FLACx2_AC3x1][chs_jpn][D87C36B6].mkv");
+            Assert.AreEqual(guessInfo.episodeNumber, 5);
 
-            indexNumber = provider.GuessEpisodeNumber("Fullmetal Alchemist Brotherhood.E05.1920X1080");
-            Assert.AreEqual(indexNumber, 5);
+            guessInfo = provider.GuessEpisodeNumber("Fullmetal Alchemist Brotherhood.E05.1920X1080");
+            Assert.AreEqual(guessInfo.episodeNumber, 5);
 
-            indexNumber = provider.GuessEpisodeNumber("[SAIO-Raws] Neon Genesis Evangelion 05 [BD 1440x1080 HEVC-10bit OPUSx2 ASSx2].mkv");
-            Assert.AreEqual(indexNumber, 5);
+            guessInfo = provider.GuessEpisodeNumber("[SAIO-Raws] Neon Genesis Evangelion 05 [BD 1440x1080 HEVC-10bit OPUSx2 ASSx2].mkv");
+            Assert.AreEqual(guessInfo.episodeNumber, 5);
+
+            guessInfo = provider.GuessEpisodeNumber("[Moozzi2] Samurai Champloo [SP03] Battlecry (Opening) PV (BD 1920x1080 x.264 AC3).mkv");
+            Assert.AreEqual(guessInfo.episodeNumber, 3);
+            Assert.AreEqual(guessInfo.seasonNumber, 0);
         }
 
     }

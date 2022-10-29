@@ -35,7 +35,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         };
 
         public EpisodeProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
-            : base(httpClientFactory, loggerFactory.CreateLogger<SeriesProvider>(), libraryManager, doubanApi, tmdbApi, omdbApi)
+            : base(httpClientFactory, loggerFactory.CreateLogger<EpisodeProvider>(), libraryManager, doubanApi, tmdbApi, omdbApi)
         {
         }
 
@@ -70,18 +70,22 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 this.Log("FixSeasionNumber: old: {0} new: {1}", seasonNumber, season.IndexNumber);
                 seasonNumber = season.IndexNumber;
             }
-            // 没有season级目录时，会为null
+            // 没有season级目录或目录不命名不规范时，会为null
             if (seasonNumber is null or 0)
             {
                 seasonNumber = 1;
             }
             // 修正anime命名格式导致的episodeNumber错误
             var fileName = Path.GetFileName(info.Path) ?? string.Empty;
-            var newEpisodeNumber = this.GuessEpisodeNumber(fileName);
-            this.Log("GuessEpisodeNumber: fileName: {0} episodeNumber: {1}", fileName, newEpisodeNumber);
-            if (newEpisodeNumber.HasValue && newEpisodeNumber != episodeNumber)
+            var guessInfo = this.GuessEpisodeNumber(fileName);
+            this.Log("GuessEpisodeNumber: fileName: {0} seasonNumber: {1} episodeNumber: {2}", fileName, guessInfo.seasonNumber, guessInfo.episodeNumber);
+            if (guessInfo.seasonNumber.HasValue && guessInfo.seasonNumber != seasonNumber)
             {
-                episodeNumber = newEpisodeNumber;
+                seasonNumber = guessInfo.seasonNumber.Value;
+            }
+            if (guessInfo.episodeNumber.HasValue && guessInfo.episodeNumber != episodeNumber)
+            {
+                episodeNumber = guessInfo.episodeNumber;
 
                 result.HasMetadata = true;
                 result.Item = new Episode
@@ -146,17 +150,23 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return _httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken);
         }
 
-        public int? GuessEpisodeNumber(string fileName, double max = double.PositiveInfinity)
+        public GuessInfo GuessEpisodeNumber(string fileName, double max = double.PositiveInfinity)
         {
-            int? episodeIndex = null;
+            var guessInfo = new GuessInfo();
 
-            var result = AnitomySharp.AnitomySharp.Parse(fileName).FirstOrDefault(x => x.Category == AnitomySharp.Element.ElementCategory.ElementEpisodeNumber);
-            if (result != null)
+            var parseResult = AnitomySharp.AnitomySharp.Parse(fileName);
+            var animeSpecialType = parseResult.FirstOrDefault(x => x.Category == AnitomySharp.Element.ElementCategory.ElementAnimeType && x.Value == "SP");
+            if (animeSpecialType != null)
             {
-                episodeIndex = result.Value.ToInt();
+                guessInfo.seasonNumber = 0;
+            }
+            var animeEpisode = parseResult.FirstOrDefault(x => x.Category == AnitomySharp.Element.ElementCategory.ElementEpisodeNumber);
+            if (animeEpisode != null)
+            {
+                guessInfo.episodeNumber = animeEpisode.Value.ToInt();
             }
 
-            if (!episodeIndex.HasValue)
+            if (!guessInfo.episodeNumber.HasValue)
             {
                 foreach (var regex in EpisodeFileNameRegex)
                 {
@@ -164,18 +174,18 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         continue;
                     if (!int.TryParse(regex.Match(fileName).Groups[1].Value.Trim('.'), out var index))
                         continue;
-                    episodeIndex = index;
+                    guessInfo.episodeNumber = index;
                     break;
                 }
             }
 
-            if (episodeIndex > 1000)
+            if (guessInfo.episodeNumber > 1000)
             {
                 // 可能解析了分辨率，忽略返回
-                episodeIndex = null;
+                guessInfo.episodeNumber = null;
             }
 
-            return episodeIndex;
+            return guessInfo;
         }
 
     }
