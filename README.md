@@ -26,7 +26,9 @@ jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TheMov
 
 1. 安装后，先进入`控制台 -> 插件`，查看下MetaShark插件是否是**Active**状态
 2. 进入`控制台 -> 媒体库`，点击任一媒体库进入配置页，在元数据下载器选项中勾选**MetaShark**，并把**MetaShark**移动到第一位
+
    <img src="https://cdn.jsdelivr.net/gh/kozalak-robot/assets@main/img/3fZmJK.png"  width="400px" />
+   
 3. 识别时默认不返回TheMovieDb结果，有需要可以到插件配置中打开
 4. 假如网络原因访问TheMovieDb比较慢，可以到插件配置中关闭从TheMovieDb获取数据（关闭后不会再获取剧集信息）
   
