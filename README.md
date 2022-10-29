@@ -4,11 +4,11 @@
 [![metashark](https://img.shields.io/badge/jellyfin-10.8.x-lightgrey)](https://github.com/cxfksword/jellyfin-plugin-metashark/releases)
 [![metashark](https://img.shields.io/github/license/cxfksword/jellyfin-plugin-metashark)](https://github.com/cxfksword/jellyfin-plugin-metashark/main/LICENSE) 
 
-jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TheMovieDb补充缺失的剧集数据。
+jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TheMovieDb补全缺失的剧集数据。
 
 功能：
 * 支持从豆瓣和TMDB获取元数据
-* 兼容anime动画名称格式
+* 兼容anime动画命名格式
 
 ![preview](doc/logo.png)
 
@@ -25,7 +25,8 @@ jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TheMov
 ## 如何使用
 
 * 进入`控制台 -> 媒体库`，在元数据下载器中勾选**MetaShark**
-* 假如网络原因访问TheMovieDb比较慢，也可以到插件配置页关闭从TheMovieDb获取数据
+* 识别时默认不返回TheMovieDb结果，有需要可以到插件配置中打开
+* 假如网络原因访问TheMovieDb比较慢，可以到插件配置中关闭从TheMovieDb获取数据（关闭后不会再获取剧集信息）
   
 
 ## How to build
