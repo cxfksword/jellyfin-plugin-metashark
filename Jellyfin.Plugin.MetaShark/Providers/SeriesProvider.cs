@@ -119,6 +119,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     // ProductionLocations = [x?.Country],
                     PremiereDate = subject.ScreenTime,
                 };
+
+                // 通过imdb获取tmdbId
                 if (!string.IsNullOrEmpty(subject.Imdb))
                 {
                     item.SetProviderId(MetadataProvider.Imdb, subject.Imdb);
@@ -131,10 +133,21 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                             var findResult = await this._tmdbApi.FindByExternalIdAsync(omdbItem.ImdbID, FindExternalSource.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
                             if (findResult?.TvResults != null && findResult.TvResults.Count > 0)
                             {
-                                this.Log($"GetSeriesMetadata found tmdb [id]: {findResult.TvResults[0].Id} by imdb id: {subject.Imdb}");
-                                item.SetProviderId(MetadataProvider.Tmdb, $"{findResult.TvResults[0].Id}");
+                                tmdbId = $"{findResult.TvResults[0].Id}";
+                                this.Log($"GetSeriesMetadata found tmdb [id]: {tmdbId} by imdb id: {subject.Imdb}");
+                                item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
                             }
                         }
+                    }
+                }
+
+                // 尝试通过搜索匹配获取tmdbId
+                if (string.IsNullOrEmpty(tmdbId))
+                {
+                    tmdbId = await this.GuestByTmdbAsync(info, cancellationToken).ConfigureAwait(false);
+                    if (!string.IsNullOrEmpty(tmdbId))
+                    {
+                        item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
                     }
                 }
 

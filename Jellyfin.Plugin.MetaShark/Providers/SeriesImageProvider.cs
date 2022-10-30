@@ -31,7 +31,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <param name="logger">Instance of the <see cref="ILogger{OddbImageProvider}"/> interface.</param>
         /// <param name="doubanApi">Instance of <see cref="DoubanApi"/>.</param>
         public SeriesImageProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
-            : base(httpClientFactory, loggerFactory.CreateLogger<SeriesProvider>(), libraryManager, doubanApi, tmdbApi, omdbApi)
+            : base(httpClientFactory, loggerFactory.CreateLogger<SeriesImageProvider>(), libraryManager, doubanApi, tmdbApi, omdbApi)
         {
         }
 
