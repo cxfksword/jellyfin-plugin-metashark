@@ -133,6 +133,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     continue;
                 }
+
                 var score = jw.Similarity(name, item.Name);
                 // this.Log($"GuestDoubanSeasonByYear name: {name} douban_name: {item.Name} douban_sid: {item.Sid} douban_year: {item.Year} score: {score} ");
                 if (score < 0.8)
@@ -150,6 +151,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return null;
         }
 
+        // 通过季数，搜索结果按年份排序后，取对应季数索引项（不适合每季标题差异太大的，如葫芦兄弟和葫芦小金刚）
         protected async Task<string?> GuestDoubanSeasonByNumberAsync(string name, int? seasonNumber, CancellationToken cancellationToken)
         {
             if (seasonNumber == null || seasonNumber == 0)
@@ -167,6 +169,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     continue;
                 }
+
                 var score = jw.Similarity(name, item.Name);
                 if (score < 0.8)
                 {
@@ -227,26 +230,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         }
 
 
-        protected int GetVideoFileCount(string? dir)
-        {
-            if (dir == null)
-            {
-                return 0;
-            }
-
-            var dirInfo = new DirectoryInfo(dir);
-            var files = dirInfo.GetFiles();
-            var nameOptions = new Emby.Naming.Common.NamingOptions();
-            var videoFilesCount = 0;
-            foreach (var fileInfo in files.Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden)))
-            {
-                if (Emby.Naming.Video.VideoResolver.IsVideoFile(fileInfo.FullName, nameOptions))
-                {
-                    videoFilesCount++;
-                }
-            }
-            return videoFilesCount;
-        }
 
 
         protected string GetProxyImageUrl(string url)

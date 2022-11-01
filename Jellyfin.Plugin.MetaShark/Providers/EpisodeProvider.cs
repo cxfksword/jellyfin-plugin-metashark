@@ -9,6 +9,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,8 +23,9 @@ using MediaBrowser.Controller.Entities;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
-    public class EpisodeProvider : BaseProvider, IRemoteMetadataProvider<Episode, EpisodeInfo>
+    public class EpisodeProvider : BaseProvider, IRemoteMetadataProvider<Episode, EpisodeInfo>, IDisposable
     {
+        private readonly IMemoryCache _memoryCache;
 
         private static readonly Regex[] EpisodeFileNameRegex =
         {
@@ -38,6 +40,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         public EpisodeProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
             : base(httpClientFactory, loggerFactory.CreateLogger<EpisodeProvider>(), libraryManager, doubanApi, tmdbApi, omdbApi)
         {
+            this._memoryCache = new MemoryCache(new MemoryCacheOptions());
         }
 
         public string Name => Plugin.PluginName;
@@ -112,6 +115,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 this.Log("Can‘t found episode data from tmdb. Name: {0} seriesTmdbId: {1} seasonNumber: {2} episodeNumber: {3}", info.Name, seriesTmdbId, seasonNumber, episodeNumber);
                 return result;
             }
+
+            // 判断tmdb剧集信息数目和视频是否一致，不一致不处理
             var videoFilesCount = this.GetVideoFileCount(Path.GetDirectoryName(info.Path));
             if (videoFilesCount > 0 && seasonResult.Episodes.Count != videoFilesCount)
             {
@@ -194,5 +199,50 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return guessInfo;
         }
 
+
+
+        protected int GetVideoFileCount(string? dir)
+        {
+            if (dir == null)
+            {
+                return 0;
+            }
+
+            var cacheKey = $"filecount_{dir}";
+            if (this._memoryCache.TryGetValue<int>(cacheKey, out var videoFilesCount))
+            {
+                return videoFilesCount;
+            }
+
+            var dirInfo = new DirectoryInfo(dir);
+            var files = dirInfo.GetFiles();
+            var nameOptions = new Emby.Naming.Common.NamingOptions();
+
+            foreach (var fileInfo in files.Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden)))
+            {
+                if (Emby.Naming.Video.VideoResolver.IsVideoFile(fileInfo.FullName, nameOptions))
+                {
+                    videoFilesCount++;
+                }
+            }
+
+            var expiredOption = new MemoryCacheEntryOptions() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1) };
+            this._memoryCache.Set<int>(cacheKey, videoFilesCount, expiredOption);
+            return videoFilesCount;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _memoryCache.Dispose();
+            }
+        }
     }
 }
