@@ -18,6 +18,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using MediaBrowser.Controller.Entities;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -65,7 +66,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var indexNumberEnd = info.IndexNumberEnd;
             // 修正anime命名格式导致的seasonNumber错误（从season元数据读取)
             var parent = _libraryManager.FindByPath(Path.GetDirectoryName(info.Path), true);
-            if (parent is Season season)
+            if (parent is Season season && seasonNumber != season.IndexNumber)
             {
                 this.Log("FixSeasionNumber: old: {0} new: {1}", seasonNumber, season.IndexNumber);
                 seasonNumber = season.IndexNumber;
@@ -73,6 +74,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 没有season级目录或目录不命名不规范时，会为null
             if (seasonNumber is null or 0)
             {
+                this.Log("FixSeasionNumber: season number is null, set to default 1");
                 seasonNumber = 1;
             }
             // 修正anime命名格式导致的episodeNumber错误
@@ -83,7 +85,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             {
                 seasonNumber = guessInfo.seasonNumber.Value;
             }
-            if (guessInfo.episodeNumber.HasValue && guessInfo.episodeNumber != episodeNumber)
+            if (guessInfo.episodeNumber.HasValue)
             {
                 episodeNumber = guessInfo.episodeNumber;
 
@@ -94,8 +96,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     IndexNumber = episodeNumber
                 };
             }
-
-
 
             if (episodeNumber is null or 0 || seasonNumber is null or 0 || string.IsNullOrEmpty(seriesTmdbId))
             {
@@ -110,6 +110,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (seasonResult == null || seasonResult.Episodes.Count < episodeNumber.Value)
             {
                 this.Log("Can‘t found episode data from tmdb. Name: {0} seriesTmdbId: {1} seasonNumber: {2} episodeNumber: {3}", info.Name, seriesTmdbId, seasonNumber, episodeNumber);
+                return result;
+            }
+            var videoFilesCount = this.GetVideoFileCount(Path.GetDirectoryName(info.Path));
+            if (videoFilesCount > 0 && seasonResult.Episodes.Count != videoFilesCount)
+            {
+                this.Log("Tmdb episode number not match. Name: {0} tmdb episode count: {1} video files count: {2}", info.Name, seasonResult.Episodes.Count, videoFilesCount);
                 return result;
             }
 
@@ -136,7 +142,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             item.ProductionYear = episodeResult.AirDate?.Year;
             item.Name = episodeResult.Name;
             item.Overview = episodeResult.Overview;
-            item.CommunityRating = Convert.ToSingle(episodeResult.VoteAverage);
+            item.CommunityRating = (float)System.Math.Round(episodeResult.VoteAverage, 1);
 
             result.Item = item;
 

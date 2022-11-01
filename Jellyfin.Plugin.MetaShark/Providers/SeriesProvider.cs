@@ -57,7 +57,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }));
 
             // 尝试从tmdb搜索
-            if (Plugin.Instance?.Configuration.EnableTmdbSearch ?? false)
+            if (this.config.EnableTmdbSearch)
             {
                 var tmdbList = await this._tmdbApi.SearchSeriesAsync(info.Name, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
                 result.AddRange(tmdbList.Take(this.config.MaxSearchResult).Select(x =>
@@ -89,7 +89,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (string.IsNullOrEmpty(sid) && string.IsNullOrEmpty(tmdbId))
             {
                 // 刷新元数据自动匹配搜索
-                sid = await this.GuestByDoubanAsync(info, cancellationToken).ConfigureAwait(false);
+                sid = await this.GuessByDoubanAsync(info, cancellationToken).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(sid))
                 {
                     tmdbId = await this.GuestByTmdbAsync(info, cancellationToken).ConfigureAwait(false);
@@ -209,7 +209,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             series.SetProviderId(MetadataProvider.Tmdb, seriesResult.Id.ToString(CultureInfo.InvariantCulture));
 
-            series.CommunityRating = Convert.ToSingle(seriesResult.VoteAverage);
+            series.CommunityRating = (float)System.Math.Round(seriesResult.VoteAverage, 2);
 
             series.Overview = seriesResult.Overview;
 

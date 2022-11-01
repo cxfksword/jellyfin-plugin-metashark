@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -19,6 +20,7 @@ using System.Threading.Tasks;
 using System.Web;
 using TMDbLib.Objects.General;
 using Jellyfin.Plugin.MetaShark.Configuration;
+using Jellyfin.Plugin.MetaShark.Core;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -74,17 +76,26 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             this._httpClientFactory = httpClientFactory;
         }
 
-
-        protected async Task<string?> GuestByDoubanAsync(ItemLookupInfo info, CancellationToken cancellationToken)
+        protected async Task<string?> GuessByDoubanAsync(ItemLookupInfo info, CancellationToken cancellationToken)
         {
             // ParseName is required here.
             // Caller provides the filename with extension stripped and NOT the parsed filename
             var parsedName = this._libraryManager.ParseName(info.Name);
-            this.Log($"GuestByDouban of [name]: {info.Name} year: {info.Year} search name: {parsedName.Name}");
+            this.Log($"GuessByDouban of [name]: {info.Name} year: {info.Year} search name: {parsedName.Name}");
             var result = await this._doubanApi.SearchAsync(parsedName.Name, cancellationToken).ConfigureAwait(false);
             var jw = new JaroWinkler();
             foreach (var item in result)
             {
+                if (info is MovieInfo && item.Category != "电影")
+                {
+                    continue;
+                }
+
+                if (info is SeriesInfo && item.Category != "电视剧")
+                {
+                    continue;
+                }
+
                 if (jw.Similarity(parsedName.Name, item.Name) < 0.8)
                 {
                     continue;
@@ -92,13 +103,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
                 if (parsedName.Year == null || parsedName.Year == 0)
                 {
-                    this.Log($"GuestByDouban of [name] found Sid: \"{item.Sid}\"");
+                    this.Log($"GuessByDouban of [name] found Sid: {item.Sid}");
                     return item.Sid;
                 }
 
                 if (parsedName.Year == item.Year)
                 {
-                    this.Log($"GuestByDouban of [name] found Sid: \"{item.Sid}\"");
+                    this.Log($"GuessByDouban of [name] found Sid: {item.Sid}");
                     return item.Sid;
                 }
             }
@@ -106,20 +117,24 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return null;
         }
 
-        protected async Task<string?> GuestSeasonByDoubanAsync(string name, int? year, CancellationToken cancellationToken)
+        protected async Task<string?> GuestDoubanSeasonByYearAsync(string name, int? year, CancellationToken cancellationToken)
         {
             if (year == null || year == 0)
             {
                 return null;
             }
 
-            this.Log($"GuestSeasonByDouban of [name]: {name} year: {year}");
+            this.Log($"GuestDoubanSeasonByYear of [name]: {name} year: {year}");
             var result = await this._doubanApi.SearchAsync(name, cancellationToken).ConfigureAwait(false);
             var jw = new JaroWinkler();
             foreach (var item in result)
             {
+                if (item.Category != "电视剧")
+                {
+                    continue;
+                }
                 var score = jw.Similarity(name, item.Name);
-                this.Log($"GuestSeasonByDouban： name: {name} douban_name: {item.Name} douban_sid: {item.Sid} douban_year: {item.Year} score: {score} ");
+                // this.Log($"GuestDoubanSeasonByYear name: {name} douban_name: {item.Name} douban_sid: {item.Sid} douban_year: {item.Year} score: {score} ");
                 if (score < 0.8)
                 {
                     continue;
@@ -127,9 +142,48 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
                 if (year == item.Year)
                 {
-                    this.Log($"GuestSeasonByDouban of [name] found Sid: \"{item.Sid}\"");
+                    this.Log($"GuestDoubanSeasonByYear of [name] found Sid: {item.Sid}");
                     return item.Sid;
                 }
+            }
+
+            return null;
+        }
+
+        protected async Task<string?> GuestDoubanSeasonByNumberAsync(string name, int? seasonNumber, CancellationToken cancellationToken)
+        {
+            if (seasonNumber == null || seasonNumber == 0)
+            {
+                return null;
+            }
+
+            this.Log($"GuestDoubanSeasonByNumber of [name]: {name} seasonNumber: {seasonNumber}");
+            var result = await this._doubanApi.SearchAsync(name, cancellationToken).ConfigureAwait(false);
+            var jw = new JaroWinkler();
+            var matchList = new List<DoubanSubject>();
+            foreach (var item in result)
+            {
+                if (item.Category != "电视剧")
+                {
+                    continue;
+                }
+                var score = jw.Similarity(name, item.Name);
+                if (score < 0.8)
+                {
+                    continue;
+                }
+
+                // this.Log($"GuestDoubanSeasonByNumber name: {name} douban_name: {item.Name} douban_sid: {item.Sid} douban_year: {item.Year} score: {score} ");
+                matchList.Add(item);
+            }
+
+            matchList.Sort((x, y) => x.Year.CompareTo(y.Year));
+            if (matchList.Count >= seasonNumber)
+            {
+                var matchItem = matchList[seasonNumber.Value - 1];
+                var sid = matchItem.Sid;
+                this.Log($"GuestDoubanSeasonByNumber of [name] found Sid: {sid}");
+                return sid;
             }
 
             return null;
@@ -173,22 +227,25 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         }
 
 
-        protected string AppendMetaSourcePrefix(string name, string source)
+        protected int GetVideoFileCount(string? dir)
         {
-            if (string.IsNullOrEmpty(name))
+            if (dir == null)
             {
-                return name;
+                return 0;
             }
-            return $"[{source}]{name}";
-        }
 
-        protected string RemoveMetaSourcePrefix(string name)
-        {
-            if (string.IsNullOrEmpty(name))
+            var dirInfo = new DirectoryInfo(dir);
+            var files = dirInfo.GetFiles();
+            var nameOptions = new Emby.Naming.Common.NamingOptions();
+            var videoFilesCount = 0;
+            foreach (var fileInfo in files.Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden)))
             {
-                return name;
+                if (Emby.Naming.Video.VideoResolver.IsVideoFile(fileInfo.FullName, nameOptions))
+                {
+                    videoFilesCount++;
+                }
             }
-            return regMetaSourcePrefix.Replace(name, string.Empty);
+            return videoFilesCount;
         }
 
 

@@ -31,6 +31,8 @@ namespace Jellyfin.Plugin.MetaShark.Model
         public string Actor { get; set; }
         // "genre": "奇幻 / 冒险",
         public string Genre { get; set; }
+        // 电影/电视剧
+        public string Category { get; set; }
         // "site": "www.harrypotter.co.uk",
         public string Site { get; set; }
         // "country": "美国 / 英国",
@@ -66,12 +68,18 @@ namespace Jellyfin.Plugin.MetaShark.Model
 
         public List<DoubanCelebrity> Celebrities { get; set; }
 
+        [JsonIgnore]
         public List<DoubanCelebrity> LimitDirectorCelebrities
         {
             get
             {
                 // 限制导演最多返回5个
                 var limitCelebrities = new List<DoubanCelebrity>();
+                if (Celebrities == null || Celebrities.Count == 0)
+                {
+                    return limitCelebrities;
+                }
+
                 limitCelebrities.AddRange(Celebrities.Where(x => x.RoleType == MediaBrowser.Model.Entities.PersonType.Director).Take(5));
                 limitCelebrities.AddRange(Celebrities.Where(x => x.RoleType != MediaBrowser.Model.Entities.PersonType.Director));
 

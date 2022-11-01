@@ -78,8 +78,14 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
                     if (!string.IsNullOrEmpty(seriesName) && seasonYear > 0)
                     {
-                        seasonSid = await this.GuestSeasonByDoubanAsync(seriesName, seasonYear, cancellationToken).ConfigureAwait(false);
+                        seasonSid = await this.GuestDoubanSeasonByYearAsync(seriesName, seasonYear, cancellationToken).ConfigureAwait(false);
                     }
+                }
+
+                // 尝试通过豆瓣按年份排序后，按季数索引取对应一个
+                if (string.IsNullOrEmpty(seasonSid) && !string.IsNullOrEmpty(seriesName) && seasonNumber.HasValue)
+                {
+                    seasonSid = await this.GuestDoubanSeasonByNumberAsync(seriesName, seasonNumber, cancellationToken).ConfigureAwait(false);
                 }
 
                 // 获取季豆瓣数据

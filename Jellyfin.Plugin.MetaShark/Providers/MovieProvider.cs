@@ -65,7 +65,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
 
             // 从tmdb搜索
-            if (Plugin.Instance?.Configuration.EnableTmdbSearch ?? false)
+            if (this.config.EnableTmdbSearch)
             {
                 var tmdbList = await _tmdbApi.SearchMovieAsync(info.Name, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
                 result.AddRange(tmdbList.Take(this.config.MaxSearchResult).Select(x =>
@@ -97,7 +97,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (string.IsNullOrEmpty(sid) && string.IsNullOrEmpty(tmdbId))
             {
                 // 刷新元数据匹配搜索
-                sid = await this.GuestByDoubanAsync(info, cancellationToken).ConfigureAwait(false);
+                sid = await this.GuessByDoubanAsync(info, cancellationToken).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(sid))
                 {
                     tmdbId = await this.GuestByTmdbAsync(info, cancellationToken).ConfigureAwait(false);
@@ -187,7 +187,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 movie.SetProviderId(MetadataProvider.Imdb, movieResult.ImdbId);
                 movie.SetProviderId(Plugin.ProviderId, MetaSource.Tmdb);
 
-                movie.CommunityRating = Convert.ToSingle(movieResult.VoteAverage);
+                movie.CommunityRating = (float)System.Math.Round(movieResult.VoteAverage, 2);
                 movie.PremiereDate = movieResult.ReleaseDate;
                 movie.ProductionYear = movieResult.ReleaseDate?.Year;
 

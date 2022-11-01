@@ -175,6 +175,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 movie.Sid = sid;
                 movie.Name = name;
                 movie.Genre = cat;
+                movie.Category = cat;
                 movie.Img = img;
                 movie.Rating = rating.ToFloat();
                 movie.Year = year.ToInt();
@@ -230,6 +231,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var img = contentNode.GetAttr("a.nbgnbg>img", "src") ?? string.Empty;
                 var intro = contentNode.GetText("div.indent>span") ?? string.Empty;
                 intro = intro.Replace("©豆瓣", string.Empty);
+                var category = contentNode.QuerySelector("div.episode_list") == null ? "电影" : "电视剧";
 
                 var info = contentNode.GetText("#info") ?? string.Empty;
                 var director = info.GetMatchGroup(this.regDirector);
@@ -254,6 +256,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 movie.Subname = subname;
                 movie.Director = director;
                 movie.Genre = genre;
+                movie.Category = category;
                 movie.Country = country;
                 movie.Language = language;
                 movie.Duration = duration;
