@@ -82,11 +82,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     }
                 }
 
-                // 尝试通过豆瓣按年份排序后，按季数索引取对应一个
-                if (string.IsNullOrEmpty(seasonSid) && !string.IsNullOrEmpty(seriesName) && seasonNumber.HasValue)
-                {
-                    seasonSid = await this.GuestDoubanSeasonByNumberAsync(seriesName, seasonNumber, cancellationToken).ConfigureAwait(false);
-                }
 
                 // 获取季豆瓣数据
                 if (!string.IsNullOrEmpty(seasonSid))
@@ -125,6 +120,17 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
 
 
+                // tmdb有数据，豆瓣找不到，尝试获取tmdb的季数据
+                if (string.IsNullOrEmpty(seasonSid) && !string.IsNullOrWhiteSpace(seriesTmdbId) && seasonNumber.HasValue)
+                {
+                    var tmdbResult = await this.GetMetadataByTmdb(info, seriesTmdbId, seasonNumber.Value, cancellationToken).ConfigureAwait(false);
+                    if (tmdbResult != null)
+                    {
+                        return tmdbResult;
+                    }
+                }
+
+
                 // 从豆瓣获取不到季信息，直接使用series信息
                 result.Item = new Season
                 {
@@ -148,34 +154,11 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // tmdb季级没有对应id，只通过indexNumber区分
             if (!string.IsNullOrWhiteSpace(seriesTmdbId) && seasonNumber.HasValue)
             {
-                var seasonResult = await this._tmdbApi
-                .GetSeasonAsync(seriesTmdbId.ToInt(), seasonNumber.Value, info.MetadataLanguage, null, cancellationToken)
-                .ConfigureAwait(false);
-                if (seasonResult == null)
+                var tmdbResult = await this.GetMetadataByTmdb(info, seriesTmdbId, seasonNumber.Value, cancellationToken).ConfigureAwait(false);
+                if (tmdbResult != null)
                 {
-                    this.Log($"Not found season from TMDB. {info.Name} seriesTmdbId: {seriesTmdbId} seasonNumber: {seasonNumber}");
-                    return result;
+                    return tmdbResult;
                 }
-
-                result.HasMetadata = true;
-                result.Item = new Season
-                {
-                    IndexNumber = seasonNumber,
-                    Overview = seasonResult.Overview,
-                    PremiereDate = seasonResult.AirDate,
-                    ProductionYear = seasonResult.AirDate?.Year,
-                };
-
-                if (!string.IsNullOrEmpty(seasonResult.ExternalIds?.TvdbId))
-                {
-                    result.Item.SetProviderId(MetadataProvider.Tvdb, seasonResult.ExternalIds.TvdbId);
-                }
-                foreach (var person in GetPersons(seasonResult))
-                {
-                    result.AddPerson(person);
-                }
-
-                return result;
             }
 
 
@@ -218,6 +201,40 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             //         return result;
             //     }
             // }
+
+            return result;
+        }
+
+        public async Task<MetadataResult<Season>?> GetMetadataByTmdb(SeasonInfo info, string seriesTmdbId, int seasonNumber, CancellationToken cancellationToken)
+        {
+            var seasonResult = await this._tmdbApi
+                .GetSeasonAsync(seriesTmdbId.ToInt(), seasonNumber, info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
+                .ConfigureAwait(false);
+            if (seasonResult == null)
+            {
+                this.Log($"Not found season from TMDB. {info.Name} seriesTmdbId: {seriesTmdbId} seasonNumber: {seasonNumber}");
+                return null;
+            }
+
+
+            var result = new MetadataResult<Season>();
+            result.HasMetadata = true;
+            result.Item = new Season
+            {
+                IndexNumber = seasonNumber,
+                Overview = seasonResult.Overview,
+                PremiereDate = seasonResult.AirDate,
+                ProductionYear = seasonResult.AirDate?.Year,
+            };
+
+            if (!string.IsNullOrEmpty(seasonResult.ExternalIds?.TvdbId))
+            {
+                result.Item.SetProviderId(MetadataProvider.Tvdb, seasonResult.ExternalIds.TvdbId);
+            }
+            foreach (var person in GetPersons(seasonResult))
+            {
+                result.AddPerson(person);
+            }
 
             return result;
         }
