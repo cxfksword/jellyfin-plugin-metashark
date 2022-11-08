@@ -75,7 +75,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 seasonNumber = season.IndexNumber;
             }
             // 没有season级目录或目录不命名不规范时，会为null
-            if (seasonNumber is null or 0)
+            if (seasonNumber is null)
             {
                 this.Log("FixSeasionNumber: season number is null, set to default 1");
                 seasonNumber = 1;

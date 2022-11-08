@@ -50,7 +50,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             info.SeriesProviderIds.TryGetValue(MetadataProvider.Tmdb.ToString(), out var seriesTmdbId);
             info.SeriesProviderIds.TryGetValue(Plugin.ProviderId, out var metaSource);
             info.SeriesProviderIds.TryGetValue(DoubanProviderId, out var sid);
-            var seasonNumber = info.IndexNumber;
+            var seasonNumber = info.IndexNumber; // S00/Season 00特典目录会为0
             var seasonSid = info.GetProviderId(DoubanProviderId);
             this.Log($"GetSeasonMetaData of [name]: {info.Name}  number: {info.IndexNumber} seriesTmdbId: {seriesTmdbId} sid: {sid} metaSource: {metaSource}");
 
@@ -68,7 +68,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 if (string.IsNullOrEmpty(seasonSid))
                 {
                     var seasonYear = 0;
-                    if (!string.IsNullOrEmpty(seriesTmdbId) && seasonNumber.HasValue)
+                    if (!string.IsNullOrEmpty(seriesTmdbId) && (seasonNumber.HasValue && seasonNumber > 0))
                     {
                         var season = await this._tmdbApi
                             .GetSeasonAsync(seriesTmdbId.ToInt(), seasonNumber.Value, info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
@@ -121,7 +121,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
 
                 // tmdb有数据，豆瓣找不到，尝试获取tmdb的季数据
-                if (string.IsNullOrEmpty(seasonSid) && !string.IsNullOrWhiteSpace(seriesTmdbId) && seasonNumber.HasValue)
+                if (string.IsNullOrEmpty(seasonSid) && !string.IsNullOrWhiteSpace(seriesTmdbId) && (seasonNumber.HasValue && seasonNumber > 0))
                 {
                     var tmdbResult = await this.GetMetadataByTmdb(info, seriesTmdbId, seasonNumber.Value, cancellationToken).ConfigureAwait(false);
                     if (tmdbResult != null)
@@ -152,7 +152,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             // series使用TMDB元数据来源
             // tmdb季级没有对应id，只通过indexNumber区分
-            if (!string.IsNullOrWhiteSpace(seriesTmdbId) && seasonNumber.HasValue)
+            if (!string.IsNullOrWhiteSpace(seriesTmdbId) && (seasonNumber.HasValue && seasonNumber > 0))
             {
                 var tmdbResult = await this.GetMetadataByTmdb(info, seriesTmdbId, seasonNumber.Value, cancellationToken).ConfigureAwait(false);
                 if (tmdbResult != null)

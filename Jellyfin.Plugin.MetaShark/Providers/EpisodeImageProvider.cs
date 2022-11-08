@@ -69,7 +69,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var seasonNumber = episode.ParentIndexNumber;
             var episodeNumber = episode.IndexNumber;
 
-            if (!seasonNumber.HasValue || !episodeNumber.HasValue)
+            if (seasonNumber is null or 0 || episodeNumber is null or 0)
             {
                 this.Log($"[GetEpisodeImages] The seasonNumber or episodeNumber is empty! seasonNumber: {seasonNumber} episodeNumber: {episodeNumber}");
                 return Enumerable.Empty<RemoteImageInfo>();
