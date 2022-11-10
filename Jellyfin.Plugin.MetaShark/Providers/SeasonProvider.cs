@@ -64,7 +64,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
                 var seriesName = series.Name;
 
-                // 存在tmdbid，尝试从tmdb获取对应季的年份信息，用于从豆瓣搜索对应季数据
+                // 没有季id，但存在tmdbid，尝试从tmdb获取对应季的年份信息，用于从豆瓣搜索对应季数据
                 if (string.IsNullOrEmpty(seasonSid))
                 {
                     var seasonYear = 0;
@@ -131,7 +131,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
 
 
-                // 从豆瓣获取不到季信息，直接使用series信息
+                // 从豆瓣获取不到季信息，直接使用series信息（还是不替换旧有信息好？？）
                 result.Item = new Season
                 {
                     ProviderIds = new Dictionary<string, string> { { DoubanProviderId, sid } },

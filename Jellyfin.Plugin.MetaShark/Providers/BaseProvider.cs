@@ -229,6 +229,28 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return null;
         }
 
+        // 通过imdb获取tmdbId
+        protected async Task<string?> GetTmdbIdByImdbAsync(string imdb, string language, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(imdb))
+            {
+                return null;
+            }
+
+            // 通过imdb获取TMDB id (豆瓣的imdb id可能是旧的，需要先从omdb接口获取最新的imdb id
+            var omdbItem = await this._omdbApi.GetByImdbID(imdb, cancellationToken).ConfigureAwait(false);
+            if (omdbItem != null)
+            {
+                var findResult = await this._tmdbApi.FindByExternalIdAsync(omdbItem.ImdbID, TMDbLib.Objects.Find.FindExternalSource.Imdb, language, cancellationToken).ConfigureAwait(false);
+                if (findResult?.TvResults != null && findResult.TvResults.Count > 0)
+                {
+                    this.Log($"GetSeriesMetadata found tmdb [id]: {findResult.TvResults[0].Id} by imdb id: {imdb}");
+                    return $"{findResult.TvResults[0].Id}";
+                }
+            }
+
+            return null;
+        }
 
 
 
