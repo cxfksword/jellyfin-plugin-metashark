@@ -57,7 +57,11 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
                 var primary = await this._doubanApi.GetMovieAsync(sid, cancellationToken);
-                var dropback = await GetBackdrop(sid, cancellationToken);
+                if (primary == null)
+                {
+                    return Enumerable.Empty<RemoteImageInfo>();
+                }
+                var backdropImgs = await GetBackdrop(sid, cancellationToken);
 
                 var res = new List<RemoteImageInfo> {
                     new RemoteImageInfo
@@ -67,16 +71,16 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         Type = ImageType.Primary
                     }
                 };
-                res.AddRange(dropback);
+                res.AddRange(backdropImgs);
                 return res;
             }
 
-            var tmdbId = item.GetProviderId(MetadataProvider.Tmdb).ToInt();
-            if (tmdbId > 0)
+            var tmdbId = item.GetProviderId(MetadataProvider.Tmdb);
+            if (!string.IsNullOrEmpty(tmdbId))
             {
                 var language = item.GetPreferredMetadataLanguage();
                 var movie = await _tmdbApi
-                .GetMovieAsync(tmdbId, language, language, cancellationToken)
+                .GetMovieAsync(tmdbId.ToInt(), language, language, cancellationToken)
                 .ConfigureAwait(false);
 
                 if (movie?.Images == null)

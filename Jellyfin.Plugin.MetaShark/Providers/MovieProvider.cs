@@ -96,7 +96,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var metaSource = info.GetProviderId(Plugin.ProviderId); // 刷新元数据时会有值
             if (string.IsNullOrEmpty(sid) && string.IsNullOrEmpty(tmdbId))
             {
-                // 刷新元数据匹配搜索
+                // 自动扫描匹配搜索
                 sid = await this.GuessByDoubanAsync(info, cancellationToken).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(sid))
                 {
@@ -132,11 +132,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     movie.SetProviderId(MetadataProvider.Imdb, subject.Imdb);
 
                     // 通过imdb获取TMDB id
-                    var movieResult = await this._tmdbApi.FindByExternalIdAsync(subject.Imdb, FindExternalSource.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-                    if (movieResult?.MovieResults != null && movieResult.MovieResults.Count > 0)
+                    if (string.IsNullOrEmpty(tmdbId))
                     {
-                        this.Log($"GetMovieMetadata of found tmdb [id]: \"{movieResult.MovieResults[0].Id}\"");
-                        movie.SetProviderId(MetadataProvider.Tmdb, $"{movieResult.MovieResults[0].Id}");
+                        tmdbId = await this.GetTmdbIdByImdbAsync(subject.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
+                        if (!string.IsNullOrEmpty(tmdbId))
+                        {
+                            movie.SetProviderId(MetadataProvider.Tmdb, tmdbId);
+                        }
                     }
                 }
 

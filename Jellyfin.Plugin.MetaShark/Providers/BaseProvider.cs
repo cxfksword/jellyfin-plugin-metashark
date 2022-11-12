@@ -80,9 +80,15 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             // ParseName is required here.
             // Caller provides the filename with extension stripped and NOT the parsed filename
+            var searchName = info.Name;
             var parsedName = this._libraryManager.ParseName(info.Name);
-            this.Log($"GuessByDouban of [name]: {info.Name} year: {info.Year} search name: {parsedName.Name}");
-            var result = await this._doubanApi.SearchAsync(parsedName.Name, cancellationToken).ConfigureAwait(false);
+            if (parsedName != null)
+            {
+                searchName = parsedName.Name;
+            }
+
+            this.Log($"GuessByDouban of [name]: {info.Name} year: {info.Year} search name: {searchName}");
+            var result = await this._doubanApi.SearchAsync(searchName, cancellationToken).ConfigureAwait(false);
             var jw = new JaroWinkler();
             foreach (var item in result)
             {
@@ -96,12 +102,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     continue;
                 }
 
-                if (jw.Similarity(parsedName.Name, item.Name) < 0.8)
+                if (jw.Similarity(searchName, item.Name) < 0.8)
                 {
                     continue;
                 }
 
-                if (parsedName.Year == null || parsedName.Year == 0)
+                if (parsedName == null || parsedName.Year == null || parsedName.Year == 0)
                 {
                     this.Log($"GuessByDouban of [name] found Sid: {item.Sid}");
                     return item.Sid;
@@ -242,10 +248,18 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (omdbItem != null)
             {
                 var findResult = await this._tmdbApi.FindByExternalIdAsync(omdbItem.ImdbID, TMDbLib.Objects.Find.FindExternalSource.Imdb, language, cancellationToken).ConfigureAwait(false);
+                if (findResult?.MovieResults != null && findResult.MovieResults.Count > 0)
+                {
+                    var tmdbId = findResult.MovieResults[0].Id;
+                    this.Log($"Found tmdb [id]: {tmdbId} by imdb id: {imdb}");
+                    return $"{tmdbId}";
+                }
+
                 if (findResult?.TvResults != null && findResult.TvResults.Count > 0)
                 {
-                    this.Log($"GetSeriesMetadata found tmdb [id]: {findResult.TvResults[0].Id} by imdb id: {imdb}");
-                    return $"{findResult.TvResults[0].Id}";
+                    var tmdbId = findResult.TvResults[0].Id;
+                    this.Log($"Found tmdb [id]: {tmdbId} by imdb id: {imdb}");
+                    return $"{tmdbId}";
                 }
             }
 

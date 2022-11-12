@@ -676,7 +676,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
         private bool IsEnable()
         {
-            return Plugin.Instance?.Configuration.EnableTmdb ?? false;
+            return Plugin.Instance?.Configuration.EnableTmdb ?? true;
         }
 
     }
