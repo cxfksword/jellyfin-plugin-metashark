@@ -165,7 +165,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var cat = titleStr.GetMatchGroup(this.regCat);
                 var subjectStr = movieElement.GetText("div.rating-info>.subject-cast") ?? string.Empty;
                 var year = subjectStr.GetMatchGroup(this.regYear);
-
+                var desc = movieElement.GetText("div.content>p") ?? string.Empty;
                 if (cat != "电影" && cat != "电视剧")
                 {
                     continue;
@@ -174,11 +174,13 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var movie = new DoubanSubject();
                 movie.Sid = sid;
                 movie.Name = name;
+                movie.OriginalName = subjectStr.Split("/").FirstOrDefault(a => a.Contains("原名:"),"").Replace("原名:","");
                 movie.Genre = cat;
                 movie.Category = cat;
                 movie.Img = img;
                 movie.Rating = rating.ToFloat();
                 movie.Year = year.ToInt();
+                movie.Intro = desc;
                 list.Add(movie);
             }
 

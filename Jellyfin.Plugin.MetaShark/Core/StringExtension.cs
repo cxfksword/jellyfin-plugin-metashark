@@ -44,6 +44,12 @@ namespace Jellyfin.Plugin.MetaShark.Core
             return 0.0f;
         }
 
+        public static bool IsChinese(this string s)
+        {
+            Regex chineseReg = new Regex(@"[\u4e00-\u9fa5]{1,}", RegexOptions.Compiled);
+            return chineseReg.IsMatch(s.Replace(" ", string.Empty).Trim());
+        }
+
         public static double Distance(this string s1, string s2)
         {
             var jw = new JaroWinkler();
