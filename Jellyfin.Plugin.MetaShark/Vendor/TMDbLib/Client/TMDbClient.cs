@@ -17,7 +17,7 @@ namespace TMDbLib.Client
     public partial class TMDbClient : IDisposable
     {
         private const string ApiVersion = "3";
-        private const string ProductionUrl = "api.themoviedb.org";
+        private const string ProductionUrl = "api.tmdb.org";
 
         private readonly ITMDbSerializer _serializer;
         private RestClient _client;

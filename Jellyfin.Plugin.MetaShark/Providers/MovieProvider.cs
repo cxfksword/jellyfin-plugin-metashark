@@ -48,7 +48,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             {
                 return result;
             }
-
             // 从douban搜索
             var res = await this._doubanApi.SearchAsync(info.Name, cancellationToken).ConfigureAwait(false);
             result.AddRange(res.Take(this.config.MaxSearchResult).Select(x =>
@@ -141,7 +140,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         }
                     }
                 }
-
                 result.Item = movie;
                 result.QueriedById = true;
                 result.HasMetadata = true;
@@ -156,7 +154,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
                 return result;
             }
-
 
 
             if (!string.IsNullOrEmpty(tmdbId))

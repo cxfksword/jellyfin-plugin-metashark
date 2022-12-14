@@ -21,6 +21,7 @@ using System.Web;
 using TMDbLib.Objects.General;
 using Jellyfin.Plugin.MetaShark.Configuration;
 using Jellyfin.Plugin.MetaShark.Core;
+using Jellyfin.Plugin.MetaShark.Parser;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -80,11 +81,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             // ParseName is required here.
             // Caller provides the filename with extension stripped and NOT the parsed filename
-            var searchName = info.Name;
-            var parsedName = this._libraryManager.ParseName(info.Name);
-            if (parsedName != null)
+            BTNamePareser pareser = new BTNamePareser();
+            var search_info = pareser.Match(info.Name, this._logger);
+            string searchName = search_info.ChineseName != null ? search_info.ChineseName : search_info.EnglishName;
+
+            if (info.Year == null && search_info.Year != null)
             {
-                searchName = parsedName.Name;
+                info.Year = int.Parse(search_info.Year);
             }
 
             this.Log($"GuessByDouban of [name]: {info.Name} year: {info.Year} search name: {searchName}");
@@ -101,23 +104,25 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     continue;
                 }
-
-                if (jw.Similarity(searchName, item.Name) < 0.8)
-                {
-                    continue;
-                }
-
-                if (parsedName == null || parsedName.Year == null || parsedName.Year == 0)
+                //英文关键词搜，结果是中文的情况，不适用相似匹配
+                if (jw.Similarity(searchName, item.Name) > 0.8
+                    || jw.Similarity(searchName, item.OriginalName) > 0.8)
                 {
                     this.Log($"GuessByDouban of [name] found Sid: {item.Sid}");
                     return item.Sid;
                 }
-
-                if (parsedName.Year == item.Year)
+                if (item.Name.Contains(searchName) && (info.Year != null && info.Year == item.Year))
                 {
                     this.Log($"GuessByDouban of [name] found Sid: {item.Sid}");
                     return item.Sid;
                 }
+                if (searchName.IsChinese() != item.Name.IsChinese()
+                          && searchName.IsChinese() != item.OriginalName.IsChinese())
+                {
+                    this.Log($"GuessByDouban of [name] found tmdb id: \"{item.Sid}\"");
+                    return item.Sid;
+                }
+
             }
 
             return null;
@@ -139,17 +144,17 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     continue;
                 }
-
-                var score = jw.Similarity(name, item.Name);
                 // this.Log($"GuestDoubanSeasonByYear name: {name} douban_name: {item.Name} douban_sid: {item.Sid} douban_year: {item.Year} score: {score} ");
-                if (score < 0.8)
-                {
-                    continue;
-                }
-
-                if (year == item.Year)
+                if (jw.Similarity(name, item.Name) > 0.8)
                 {
                     this.Log($"GuestDoubanSeasonByYear of [name] found Sid: {item.Sid}");
+                    return item.Sid;
+                }
+
+                if ((name.IsChinese() != item.Name.IsChinese()
+                         && name.IsChinese() != item.OriginalName.IsChinese()) || year == item.Year)
+                {
+                    this.Log($"GuestDoubanSeasonByYear of [name] found Sid: \"{item.Sid}\"");
                     return item.Sid;
                 }
             }
@@ -202,17 +207,32 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             // ParseName is required here.
             // Caller provides the filename with extension stripped and NOT the parsed filename
-            var parsedName = this._libraryManager.ParseName(info.Name);
-            this.Log($"GuestByTmdb of [name]: {info.Name} search name: {parsedName.Name}");
+            BTNamePareser pareser = new BTNamePareser();
+            var search_info = pareser.Match(info.Name, this._logger);
+            string searchName = search_info.ChineseName != null ? search_info.ChineseName : search_info.EnglishName;
+
+            if (info.Year == null && search_info.Year != null)
+            {
+                info.Year = int.Parse(search_info.Year);
+            }
+
+            this.Log($"GuestByTmdb of [name]: {info.Name} search name: {searchName}");
             var jw = new JaroWinkler();
 
             switch (info)
             {
                 case MovieInfo:
-                    var movieResults = await this._tmdbApi.SearchMovieAsync(parsedName.Name, parsedName.Year ?? 0, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
+                    var movieResults = await this._tmdbApi.SearchMovieAsync(searchName, info.Year ?? 0, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
                     foreach (var item in movieResults)
                     {
-                        if (jw.Similarity(parsedName.Name, item.Title) > 0.8)
+                        if (jw.Similarity(searchName, item.Title) > 0.8
+                            || jw.Similarity(searchName, item.OriginalTitle) > 0.8)
+                        {
+                            this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
+                            return item.Id.ToString(CultureInfo.InvariantCulture);
+                        }
+                        if (searchName.IsChinese() != item.Title.IsChinese()
+                            && searchName.IsChinese() != item.OriginalTitle.IsChinese())
                         {
                             this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
                             return item.Id.ToString(CultureInfo.InvariantCulture);
@@ -220,10 +240,17 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     }
                     break;
                 case SeriesInfo:
-                    var seriesResults = await this._tmdbApi.SearchSeriesAsync(parsedName.Name, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
+                    var seriesResults = await this._tmdbApi.SearchSeriesAsync(searchName, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
                     foreach (var item in seriesResults)
                     {
-                        if (jw.Similarity(parsedName.Name, item.Name) > 0.8)
+                        if (jw.Similarity(searchName, item.Name) > 0.8
+                             || jw.Similarity(searchName, item.OriginalName) > 0.8)
+                        {
+                            this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
+                            return item.Id.ToString(CultureInfo.InvariantCulture);
+                        }
+                        if (searchName.IsChinese() != item.Name.IsChinese()
+                            && searchName.IsChinese() != item.OriginalName.IsChinese())
                         {
                             this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
                             return item.Id.ToString(CultureInfo.InvariantCulture);
