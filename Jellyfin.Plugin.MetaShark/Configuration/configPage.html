@@ -53,6 +53,12 @@
                             <input id="TmdbApiKey" name="TmdbApiKey" type="text" is="emby-input" />
                             <div class="fieldDescription">填写自定义Api Key，不填写会使用默认api key.(需重启才能生效)</div>
                         </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="TmdbHost">Api Host</label>
+                            <input id="TmdbHost" name="TmdbHost" type="text" is="emby-input"
+                                placeholder="api.tmdb.org" />
+                            <div class="fieldDescription">填写Api域名，默认api.tmdb.org.(需重启才能生效)</div>
+                        </div>
                     </fieldset>
                     <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                         <span>Save</span>
@@ -75,6 +81,7 @@
                         document.querySelector('#EnableTmdb').checked = config.EnableTmdb;
                         document.querySelector('#EnableTmdbSearch').checked = config.EnableTmdbSearch;
                         document.querySelector('#TmdbApiKey').value = config.TmdbApiKey;
+                        document.querySelector('#TmdbHost').value = config.TmdbHost;
                         Dashboard.hideLoadingMsg();
                     });
                 });
@@ -87,6 +94,7 @@
                         config.EnableTmdb = document.querySelector('#EnableTmdb').checked;
                         config.EnableTmdbSearch = document.querySelector('#EnableTmdbSearch').checked;
                         config.TmdbApiKey = document.querySelector('#TmdbApiKey').value;
+                        config.TmdbHost = document.querySelector('#TmdbHost').value;
                         ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
                         });

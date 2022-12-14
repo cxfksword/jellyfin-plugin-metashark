@@ -23,6 +23,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
     public class TmdbApi : IDisposable
     {
         public const string DEFAULT_API_KEY = "4219e299c89411838049ab0dab19ebd5";
+        public const string DEFAULT_API_HOST = "api.tmdb.org";
         private const int CacheDurationInHours = 1;
         private readonly ILogger<TmdbApi> _logger;
         private readonly IMemoryCache _memoryCache;
@@ -37,7 +38,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
             var config = Plugin.Instance?.Configuration;
             var apiKey = config == null || string.IsNullOrEmpty(config.TmdbApiKey) ? DEFAULT_API_KEY : config.TmdbApiKey;
-            _tmDbClient = new TMDbClient(apiKey);
+            var host = config == null || string.IsNullOrEmpty(config.TmdbHost) ? DEFAULT_API_HOST : config.TmdbHost;
+            _tmDbClient = new TMDbClient(apiKey, true, host);
             _tmDbClient.RequestTimeout = TimeSpan.FromSeconds(10);
             // Not really interested in NotFoundException
             _tmDbClient.ThrowApiExceptions = false;

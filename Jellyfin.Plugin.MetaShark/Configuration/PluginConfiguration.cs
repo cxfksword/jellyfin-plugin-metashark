@@ -35,6 +35,8 @@ public class PluginConfiguration : BasePluginConfiguration
 
     public string TmdbApiKey { get; set; } = string.Empty;
 
+    public string TmdbHost { get; set; } = string.Empty;
+
     public string DoubanCookies { get; set; } = string.Empty;
 
     public int MaxCastMembers { get; set; } = 15;
