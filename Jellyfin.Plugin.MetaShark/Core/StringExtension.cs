@@ -58,7 +58,7 @@ namespace Jellyfin.Plugin.MetaShark.Core
 
         public static bool IsSameLanguage(this string s1, string s2)
         {
-            return s1.IsChinese() && s2.IsChinese();
+            return s1.IsChinese() == s2.IsChinese();
         }
 
         public static double Distance(this string s1, string s2)
