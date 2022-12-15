@@ -58,7 +58,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
         Regex regDuration = new Regex(@"片长: (.+?)\n", RegexOptions.Compiled);
         Regex regScreen = new Regex(@"上映日期: (.+?)\n", RegexOptions.Compiled);
         Regex regSubname = new Regex(@"又名: (.+?)\n", RegexOptions.Compiled);
-        Regex regImdb = new Regex(@"IMDb: (.+?)$", RegexOptions.Compiled);
+        Regex regImdb = new Regex(@"IMDb: (tt\d+)", RegexOptions.Compiled);
         Regex regSite = new Regex(@"官方网站: (.+?)\n", RegexOptions.Compiled);
         Regex regNameMath = new Regex(@"(.+第\w季|[\w\uff1a\uff01\uff0c\u00b7]+)\s*(.*)", RegexOptions.Compiled);
         Regex regRole = new Regex(@"\([饰|配] (.+?)\)", RegexOptions.Compiled);
@@ -220,7 +220,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
             var contentNode = doc.QuerySelector("#content");
             if (contentNode != null)
             {
-                var nameStr = contentNode.GetText("h1>span:first-child");
+                var nameStr = contentNode.GetText("h1>span:first-child") ?? string.Empty;
                 var match = this.regNameMath.Match(nameStr);
                 var name = string.Empty;
                 var orginalName = string.Empty;

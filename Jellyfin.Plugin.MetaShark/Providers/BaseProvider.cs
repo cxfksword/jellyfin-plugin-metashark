@@ -230,7 +230,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return null;
         }
 
-        // 通过imdb获取tmdbId
+        // 通过imdb获取tmdbId(豆瓣的imdb id可能是旧的，需要先从omdb接口获取最新的imdb id)
         protected async Task<string?> GetTmdbIdByImdbAsync(string imdb, string language, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(imdb))
@@ -238,7 +238,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return null;
             }
 
-            // 通过imdb获取TMDB id (豆瓣的imdb id可能是旧的，需要先从omdb接口获取最新的imdb id
             var omdbItem = await this._omdbApi.GetByImdbID(imdb, cancellationToken).ConfigureAwait(false);
             if (omdbItem != null)
             {
@@ -258,7 +257,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
             }
 
-            return null;
+            // 接口出错，返回旧的
+            return imdb;
         }
 
 
