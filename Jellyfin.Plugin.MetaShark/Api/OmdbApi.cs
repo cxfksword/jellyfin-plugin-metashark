@@ -32,6 +32,11 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
         public async Task<OmdbItem?> GetByImdbID(string id, CancellationToken cancellationToken)
         {
+            if (!this.IsEnable())
+            {
+                return null;
+            }
+
             var cacheKey = $"GetByImdbID_{id}";
             var expiredOption = new MemoryCacheEntryOptions() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30) };
             OmdbItem? item;
@@ -68,6 +73,11 @@ namespace Jellyfin.Plugin.MetaShark.Api
             {
                 _memoryCache.Dispose();
             }
+        }
+
+        private bool IsEnable()
+        {
+            return Plugin.Instance?.Configuration.EnableTmdb ?? true;
         }
     }
 }

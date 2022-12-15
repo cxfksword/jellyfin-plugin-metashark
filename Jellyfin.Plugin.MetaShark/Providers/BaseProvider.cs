@@ -230,7 +230,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return null;
         }
 
-        // 通过imdb获取tmdbId(豆瓣的imdb id可能是旧的，需要先从omdb接口获取最新的imdb id)
+
         protected async Task<string?> GetTmdbIdByImdbAsync(string imdb, string language, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(imdb))
@@ -238,27 +238,30 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return null;
             }
 
+            // 豆瓣的imdb id可能是旧的，需要先从omdb接口获取最新的imdb id
             var omdbItem = await this._omdbApi.GetByImdbID(imdb, cancellationToken).ConfigureAwait(false);
             if (omdbItem != null)
             {
-                var findResult = await this._tmdbApi.FindByExternalIdAsync(omdbItem.ImdbID, TMDbLib.Objects.Find.FindExternalSource.Imdb, language, cancellationToken).ConfigureAwait(false);
-                if (findResult?.MovieResults != null && findResult.MovieResults.Count > 0)
-                {
-                    var tmdbId = findResult.MovieResults[0].Id;
-                    this.Log($"Found tmdb [id]: {tmdbId} by imdb id: {imdb}");
-                    return $"{tmdbId}";
-                }
-
-                if (findResult?.TvResults != null && findResult.TvResults.Count > 0)
-                {
-                    var tmdbId = findResult.TvResults[0].Id;
-                    this.Log($"Found tmdb [id]: {tmdbId} by imdb id: {imdb}");
-                    return $"{tmdbId}";
-                }
+                imdb = omdbItem.ImdbID;
             }
 
-            // 接口出错，返回旧的
-            return imdb;
+            // 通过imdb获取tmdbId
+            var findResult = await this._tmdbApi.FindByExternalIdAsync(imdb, TMDbLib.Objects.Find.FindExternalSource.Imdb, language, cancellationToken).ConfigureAwait(false);
+            if (findResult?.MovieResults != null && findResult.MovieResults.Count > 0)
+            {
+                var tmdbId = findResult.MovieResults[0].Id;
+                this.Log($"Found tmdb [id]: {tmdbId} by imdb id: {imdb}");
+                return $"{tmdbId}";
+            }
+
+            if (findResult?.TvResults != null && findResult.TvResults.Count > 0)
+            {
+                var tmdbId = findResult.TvResults[0].Id;
+                this.Log($"Found tmdb [id]: {tmdbId} by imdb id: {imdb}");
+                return $"{tmdbId}";
+            }
+
+            return null;
         }
 
 
