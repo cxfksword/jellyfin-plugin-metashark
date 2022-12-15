@@ -95,7 +95,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var metaSource = info.GetProviderId(Plugin.ProviderId); // 刷新元数据时会有值
             if (string.IsNullOrEmpty(sid) && string.IsNullOrEmpty(tmdbId))
             {
-                // 自动扫描匹配搜索
+                // 自动扫描搜索匹配元数据
                 sid = await this.GuessByDoubanAsync(info, cancellationToken).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(sid))
                 {

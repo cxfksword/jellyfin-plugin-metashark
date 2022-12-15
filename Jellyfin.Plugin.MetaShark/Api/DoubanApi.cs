@@ -48,6 +48,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
         Regex regSid = new Regex(@"sid: (\d+?),", RegexOptions.Compiled);
         Regex regCat = new Regex(@"\[(.+?)\]", RegexOptions.Compiled);
         Regex regYear = new Regex(@"(\d{4})", RegexOptions.Compiled);
+        Regex regOriginalName = new Regex(@"原名[:：](.+?)\s*?\/", RegexOptions.Compiled);
         Regex regDirector = new Regex(@"导演: (.+?)\n", RegexOptions.Compiled);
         Regex regWriter = new Regex(@"编剧: (.+?)\n", RegexOptions.Compiled);
         Regex regActor = new Regex(@"主演: (.+?)\n", RegexOptions.Compiled);
@@ -165,6 +166,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var cat = titleStr.GetMatchGroup(this.regCat);
                 var subjectStr = movieElement.GetText("div.rating-info>.subject-cast") ?? string.Empty;
                 var year = subjectStr.GetMatchGroup(this.regYear);
+                var originalName = subjectStr.GetMatchGroup(this.regOriginalName);
                 var desc = movieElement.GetText("div.content>p") ?? string.Empty;
                 if (cat != "电影" && cat != "电视剧")
                 {
@@ -174,7 +176,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var movie = new DoubanSubject();
                 movie.Sid = sid;
                 movie.Name = name;
-                movie.OriginalName = subjectStr.Split("/").FirstOrDefault(a => a.Contains("原名:"),"").Replace("原名:","");
+                movie.OriginalName = !string.IsNullOrEmpty(originalName) ? originalName : name;
                 movie.Genre = cat;
                 movie.Category = cat;
                 movie.Img = img;

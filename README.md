@@ -57,5 +57,11 @@ rm -rf MediaBrowser*.dll Microsoft*.dll Newtonsoft*.dll System*.dll Emby*.dll Je
 
 2. Create a folder, like `metashark` and copy  `artifacts/*.dll` into it
 
-3. Move folder `metashark` to jellyfin `data/plugin` folder
+3. Move folder `metashark` to jellyfin `data/plugins` folder
 
+
+## QA
+
+1. Plugin run in error: `System.BadImageFormatException: Bad IL format.` 
+
+> Remove all hidden file in `metashark` plugin folder

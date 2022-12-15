@@ -21,7 +21,6 @@ using System.Web;
 using TMDbLib.Objects.General;
 using Jellyfin.Plugin.MetaShark.Configuration;
 using Jellyfin.Plugin.MetaShark.Core;
-using Jellyfin.Plugin.MetaShark.Parser;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -81,16 +80,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             // ParseName is required here.
             // Caller provides the filename with extension stripped and NOT the parsed filename
-            BTNamePareser pareser = new BTNamePareser();
-            var search_info = pareser.Match(info.Name, this._logger);
-            string searchName = search_info.ChineseName != null ? search_info.ChineseName : search_info.EnglishName;
+            var fileName = Path.GetFileName(info.Path) ?? info.Name;
+            var parseResult = NameParser.Parse(fileName);
+            var searchName = !string.IsNullOrEmpty(parseResult.ChineseName) ? parseResult.ChineseName : parseResult.Name;
+            info.Year = parseResult.Year;  // 默认parser对anime年份会解析出错，以anitomy为准
 
-            if (info.Year == null && search_info.Year != null)
-            {
-                info.Year = int.Parse(search_info.Year);
-            }
 
-            this.Log($"GuessByDouban of [name]: {info.Name} year: {info.Year} search name: {searchName}");
+            this.Log($"GuessByDouban of [name]: {info.Name} [fileName]: {fileName} [year]: {info.Year} [search name]: {searchName}");
             var result = await this._doubanApi.SearchAsync(searchName, cancellationToken).ConfigureAwait(false);
             var jw = new JaroWinkler();
             foreach (var item in result)
@@ -104,22 +100,31 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     continue;
                 }
-                //英文关键词搜，结果是中文的情况，不适用相似匹配
-                if (jw.Similarity(searchName, item.Name) > 0.8
-                    || jw.Similarity(searchName, item.OriginalName) > 0.8)
+
+
+                //英文关键词搜，结果是只有中文/繁体中文时，不适用相似匹配，如Who Am I
+                if (jw.Similarity(searchName, item.Name) < 0.8 && jw.Similarity(searchName, item.OriginalName) < 0.8)
+                {
+                    if (!searchName.IsSameLanguage(item.Name) && !searchName.IsSameLanguage(item.OriginalName))
+                    {
+                        // 特殊处理下使用英文搜索，只有中文标题的情况
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+
+                // 不存在年份需要比较时，直接返回
+                if (info.Year == null || info.Year == 0)
                 {
                     this.Log($"GuessByDouban of [name] found Sid: {item.Sid}");
                     return item.Sid;
                 }
-                if (item.Name.Contains(searchName) && (info.Year != null && info.Year == item.Year))
+
+                if (info.Year == item.Year)
                 {
                     this.Log($"GuessByDouban of [name] found Sid: {item.Sid}");
-                    return item.Sid;
-                }
-                if (searchName.IsChinese() != item.Name.IsChinese()
-                          && searchName.IsChinese() != item.OriginalName.IsChinese())
-                {
-                    this.Log($"GuessByDouban of [name] found tmdb id: \"{item.Sid}\"");
                     return item.Sid;
                 }
 
@@ -135,7 +140,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return null;
             }
 
-            this.Log($"GuestDoubanSeasonByYear of [name]: {name} year: {year}");
+            this.Log($"GuestDoubanSeasonByYear of [name]: {name} [year]: {year}");
             var result = await this._doubanApi.SearchAsync(name, cancellationToken).ConfigureAwait(false);
             var jw = new JaroWinkler();
             foreach (var item in result)
@@ -144,15 +149,22 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     continue;
                 }
+
                 // this.Log($"GuestDoubanSeasonByYear name: {name} douban_name: {item.Name} douban_sid: {item.Sid} douban_year: {item.Year} score: {score} ");
-                if (jw.Similarity(name, item.Name) > 0.8)
+                //英文关键词搜，结果是只有中文/繁体中文时，不适用相似匹配，如Who Am I
+                if (jw.Similarity(name, item.Name) < 0.8 && jw.Similarity(name, item.OriginalName) < 0.8)
                 {
-                    this.Log($"GuestDoubanSeasonByYear of [name] found Sid: {item.Sid}");
-                    return item.Sid;
+                    if (!name.IsSameLanguage(item.Name) && !name.IsSameLanguage(item.OriginalName))
+                    {
+                        // 特殊处理下使用英文搜索，只有中文标题的情况
+                    }
+                    else
+                    {
+                        continue;
+                    }
                 }
 
-                if ((name.IsChinese() != item.Name.IsChinese()
-                         && name.IsChinese() != item.OriginalName.IsChinese()) || year == item.Year)
+                if (year == item.Year)
                 {
                     this.Log($"GuestDoubanSeasonByYear of [name] found Sid: \"{item.Sid}\"");
                     return item.Sid;
@@ -162,61 +174,17 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return null;
         }
 
-        // 通过季数，搜索结果按年份排序后，取对应季数索引项（不适合每季标题差异太大的，如葫芦兄弟和葫芦小金刚）
-        protected async Task<string?> GuestDoubanSeasonByNumberAsync(string name, int? seasonNumber, CancellationToken cancellationToken)
-        {
-            if (seasonNumber == null || seasonNumber == 0)
-            {
-                return null;
-            }
-
-            this.Log($"GuestDoubanSeasonByNumber of [name]: {name} seasonNumber: {seasonNumber}");
-            var result = await this._doubanApi.SearchAsync(name, cancellationToken).ConfigureAwait(false);
-            var jw = new JaroWinkler();
-            var matchList = new List<DoubanSubject>();
-            foreach (var item in result)
-            {
-                if (item.Category != "电视剧")
-                {
-                    continue;
-                }
-
-                var score = jw.Similarity(name, item.Name);
-                if (score < 0.8)
-                {
-                    continue;
-                }
-
-                // this.Log($"GuestDoubanSeasonByNumber name: {name} douban_name: {item.Name} douban_sid: {item.Sid} douban_year: {item.Year} score: {score} ");
-                matchList.Add(item);
-            }
-
-            matchList.Sort((x, y) => x.Year.CompareTo(y.Year));
-            if (matchList.Count >= seasonNumber)
-            {
-                var matchItem = matchList[seasonNumber.Value - 1];
-                var sid = matchItem.Sid;
-                this.Log($"GuestDoubanSeasonByNumber of [name] found Sid: {sid}");
-                return sid;
-            }
-
-            return null;
-        }
 
         protected async Task<string?> GuestByTmdbAsync(ItemLookupInfo info, CancellationToken cancellationToken)
         {
             // ParseName is required here.
             // Caller provides the filename with extension stripped and NOT the parsed filename
-            BTNamePareser pareser = new BTNamePareser();
-            var search_info = pareser.Match(info.Name, this._logger);
-            string searchName = search_info.ChineseName != null ? search_info.ChineseName : search_info.EnglishName;
+            var fileName = Path.GetFileName(info.Path) ?? info.Name;
+            var parseResult = NameParser.Parse(fileName);
+            var searchName = !string.IsNullOrEmpty(parseResult.ChineseName) ? parseResult.ChineseName : parseResult.Name;
+            info.Year = parseResult.Year;  // 默认parser对anime年份会解析出错，以anitomy为准
 
-            if (info.Year == null && search_info.Year != null)
-            {
-                info.Year = int.Parse(search_info.Year);
-            }
-
-            this.Log($"GuestByTmdb of [name]: {info.Name} search name: {searchName}");
+            this.Log($"GuestByTmdb of [name]: {info.Name} [fileName]: {fileName} [year]: {info.Year} [search name]: {searchName}");
             var jw = new JaroWinkler();
 
             switch (info)
@@ -231,8 +199,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                             this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
                             return item.Id.ToString(CultureInfo.InvariantCulture);
                         }
-                        if (searchName.IsChinese() != item.Title.IsChinese()
-                            && searchName.IsChinese() != item.OriginalTitle.IsChinese())
+                        // 特殊处理下使用英文搜索，只有中文标题的情况，当匹配成功
+                        if (!searchName.IsSameLanguage(item.Title) && !searchName.IsSameLanguage(item.OriginalTitle))
                         {
                             this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
                             return item.Id.ToString(CultureInfo.InvariantCulture);
@@ -249,8 +217,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                             this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
                             return item.Id.ToString(CultureInfo.InvariantCulture);
                         }
-                        if (searchName.IsChinese() != item.Name.IsChinese()
-                            && searchName.IsChinese() != item.OriginalName.IsChinese())
+                        // 特殊处理下使用英文搜索，只有中文标题的情况，当匹配成功
+                        if (!searchName.IsSameLanguage(item.Name) && !searchName.IsSameLanguage(item.OriginalName))
                         {
                             this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
                             return item.Id.ToString(CultureInfo.InvariantCulture);

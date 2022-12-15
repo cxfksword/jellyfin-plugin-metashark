@@ -46,8 +46,19 @@ namespace Jellyfin.Plugin.MetaShark.Core
 
         public static bool IsChinese(this string s)
         {
-            Regex chineseReg = new Regex(@"[\u4e00-\u9fa5]{1,}", RegexOptions.Compiled);
+            Regex chineseReg = new Regex(@"[\u4e00-\u9fa5：]{1,}", RegexOptions.Compiled);
             return chineseReg.IsMatch(s.Replace(" ", string.Empty).Trim());
+        }
+
+        public static bool HasChinese(this string s)
+        {
+            Regex chineseReg = new Regex(@"[\u4e00-\u9fa5]", RegexOptions.Compiled);
+            return chineseReg.Match(s).Success;
+        }
+
+        public static bool IsSameLanguage(this string s1, string s2)
+        {
+            return s1.IsChinese() && s2.IsChinese();
         }
 
         public static double Distance(this string s1, string s2)
