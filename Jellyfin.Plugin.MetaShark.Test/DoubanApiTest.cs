@@ -60,7 +60,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
 
         [TestMethod]
-        public void TestGetVideoByBvidAsync()
+        public void TestGetVideoBySidAsync()
         {
             var sid = "26654184";
 
@@ -81,6 +81,28 @@ namespace Jellyfin.Plugin.MetaShark.Test
         }
 
         [TestMethod]
+        public void TestFixGetImage()
+        {
+            // 演员入驻了豆瓣, 下载的不是演员的头像#5
+            var sid = "35460157";
+
+            var api = new DoubanApi(loggerFactory);
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    var result = await api.GetMovieAsync(sid, CancellationToken.None);
+                    Assert.AreEqual<string>("https://img2.doubanio.com/view/celebrity/raw/public/p1598199472.61.jpg", result.Celebrities.First(x => x.Name == "刘陆").Img);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }).GetAwaiter().GetResult();
+        }
+
+        [TestMethod]
         public void TestGetCelebritiesBySidAsync()
         {
             var sid = "26654184";
@@ -92,6 +114,27 @@ namespace Jellyfin.Plugin.MetaShark.Test
                 try
                 {
                     var result = await api.GetCelebritiesBySidAsync(sid, CancellationToken.None);
+                    TestContext.WriteLine(result.ToJson());
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }).GetAwaiter().GetResult();
+        }
+
+        [TestMethod]
+        public void TestGetCelebritiesByCidAsync()
+        {
+            var sid = "1340364";
+
+            var api = new DoubanApi(loggerFactory);
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    var result = await api.GetCelebrityAsync(sid, CancellationToken.None);
                     TestContext.WriteLine(result.ToJson());
                 }
                 catch (Exception ex)

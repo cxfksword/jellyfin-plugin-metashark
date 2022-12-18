@@ -1,4 +1,6 @@
-﻿using Jellyfin.Plugin.MetaShark.Api;
+﻿using System.Net.Mime;
+using System.Xml.Schema;
+using Jellyfin.Plugin.MetaShark.Api;
 using Jellyfin.Plugin.MetaShark.Core;
 using Jellyfin.Plugin.MetaShark.Model;
 using MediaBrowser.Controller.Entities;
@@ -42,7 +44,42 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(PersonLookupInfo searchInfo, CancellationToken cancellationToken)
         {
             this.Log($"GetPersonSearchResults of [name]: {searchInfo.Name}");
-            return await Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
+
+            var result = new List<RemoteSearchResult>();
+            var cid = searchInfo.GetProviderId(DoubanProviderId);
+            if (!string.IsNullOrEmpty(cid))
+            {
+                var celebrity = await this._doubanApi.GetCelebrityAsync(cid, cancellationToken).ConfigureAwait(false);
+                if (celebrity != null)
+                {
+                    result.Add(new RemoteSearchResult
+                    {
+                        SearchProviderName = DoubanProviderName,
+                        ProviderIds = new Dictionary<string, string> { { DoubanProviderId, celebrity.Id } },
+                        ImageUrl = this.GetProxyImageUrl(celebrity.Img),
+                        Name = celebrity.Name,
+                    }
+                    );
+
+                    return result;
+                }
+            }
+
+
+
+            var res = await this._doubanApi.SearchCelebrityAsync(searchInfo.Name, cancellationToken).ConfigureAwait(false);
+            result.AddRange(res.Take(this.config.MaxSearchResult).Select(x =>
+            {
+                return new RemoteSearchResult
+                {
+                    SearchProviderName = DoubanProviderName,
+                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, x.Id } },
+                    ImageUrl = this.GetProxyImageUrl(x.Img),
+                    Name = x.Name,
+                };
+            }));
+
+            return result;
         }
 
         /// <inheritdoc />
@@ -83,6 +120,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         }
                     }
 
+                    result.QueriedById = true;
                     result.HasMetadata = true;
                     result.Item = item;
 

@@ -77,7 +77,8 @@
                 .addEventListener('pageshow', function () {
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
-                        document.querySelector('#current_version').value = "v" + config.Version;
+                        $('#current_version').text("v" + config.Version);
+                        
                         document.querySelector('#DoubanCookies').value = config.DoubanCookies;
                         document.querySelector('#EnableTmdb').checked = config.EnableTmdb;
                         document.querySelector('#EnableTmdbSearch').checked = config.EnableTmdbSearch;

@@ -60,8 +60,8 @@ rm -rf MediaBrowser*.dll Microsoft*.dll Newtonsoft*.dll System*.dll Emby*.dll Je
 3. Move folder `metashark` to jellyfin `data/plugins` folder
 
 
-## QA
+## FAQ
 
-1. Plugin run in error: `System.BadImageFormatException: Bad IL format.` 
+#### Plugin run in error: `System.BadImageFormatException: Bad IL format.` 
 
-> Remove all hidden file in `metashark` plugin folder
+Remove all hidden file and `meta.json` in `metashark` plugin folder

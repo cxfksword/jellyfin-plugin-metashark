@@ -26,9 +26,6 @@ public enum SomeOptions
 public class PluginConfiguration : BasePluginConfiguration
 {
     public string Version { get; } = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-
-    public string Pattern { get; set; } = @"(S\d{2}|E\d{2}|HDR|\d{3,4}p|WEBRip|WEB|YIFY|BrRip|BluRay|H265|H264|x264|AAC\.\d\.\d|AAC|HDTV|mkv|mp4)|(\[.*\])|(\-\w+|\{.*\}|【.*】|\(.*\)|\d+MB)|(\.|\-)";
-
     public bool EnableTmdb { get; set; } = true;
 
     public bool EnableTmdbSearch { get; set; } = false;

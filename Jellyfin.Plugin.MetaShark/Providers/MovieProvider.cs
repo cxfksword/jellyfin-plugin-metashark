@@ -125,6 +125,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     Genres = subject.Genres,
                     // ProductionLocations = [x?.Country],
                     PremiereDate = subject.ScreenTime,
+                    Tagline = string.Empty,
                 };
                 if (!string.IsNullOrEmpty(subject.Imdb))
                 {
@@ -175,8 +176,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     Tagline = movieResult.Tagline,
                     ProductionLocations = movieResult.ProductionCountries.Select(pc => pc.Name).ToArray()
                 };
-                var metadataResult = new MetadataResult<Movie>
+                result = new MetadataResult<Movie>
                 {
+                    QueriedById = true,
                     HasMetadata = true,
                     ResultLanguage = info.MetadataLanguage,
                     Item = movie
@@ -207,7 +209,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     result.AddPerson(person);
                 }
 
-                return metadataResult;
+                return result;
             }
 
             return result;

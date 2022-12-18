@@ -40,9 +40,8 @@ namespace Jellyfin.Plugin.MetaShark.Controllers
 
 
         /// <summary>
-        /// 获取弹幕文件内容.
+        /// 代理访问图片.
         /// </summary>
-        /// <returns>xml弹幕文件内容</returns>
         [Route("proxy/image")]
         [HttpGet]
         public async Task<Stream> ProxyImage(string url)
@@ -54,7 +53,22 @@ namespace Jellyfin.Plugin.MetaShark.Controllers
             }
 
             var httpClient = GetHttpClient();
-            return await httpClient.GetStreamAsync(url).ConfigureAwait(false);
+            var response = await httpClient.GetAsync(url);
+            var stream = await response.Content.ReadAsStreamAsync();
+
+            Response.StatusCode = (int)response.StatusCode;
+            if (response.Content.Headers.ContentType != null)
+            {
+                Response.ContentType = response.Content.Headers.ContentType.ToString();
+            }
+            Response.ContentLength = response.Content.Headers.ContentLength;
+
+            foreach (var header in response.Headers)
+            {
+                Response.Headers.Add(header.Key, header.Value.First());
+            }
+
+            return stream;
         }
 
         private HttpClient GetHttpClient()

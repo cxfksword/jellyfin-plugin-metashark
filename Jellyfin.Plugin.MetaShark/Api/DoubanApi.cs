@@ -62,7 +62,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
         Regex regSite = new Regex(@"官方网站: (.+?)\n", RegexOptions.Compiled);
         Regex regNameMath = new Regex(@"(.+第\w季|[\w\uff1a\uff01\uff0c\u00b7]+)\s*(.*)", RegexOptions.Compiled);
         Regex regRole = new Regex(@"\([饰|配] (.+?)\)", RegexOptions.Compiled);
-        Regex regBackgroundImage = new Regex(@"url\((.+?)\)", RegexOptions.Compiled);
+        Regex regBackgroundImage = new Regex(@"url\(([^)]+?)\)$", RegexOptions.Compiled);
         Regex regGender = new Regex(@"性别: \n(.+?)\n", RegexOptions.Compiled);
         Regex regConstellation = new Regex(@"星座: \n(.+?)\n", RegexOptions.Compiled);
         Regex regBirthdate = new Regex(@"出生日期: \n(.+?)\n", RegexOptions.Compiled);
@@ -336,7 +336,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var celebrityImg = celebrityImgStr.GetMatchGroup(this.regBackgroundImage);
                 var celebrityNameStr = node.GetText("div.info a.name") ?? string.Empty;
                 var arr = celebrityNameStr.Split(" ");
-                var celebrityName = arr.Length > 1 ? arr[0] : string.Empty;
+                var celebrityName = arr.Length > 1 ? arr[0] : celebrityNameStr;
                 var celebrityRoleStr = node.GetText("div.info span.role") ?? string.Empty;
                 var celebrityRole = celebrityRoleStr.GetMatchGroup(this.regRole);
                 var arrRole = celebrityRoleStr.Split(" ");
@@ -393,7 +393,10 @@ namespace Jellyfin.Plugin.MetaShark.Api
             if (contentNode != null)
             {
                 var img = contentNode.GetAttr("#headline .nbg img", "src") ?? string.Empty;
-                var name = contentNode.GetText("h1") ?? string.Empty;
+                var nameStr = contentNode.GetText("h1") ?? string.Empty;
+                var arr = nameStr.Split(" ");
+                var name = arr.Length > 1 ? arr[0] : nameStr;
+
                 var intro = contentNode.GetText("#intro span.all") ?? string.Empty;
                 if (string.IsNullOrEmpty(intro))
                 {
@@ -432,6 +435,59 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
             _memoryCache.Set<DoubanCelebrity?>(cacheKey, null, expiredOption);
             return null;
+        }
+
+
+        public async Task<List<DoubanCelebrity>> SearchCelebrityAsync(string keyword, CancellationToken cancellationToken)
+        {
+            var list = new List<DoubanCelebrity>();
+            if (string.IsNullOrEmpty(keyword))
+            {
+                return list;
+            }
+
+            var cacheKey = $"search_celebrity_{keyword}";
+            var expiredOption = new MemoryCacheEntryOptions() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30) };
+            List<DoubanCelebrity> searchResult;
+            if (_memoryCache.TryGetValue<List<DoubanCelebrity>>(cacheKey, out searchResult))
+            {
+                return searchResult;
+            }
+
+
+            keyword = HttpUtility.UrlEncode(keyword);
+            var url = $"https://movie.douban.com/celebrities/search?search_text={keyword}";
+            var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+            {
+                return list;
+            }
+
+            var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var context = BrowsingContext.New();
+            var doc = await context.OpenAsync(req => req.Content(body), cancellationToken).ConfigureAwait(false);
+            var elements = doc.QuerySelectorAll("div.article .result");
+
+            foreach (var el in elements)
+            {
+
+                var celebrity = new DoubanCelebrity();
+                var img = el.GetAttr("div.pic img", "src") ?? string.Empty;
+                var href = el.GetAttr("h3>a", "href") ?? string.Empty;
+                var cid = href.GetMatchGroup(this.regId);
+                var nameStr = el.GetText("h3>a") ?? string.Empty;
+                var arr = nameStr.Split(" ");
+                var name = arr.Length > 1 ? arr[0] : nameStr;
+
+                celebrity.Name = name;
+                celebrity.Img = img;
+                celebrity.Id = cid;
+                list.Add(celebrity);
+            }
+
+
+            _memoryCache.Set<List<DoubanCelebrity>>(cacheKey, list, expiredOption);
+            return list;
         }
 
         public async Task<List<DoubanPhoto>> GetWallpaperBySidAsync(string sid, CancellationToken cancellationToken)

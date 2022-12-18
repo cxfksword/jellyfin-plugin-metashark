@@ -50,14 +50,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
         protected Regex regMetaSourcePrefix = new Regex(@"^\[.+\]", RegexOptions.Compiled);
 
-        public string Pattern
-        {
-            get
-            {
-                return this.config.Pattern;
-            }
-        }
-
         protected PluginConfiguration config
         {
             get
