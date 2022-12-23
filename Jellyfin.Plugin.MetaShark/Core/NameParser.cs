@@ -13,6 +13,8 @@ namespace Jellyfin.Plugin.MetaShark.Core
         private static readonly Regex yearReg = new Regex(@"[12][890][78901234][0-9]", RegexOptions.Compiled);
         private static readonly Regex seasonSuffixReg = new Regex(@"[ .]S\d{1,2}$", RegexOptions.Compiled);
 
+        private static readonly Regex unusedReg = new Regex(@"\[.+?\]", RegexOptions.Compiled);
+
         public static ParseNameResult Parse(string fileName, bool isTvSeries = false)
         {
             var parseResult = new ParseNameResult();
@@ -83,6 +85,9 @@ namespace Jellyfin.Plugin.MetaShark.Core
         {
             // 电视剧名称后紧跟季信息时，会附加到名称中，需要去掉
             name = seasonSuffixReg.Replace(name, string.Empty);
+
+            // 删除多余的[]信息
+            name = unusedReg.Replace(name, string.Empty);
 
             return name.Replace(".", " ").Trim();
         }

@@ -72,13 +72,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             // ParseName is required here.
             // Caller provides the filename with extension stripped and NOT the parsed filename
-            var fileName = Path.GetFileName(info.Path) ?? info.Name;
+            var fileName = info.Name;
             var parseResult = NameParser.Parse(fileName);
             var searchName = !string.IsNullOrEmpty(parseResult.ChineseName) ? parseResult.ChineseName : parseResult.Name;
             info.Year = parseResult.Year;  // 默认parser对anime年份会解析出错，以anitomy为准
 
 
-            this.Log($"GuessByDouban of [name]: {info.Name} [fileName]: {fileName} [year]: {info.Year} [search name]: {searchName}");
+            this.Log($"GuessByDouban of [name]: {info.Name} [year]: {info.Year} [search name]: {searchName}");
             var result = await this._doubanApi.SearchAsync(searchName, cancellationToken).ConfigureAwait(false);
             var jw = new JaroWinkler();
             foreach (var item in result)
@@ -94,18 +94,19 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
 
 
-                //英文关键词搜，结果是只有中文/繁体中文时，不适用相似匹配，如Who Am I
-                if (jw.Similarity(searchName, item.Name) < 0.8 && jw.Similarity(searchName, item.OriginalName) < 0.8)
-                {
-                    if (!searchName.IsSameLanguage(item.Name) && !searchName.IsSameLanguage(item.OriginalName))
-                    {
-                        // 特殊处理下使用英文搜索，只有中文标题的情况
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
+                // bt种子都是英文名，但电影是中日韩泰印法地区时，都不适用相似匹配，去掉限制
+                // //英文关键词搜，结果是只有中文/繁体中文时，不适用相似匹配，如Who Am I
+                // if (jw.Similarity(searchName, item.Name) < 0.8 && jw.Similarity(searchName, item.OriginalName) < 0.8)
+                // {
+                //     if (!searchName.IsSameLanguage(item.Name) && !searchName.IsSameLanguage(item.OriginalName))
+                //     {
+                //         // 特殊处理下使用英文搜索，只有中文标题的情况
+                //     }
+                //     else
+                //     {
+                //         continue;
+                //     }
+                // }
 
                 // 不存在年份需要比较时，直接返回
                 if (info.Year == null || info.Year == 0)
@@ -142,19 +143,20 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     continue;
                 }
 
-                // this.Log($"GuestDoubanSeasonByYear name: {name} douban_name: {item.Name} douban_sid: {item.Sid} douban_year: {item.Year} score: {score} ");
-                //英文关键词搜，结果是只有中文/繁体中文时，不适用相似匹配，如Who Am I
-                if (jw.Similarity(name, item.Name) < 0.8 && jw.Similarity(name, item.OriginalName) < 0.8)
-                {
-                    if (!name.IsSameLanguage(item.Name) && !name.IsSameLanguage(item.OriginalName))
-                    {
-                        // 特殊处理下使用英文搜索，只有中文标题的情况
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
+                // bt种子都是英文名，但电影是中日韩泰印法地区时，都不适用相似匹配，去掉限制
+                // // this.Log($"GuestDoubanSeasonByYear name: {name} douban_name: {item.Name} douban_sid: {item.Sid} douban_year: {item.Year} score: {score} ");
+                // //英文关键词搜，结果是只有中文/繁体中文时，不适用相似匹配，如Who Am I
+                // if (jw.Similarity(name, item.Name) < 0.8 && jw.Similarity(name, item.OriginalName) < 0.8)
+                // {
+                //     if (!name.IsSameLanguage(item.Name) && !name.IsSameLanguage(item.OriginalName))
+                //     {
+                //         // 特殊处理下使用英文搜索，只有中文标题的情况
+                //     }
+                //     else
+                //     {
+                //         continue;
+                //     }
+                // }
 
                 if (year == item.Year)
                 {
@@ -171,12 +173,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             // ParseName is required here.
             // Caller provides the filename with extension stripped and NOT the parsed filename
-            var fileName = Path.GetFileName(info.Path) ?? info.Name;
+            var fileName = info.Name;
             var parseResult = NameParser.Parse(fileName);
             var searchName = !string.IsNullOrEmpty(parseResult.ChineseName) ? parseResult.ChineseName : parseResult.Name;
             info.Year = parseResult.Year;  // 默认parser对anime年份会解析出错，以anitomy为准
 
-            this.Log($"GuestByTmdb of [name]: {info.Name} [fileName]: {fileName} [year]: {info.Year} [search name]: {searchName}");
+            this.Log($"GuestByTmdb of [name]: {info.Name} [year]: {info.Year} [search name]: {searchName}");
             var jw = new JaroWinkler();
 
             switch (info)
@@ -185,36 +187,42 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     var movieResults = await this._tmdbApi.SearchMovieAsync(searchName, info.Year ?? 0, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
                     foreach (var item in movieResults)
                     {
-                        if (jw.Similarity(searchName, item.Title) > 0.8
-                            || jw.Similarity(searchName, item.OriginalTitle) > 0.8)
-                        {
-                            this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
-                            return item.Id.ToString(CultureInfo.InvariantCulture);
-                        }
-                        // 特殊处理下使用英文搜索，只有中文标题的情况，当匹配成功
-                        if (!searchName.IsSameLanguage(item.Title) && !searchName.IsSameLanguage(item.OriginalTitle))
-                        {
-                            this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
-                            return item.Id.ToString(CultureInfo.InvariantCulture);
-                        }
+                        // bt种子都是英文名，但电影是中日韩泰印法地区时，都不适用相似匹配，去掉限制
+                        // if (jw.Similarity(searchName, item.Title) > 0.8
+                        //     || jw.Similarity(searchName, item.OriginalTitle) > 0.8)
+                        // {
+                        //     this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
+                        //     return item.Id.ToString(CultureInfo.InvariantCulture);
+                        // }
+                        // // 特殊处理下使用英文搜索，只有中文标题的情况，当匹配成功
+                        // if (!searchName.IsSameLanguage(item.Title) && !searchName.IsSameLanguage(item.OriginalTitle))
+                        // {
+                        //     this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
+                        //     return item.Id.ToString(CultureInfo.InvariantCulture);
+                        // }
+
+                        return item.Id.ToString(CultureInfo.InvariantCulture);
                     }
                     break;
                 case SeriesInfo:
                     var seriesResults = await this._tmdbApi.SearchSeriesAsync(searchName, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
                     foreach (var item in seriesResults)
                     {
-                        if (jw.Similarity(searchName, item.Name) > 0.8
-                             || jw.Similarity(searchName, item.OriginalName) > 0.8)
-                        {
-                            this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
-                            return item.Id.ToString(CultureInfo.InvariantCulture);
-                        }
-                        // 特殊处理下使用英文搜索，只有中文标题的情况，当匹配成功
-                        if (!searchName.IsSameLanguage(item.Name) && !searchName.IsSameLanguage(item.OriginalName))
-                        {
-                            this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
-                            return item.Id.ToString(CultureInfo.InvariantCulture);
-                        }
+                        // bt种子都是英文名，但电影是中日韩泰印法地区时，都不适用相似匹配，去掉限制
+                        // if (jw.Similarity(searchName, item.Name) > 0.8
+                        //      || jw.Similarity(searchName, item.OriginalName) > 0.8)
+                        // {
+                        //     this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
+                        //     return item.Id.ToString(CultureInfo.InvariantCulture);
+                        // }
+                        // // 特殊处理下使用英文搜索，只有中文标题的情况，当匹配成功
+                        // if (!searchName.IsSameLanguage(item.Name) && !searchName.IsSameLanguage(item.OriginalName))
+                        // {
+                        //     this.Log($"GuestByTmdb of [name] found tmdb id: \"{item.Id}\"");
+                        //     return item.Id.ToString(CultureInfo.InvariantCulture);
+                        // }
+
+                        return item.Id.ToString(CultureInfo.InvariantCulture);
                     }
                     break;
             }
