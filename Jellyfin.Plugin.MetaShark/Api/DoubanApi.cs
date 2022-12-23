@@ -39,6 +39,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
         const string HTTP_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36 Edg/93.0.961.44";
         private readonly ILogger<DoubanApi> _logger;
         private HttpClient httpClient;
+        private CookieContainer _cookieContainer;
+        private string oldLoadedCookies = string.Empty;
         private readonly JsonSerializerOptions _jsonOptions = JsonDefaults.Options;
         private readonly IMemoryCache _memoryCache;
         private static readonly object _lock = new object();
@@ -83,7 +85,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
 
             var handler = new HttpClientHandlerEx();
-            this.SetDoubanCookie(handler.CookieContainer);
+            this._cookieContainer = handler.CookieContainer;
             httpClient = new HttpClient(handler, true);
             httpClient.Timeout = TimeSpan.FromSeconds(10);
             httpClient.DefaultRequestHeaders.Add("user-agent", HTTP_USER_AGENT);
@@ -93,34 +95,52 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
 
 
-        private void SetDoubanCookie(CookieContainer cookieContainer)
+        private void EnsureLoadDoubanCookie()
         {
             var configCookie = Plugin.Instance?.Configuration.DoubanCookies.Trim() ?? string.Empty;
-            if (string.IsNullOrEmpty(configCookie))
-            {
-                return;
-            }
 
-            var uri = new Uri("https://douban.com/");
-            var arr = configCookie.Split(';');
-            foreach (var str in arr)
+            lock (_lock)
             {
-                var cookieArr = str.Split('=');
-                if (cookieArr.Length != 2)
+                if (oldLoadedCookies != configCookie)
                 {
-                    continue;
+                    oldLoadedCookies = configCookie;
+
+                    var uri = new Uri("https://douban.com/");
+
+                    // 清空旧的cookie
+                    var cookies = _cookieContainer.GetCookies(uri);
+                    foreach (Cookie co in cookies)
+                    {
+                        co.Expires = DateTime.Now.Subtract(TimeSpan.FromDays(1));
+                    }
+
+
+                    // 附加新的cookie
+                    if (!string.IsNullOrEmpty(configCookie))
+                    {
+                        var arr = configCookie.Split(';');
+                        foreach (var str in arr)
+                        {
+                            var cookieArr = str.Split('=');
+                            if (cookieArr.Length != 2)
+                            {
+                                continue;
+                            }
+
+                            var key = cookieArr[0].Trim();
+                            var value = cookieArr[1].Trim();
+                            try
+                            {
+                                _cookieContainer.Add(new Cookie(key, value, "/", ".douban.com"));
+                            }
+                            catch (Exception ex)
+                            {
+                                this._logger.LogError(ex, ex.Message);
+                            }
+                        }
+                    }
                 }
 
-                var key = cookieArr[0].Trim();
-                var value = cookieArr[1].Trim();
-                try
-                {
-                    cookieContainer.Add(new Cookie(key, value, "/", ".douban.com"));
-                }
-                catch (Exception ex)
-                {
-                    this._logger.LogError(ex, ex.Message);
-                }
             }
         }
 
@@ -140,6 +160,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return searchResult;
             }
 
+
+            EnsureLoadDoubanCookie();
 
             keyword = HttpUtility.UrlEncode(keyword);
             var url = $"https://www.douban.com/search?cat=1002&q={keyword}";
@@ -205,6 +227,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
             {
                 return movie;
             }
+
+            EnsureLoadDoubanCookie();
 
             var url = $"https://movie.douban.com/subject/{sid}/";
             var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
@@ -314,6 +338,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return celebrities;
             }
 
+            EnsureLoadDoubanCookie();
+
             var list = new List<DoubanCelebrity>();
             var url = $"https://movie.douban.com/subject/{sid}/celebrities";
             var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
@@ -380,6 +406,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
             {
                 return celebrity;
             }
+
+            EnsureLoadDoubanCookie();
 
             var url = $"https://movie.douban.com/celebrity/{id}/";
             var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
@@ -454,6 +482,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return searchResult;
             }
 
+            EnsureLoadDoubanCookie();
+
 
             keyword = HttpUtility.UrlEncode(keyword);
             var url = $"https://movie.douban.com/celebrities/search?search_text={keyword}";
@@ -504,6 +534,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
             {
                 return photos;
             }
+
+            EnsureLoadDoubanCookie();
 
             var list = new List<DoubanPhoto>();
             var url = $"https://movie.douban.com/subject/{sid}/photos?type=W&start=0&sortby=size&size=a&subtype=a";

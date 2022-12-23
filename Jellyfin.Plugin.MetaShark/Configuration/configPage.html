@@ -25,8 +25,8 @@
                     <div class="inputContainer">
                         <label class="inputLabel inputLabelUnfocused" for="DoubanCookies">豆瓣网站cookie</label>
                         <textarea rows="5" is="emby-input" type="text" id="DoubanCookies" name="DoubanCookies"
-                            class="emby-input"></textarea>
-                        <div class="fieldDescription">可为空，填写可搜索到需登录访问的影片.(需重启才能生效)</div>
+                            class="emby-input" placeholder="_vwo_uuid_v2=1; __utmv=2; ..."></textarea>
+                        <div class="fieldDescription">可为空，填写可搜索到需登录访问的影片，使用分号“;”分隔格式cookie.</div>
                     </div>
 
                     <fieldset class="verticalSection verticalSection-extrabottompadding">
@@ -38,7 +38,7 @@
                                 <input id="EnableTmdb" name="EnableTmdb" type="checkbox" is="emby-checkbox" />
                                 <span>启用从TheMovieDb获取元数据</span>
                             </label>
-                            <div class="fieldDescription">勾选后，会尝试从TheMovieDb获取季度和剧集元数据</div>
+                            <div class="fieldDescription">勾选后，会尝试从TheMovieDb获取剧集元数据</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label" for="EnableTmdbSearch">
@@ -78,7 +78,7 @@
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
                         $('#current_version').text("v" + config.Version);
-                        
+
                         document.querySelector('#DoubanCookies').value = config.DoubanCookies;
                         document.querySelector('#EnableTmdb').checked = config.EnableTmdb;
                         document.querySelector('#EnableTmdbSearch').checked = config.EnableTmdbSearch;
