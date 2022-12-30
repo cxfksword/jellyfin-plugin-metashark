@@ -37,6 +37,10 @@ namespace Jellyfin.Plugin.MetaShark.Test
             parseResult = NameParser.Parse(fileName);
             Console.WriteLine(parseResult.ToJson());
 
+            fileName = "罗马假日.Roman.Holiday.1953.WEB-DL.1080p.x265.AAC.2Audios.GREENOTEA";
+            parseResult = NameParser.Parse(fileName);
+            Console.WriteLine(parseResult.ToJson());
+
             // 只英文
             fileName = "New.World.2013.BluRay.1080p.x265.10bit.MNHD-FRDS";
             parseResult = NameParser.Parse(fileName);

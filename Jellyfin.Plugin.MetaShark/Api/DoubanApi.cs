@@ -162,12 +162,14 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
 
             EnsureLoadDoubanCookie();
+            // LimitRequestFrequently(2000);
 
-            keyword = HttpUtility.UrlEncode(keyword);
-            var url = $"https://www.douban.com/search?cat=1002&q={keyword}";
+            var encodedKeyword = HttpUtility.UrlEncode(keyword);
+            var url = $"https://www.douban.com/search?cat=1002&q={encodedKeyword}";
             var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
+                this._logger.LogWarning("douban搜索请求失败. keyword: {0} statusCode: {1}", keyword, response.StatusCode);
                 return list;
             }
 
@@ -208,6 +210,11 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 list.Add(movie);
             }
 
+            if (list.Count <= 0)
+            {
+                this._logger.LogWarning("douban搜索不到内容，这消息大量出现时，可能触发了爬虫风控。。。keyword: {0}", keyword);
+            }
+
 
             _memoryCache.Set<List<DoubanSubject>>(cacheKey, list, expiredOption);
             return list;
@@ -229,6 +236,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
             }
 
             EnsureLoadDoubanCookie();
+            // LimitRequestFrequently();
 
             var url = $"https://movie.douban.com/subject/{sid}/";
             var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
@@ -339,6 +347,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
             }
 
             EnsureLoadDoubanCookie();
+            // LimitRequestFrequently();
 
             var list = new List<DoubanCelebrity>();
             var url = $"https://movie.douban.com/subject/{sid}/celebrities";
@@ -482,7 +491,9 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return searchResult;
             }
 
+
             EnsureLoadDoubanCookie();
+            // LimitRequestFrequently();
 
 
             keyword = HttpUtility.UrlEncode(keyword);
@@ -536,6 +547,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
             }
 
             EnsureLoadDoubanCookie();
+            // LimitRequestFrequently();
 
             var list = new List<DoubanPhoto>();
             var url = $"https://movie.douban.com/subject/{sid}/photos?type=W&start=0&sortby=size&size=a&subtype=a";
@@ -587,19 +599,23 @@ namespace Jellyfin.Plugin.MetaShark.Api
         }
 
 
-        protected void LimitRequestFrequently()
+        protected void LimitRequestFrequently(int interval = 1000)
         {
+            var diff = 0;
             lock (_lock)
             {
                 var ts = DateTime.Now - lastRequestTime;
-                var diff = (int)(200 - ts.TotalMilliseconds);
+                diff = (int)(interval - ts.TotalMilliseconds);
                 if (diff > 0)
                 {
+                    this._logger.LogInformation("请求太频繁，等待{0}毫秒后继续执行...", diff);
                     Thread.Sleep(diff);
                 }
+
                 lastRequestTime = DateTime.Now;
             }
         }
+
 
         private string? GetText(IElement el, string css)
         {

@@ -72,13 +72,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             // ParseName is required here.
             // Caller provides the filename with extension stripped and NOT the parsed filename
-            var fileName = info.Name;
+            var fileName = GetNotParsedName(info);
             var parseResult = NameParser.Parse(fileName);
             var searchName = !string.IsNullOrEmpty(parseResult.ChineseName) ? parseResult.ChineseName : parseResult.Name;
             info.Year = parseResult.Year;  // 默认parser对anime年份会解析出错，以anitomy为准
 
 
-            this.Log($"GuessByDouban of [name]: {info.Name} [year]: {info.Year} [search name]: {searchName}");
+            this.Log($"GuessByDouban of [name]: {info.Name} [file_name]: {fileName} [year]: {info.Year} [search name]: {searchName}");
             var result = await this._doubanApi.SearchAsync(searchName, cancellationToken).ConfigureAwait(false);
             var jw = new JaroWinkler();
             foreach (var item in result)
@@ -173,12 +173,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             // ParseName is required here.
             // Caller provides the filename with extension stripped and NOT the parsed filename
-            var fileName = info.Name;
+            var fileName = GetNotParsedName(info);
             var parseResult = NameParser.Parse(fileName);
             var searchName = !string.IsNullOrEmpty(parseResult.ChineseName) ? parseResult.ChineseName : parseResult.Name;
             info.Year = parseResult.Year;  // 默认parser对anime年份会解析出错，以anitomy为准
 
-            this.Log($"GuestByTmdb of [name]: {info.Name} [year]: {info.Year} [search name]: {searchName}");
+
+            this.Log($"GuestByTmdb of [name]: {info.Name} [file_name]: {fileName} [year]: {info.Year} [search name]: {searchName}");
             var jw = new JaroWinkler();
 
             switch (info)
@@ -383,6 +384,17 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             return language;
+        }
+
+        protected string GetNotParsedName(ItemLookupInfo info)
+        {
+            var directoryName = Path.GetFileName(Path.GetDirectoryName(info.Path));
+            if (directoryName != null && directoryName.StartsWith(info.Name))
+            {
+                return directoryName;
+            }
+
+            return Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
         }
     }
 }
