@@ -20,14 +20,15 @@ using System.Threading.Tasks;
 using TMDbLib.Objects.Find;
 using TMDbLib.Objects.TvShows;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Http;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
     public class SeasonProvider : BaseProvider, IRemoteMetadataProvider<Season, SeasonInfo>
     {
 
-        public SeasonProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
-            : base(httpClientFactory, loggerFactory.CreateLogger<SeasonProvider>(), libraryManager, doubanApi, tmdbApi, omdbApi)
+        public SeasonProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
+            : base(httpClientFactory, loggerFactory.CreateLogger<MovieProvider>(), libraryManager, httpContextAccessor, doubanApi, tmdbApi, omdbApi)
         {
         }
 

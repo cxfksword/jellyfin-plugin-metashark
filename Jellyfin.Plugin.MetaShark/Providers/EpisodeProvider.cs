@@ -20,6 +20,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities;
+using Microsoft.AspNetCore.Http;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -37,8 +38,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             new(@"(\d{2,})")
         };
 
-        public EpisodeProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
-            : base(httpClientFactory, loggerFactory.CreateLogger<EpisodeProvider>(), libraryManager, doubanApi, tmdbApi, omdbApi)
+        public EpisodeProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
+            : base(httpClientFactory, loggerFactory.CreateLogger<MovieProvider>(), libraryManager, httpContextAccessor, doubanApi, tmdbApi, omdbApi)
         {
             this._memoryCache = new MemoryCache(new MemoryCacheOptions());
         }

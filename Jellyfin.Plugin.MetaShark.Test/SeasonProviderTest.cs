@@ -4,6 +4,7 @@ using Jellyfin.Plugin.MetaShark.Providers;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System;
@@ -37,10 +38,11 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var omdbApi = new OmdbApi(loggerFactory);
             var httpClientFactory = new DefaultHttpClientFactory();
             var libraryManagerStub = new Mock<ILibraryManager>();
+            var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
 
             Task.Run(async () =>
             {
-                var provider = new SeasonProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, doubanApi, tmdbApi, omdbApi);
+                var provider = new SeasonProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
                 var result = await provider.GetMetadata(info, CancellationToken.None);
                 Assert.IsNotNull(result);
 

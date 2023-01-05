@@ -21,6 +21,7 @@ using System.Web;
 using TMDbLib.Objects.General;
 using Jellyfin.Plugin.MetaShark.Configuration;
 using Jellyfin.Plugin.MetaShark.Core;
+using Microsoft.AspNetCore.Http;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -47,6 +48,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         protected readonly TmdbApi _tmdbApi;
         protected readonly OmdbApi _omdbApi;
         protected readonly ILibraryManager _libraryManager;
+        protected readonly IHttpContextAccessor _httpContextAccessor;
 
         protected Regex regMetaSourcePrefix = new Regex(@"^\[.+\]", RegexOptions.Compiled);
 
@@ -58,7 +60,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
         }
 
-        protected BaseProvider(IHttpClientFactory httpClientFactory, ILogger logger, ILibraryManager libraryManager, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
+        protected BaseProvider(IHttpClientFactory httpClientFactory, ILogger logger, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
         {
             this._doubanApi = doubanApi;
             this._tmdbApi = tmdbApi;
@@ -66,6 +68,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             this._libraryManager = libraryManager;
             this._logger = logger;
             this._httpClientFactory = httpClientFactory;
+            this._httpContextAccessor = httpContextAccessor;
         }
 
         protected async Task<string?> GuessByDoubanAsync(ItemLookupInfo info, CancellationToken cancellationToken)
@@ -241,7 +244,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             // 豆瓣的imdb id可能是旧的，需要先从omdb接口获取最新的imdb id
             var omdbItem = await this._omdbApi.GetByImdbID(imdb, cancellationToken).ConfigureAwait(false);
-            if (omdbItem != null)
+            if (!string.IsNullOrEmpty(omdbItem?.ImdbID))
             {
                 imdb = omdbItem.ImdbID;
             }
@@ -266,11 +269,27 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         }
 
 
-
+        /// <summary>
+        /// 浏览器来源请求，返回代理地址（no-referer对于background-image不生效），其他客户端请求，返回原始图片地址
+        /// </summary>
         protected string GetProxyImageUrl(string url)
         {
-            var encodedUrl = HttpUtility.UrlEncode(url);
-            return $"/plugin/metashark/proxy/image/?url={encodedUrl}";
+            var fromWeb = false;
+            if (_httpContextAccessor.HttpContext != null)
+            {
+                var clientInfo = _httpContextAccessor.HttpContext.Request.Headers.FirstOrDefault(x => x.Key == "X-Emby-Authorization").Value.FirstOrDefault() ?? string.Empty;
+                fromWeb = clientInfo.Contains("Jellyfin Web");
+            }
+
+            if (fromWeb)
+            {
+                var encodedUrl = HttpUtility.UrlEncode(url);
+                return $"/plugin/metashark/proxy/image/?url={encodedUrl}";
+            }
+            else
+            {
+                return url;
+            }
         }
 
         protected void Log(string? message, params object?[] args)

@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Model.Serialization;
+using Microsoft.AspNetCore.Http;
 
 namespace Jellyfin.Plugin.MetaShark.Test
 {
@@ -34,12 +35,13 @@ namespace Jellyfin.Plugin.MetaShark.Test
         {
             var httpClientFactory = new DefaultHttpClientFactory();
             var libraryManagerStub = new Mock<ILibraryManager>();
+            var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
 
             var doubanApi = new DoubanApi(loggerFactory);
             var tmdbApi = new TmdbApi(loggerFactory);
             var omdbApi = new OmdbApi(loggerFactory);
 
-            var provider = new EpisodeProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, doubanApi, tmdbApi, omdbApi);
+            var provider = new EpisodeProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
             var guessInfo = provider.GuessEpisodeNumber("[POPGO][Stand_Alone_Complex][05][1080P][BluRay][x264_FLACx2_AC3x1][chs_jpn][D87C36B6].mkv");
             Assert.AreEqual(guessInfo.episodeNumber, 5);
 

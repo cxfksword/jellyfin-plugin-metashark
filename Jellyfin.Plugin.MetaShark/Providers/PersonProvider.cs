@@ -18,6 +18,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TMDbLib.Objects.Find;
+using Microsoft.AspNetCore.Http;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -32,8 +33,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <param name="httpClientFactory">Instance of the <see cref="IHttpClientFactory"/> interface.</param>
         /// <param name="logger">Instance of the <see cref="ILogger{OddbImageProvider}"/> interface.</param>
         /// <param name="doubanApi">Instance of <see cref="DoubanApi"/>.</param>
-        public PersonProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
-            : base(httpClientFactory, loggerFactory.CreateLogger<PersonProvider>(), libraryManager, doubanApi, tmdbApi, omdbApi)
+        public PersonProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
+            : base(httpClientFactory, loggerFactory.CreateLogger<MovieProvider>(), libraryManager, httpContextAccessor, doubanApi, tmdbApi, omdbApi)
         {
         }
 
