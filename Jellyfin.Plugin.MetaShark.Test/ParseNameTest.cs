@@ -42,6 +42,10 @@ namespace Jellyfin.Plugin.MetaShark.Test
             Console.WriteLine(parseResult.ToJson());
 
             // 只英文
+            fileName = "A.Chinese.Odyssey.Part.1.1995.BluRay.1080p.x265.10bit.2Audio-MiniHD";
+            parseResult = NameParser.Parse(fileName);
+            Console.WriteLine(parseResult.ToJson());
+
             fileName = "New.World.2013.BluRay.1080p.x265.10bit.MNHD-FRDS";
             parseResult = NameParser.Parse(fileName);
             Console.WriteLine(parseResult.ToJson());
@@ -49,6 +53,8 @@ namespace Jellyfin.Plugin.MetaShark.Test
             fileName = "Who.Am.I.1998.1080p.BluRay.x264.DTS-FGT";
             parseResult = NameParser.Parse(fileName);
             Console.WriteLine(parseResult.ToJson());
+
+
 
             // 标题加年份
             fileName = "V字仇杀队 (2006)";

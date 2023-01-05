@@ -73,6 +73,18 @@ namespace Jellyfin.Plugin.MetaShark.Core
                         break;
                 }
             }
+
+            // 假如Anitomy解析不到year，尝试使用jellyfin默认parser，看能不能解析成功
+            if (parseResult.Year == null)
+            {
+                var nativeParseResult = ParseMovie(fileName);
+                if (nativeParseResult.Year != null)
+                {
+                    parseResult = nativeParseResult;
+                }
+            }
+
+            // 解析不到title时，使用默认名
             if (string.IsNullOrEmpty(parseResult.Name))
             {
                 parseResult.Name = fileName;
@@ -100,12 +112,12 @@ namespace Jellyfin.Plugin.MetaShark.Core
             var result = Emby.Naming.Video.VideoResolver.CleanDateTime(fileName, nameOptions);
             if (Emby.Naming.Video.VideoResolver.TryCleanString(result.Name, nameOptions, out var cleanName))
             {
-                parseResult.Name = cleanName;
+                parseResult.Name = CleanName(cleanName);
                 parseResult.Year = result.Year;
             }
             else
             {
-                parseResult.Name = result.Name;
+                parseResult.Name = CleanName(result.Name);
                 parseResult.Year = result.Year;
             }
             return parseResult;
