@@ -1,3 +1,4 @@
+using System.Threading;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,8 @@ using System.Runtime.InteropServices;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Common.Net;
+using Jellyfin.Plugin.MetaShark.Api;
+using Jellyfin.Plugin.MetaShark.Model;
 
 namespace Jellyfin.Plugin.MetaShark.Controllers
 {
@@ -27,15 +30,17 @@ namespace Jellyfin.Plugin.MetaShark.Controllers
     [Route("/plugin/metashark")]
     public class MetaSharkController : ControllerBase
     {
+        private readonly DoubanApi _doubanApi;
         private readonly IHttpClientFactory _httpClientFactory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MetaSharkController"/> class.
         /// </summary>
         /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/>.</param>
-        public MetaSharkController(IHttpClientFactory httpClientFactory)
+        public MetaSharkController(IHttpClientFactory httpClientFactory, DoubanApi doubanApi)
         {
-            _httpClientFactory = httpClientFactory;
+            this._httpClientFactory = httpClientFactory;
+            this._doubanApi = doubanApi;
         }
 
 
@@ -69,6 +74,17 @@ namespace Jellyfin.Plugin.MetaShark.Controllers
             }
 
             return stream;
+        }
+
+        /// <summary>
+        /// 代理访问图片.
+        /// </summary>
+        [Route("douban/checklogin")]
+        [HttpGet]
+        public async Task<ApiResult> CheckDoubanLogin()
+        {
+            var isLogin = await _doubanApi.CheckLoginAsync(CancellationToken.None);
+            return new ApiResult(isLogin ? 1 : 0, isLogin ? "logined" : "not login");
         }
 
         private HttpClient GetHttpClient()

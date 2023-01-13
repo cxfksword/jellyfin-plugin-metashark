@@ -25,7 +25,12 @@ public enum SomeOptions
 /// </summary>
 public class PluginConfiguration : BasePluginConfiguration
 {
-    public string Version { get; } = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+    public string Version { get; } = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty;
+
+    public string DoubanCookies { get; set; } = string.Empty;
+
+    public bool EnableDoubanAvoidRiskControl { get; set; } = false;
+
     public bool EnableTmdb { get; set; } = true;
 
     public bool EnableTmdbSearch { get; set; } = false;
@@ -34,7 +39,7 @@ public class PluginConfiguration : BasePluginConfiguration
 
     public string TmdbHost { get; set; } = string.Empty;
 
-    public string DoubanCookies { get; set; } = string.Empty;
+
 
     public int MaxCastMembers { get; set; } = 15;
 

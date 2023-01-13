@@ -75,7 +75,7 @@ namespace Jellyfin.Plugin.MetaShark.Core
             }
 
             // 假如Anitomy解析不到year，尝试使用jellyfin默认parser，看能不能解析成功
-            if (parseResult.Year == null)
+            if (parseResult.Year == null && !IsAnime(fileName))
             {
                 var nativeParseResult = ParseMovie(fileName);
                 if (nativeParseResult.Year != null)
@@ -161,6 +161,11 @@ namespace Jellyfin.Plugin.MetaShark.Core
             }
 
             if (Regex.Match(name, @"\[[+0-9XVPI-]+]\s*\[", RegexOptions.IgnoreCase).Success)
+            {
+                return true;
+            }
+
+            if (Regex.Match(name, @"\[.+\].*?\[.+?\]", RegexOptions.IgnoreCase).Success)
             {
                 return true;
             }

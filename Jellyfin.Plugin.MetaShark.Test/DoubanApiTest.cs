@@ -60,6 +60,28 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
 
         [TestMethod]
+        public void TestSearchBySuggest()
+        {
+            var keyword = "重返少年时";
+            var api = new DoubanApi(loggerFactory);
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    var result = await api.SearchBySuggestAsync(keyword, CancellationToken.None);
+                    var str = result.ToJson();
+                    TestContext.WriteLine(result.ToJson());
+                }
+                catch (Exception ex)
+                {
+                    TestContext.WriteLine(ex.Message);
+                }
+            }).GetAwaiter().GetResult();
+        }
+
+
+        [TestMethod]
         public void TestGetVideoBySidAsync()
         {
             var sid = "26654184";

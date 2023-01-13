@@ -58,7 +58,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
                 var primary = await this._doubanApi.GetMovieAsync(sid, cancellationToken);
-                if (primary == null)
+                if (primary == null || string.IsNullOrEmpty(primary.ImgMiddle))
                 {
                     return Enumerable.Empty<RemoteImageInfo>();
                 }

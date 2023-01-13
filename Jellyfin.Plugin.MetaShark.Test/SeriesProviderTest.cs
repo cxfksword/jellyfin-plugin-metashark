@@ -50,5 +50,29 @@ namespace Jellyfin.Plugin.MetaShark.Test
             }).GetAwaiter().GetResult();
         }
 
+        [TestMethod]
+        public void TestGetAnimeMetadata()
+        {
+            var info = new SeriesInfo() { Name = "命运-冠位嘉年华" };
+            var doubanApi = new DoubanApi(loggerFactory);
+            var tmdbApi = new TmdbApi(loggerFactory);
+            var omdbApi = new OmdbApi(loggerFactory);
+            var httpClientFactory = new DefaultHttpClientFactory();
+            var libraryManagerStub = new Mock<ILibraryManager>();
+            var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
+
+            Task.Run(async () =>
+            {
+                var provider = new SeriesProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
+                var result = await provider.GetMetadata(info, CancellationToken.None);
+                Assert.AreEqual(result.Item.Name, "命运/冠位指定嘉年华 公元2020奥林匹亚英灵限界大祭");
+                Assert.AreEqual(result.Item.OriginalTitle, "Fate/Grand Carnival");
+                Assert.IsNotNull(result);
+
+                var str = result.ToJson();
+                Console.WriteLine(result.ToJson());
+            }).GetAwaiter().GetResult();
+        }
+
     }
 }

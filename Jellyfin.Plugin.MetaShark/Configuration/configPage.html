@@ -22,12 +22,33 @@
                 </div>
 
                 <form id="TemplateConfigForm">
-                    <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="DoubanCookies">豆瓣网站cookie</label>
-                        <textarea rows="5" is="emby-input" type="text" id="DoubanCookies" name="DoubanCookies"
-                            class="emby-input" placeholder="_vwo_uuid_v2=1; __utmv=2; ..."></textarea>
-                        <div class="fieldDescription">可为空，填写可搜索到需登录访问的影片，使用分号“;”分隔格式cookie.</div>
-                    </div>
+                    <fieldset class="verticalSection verticalSection-extrabottompadding">
+                        <legend>
+                            <h3>豆瓣</h3>
+                        </legend>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="DoubanCookies">豆瓣网站cookie<span
+                                    id="login_invalid"
+                                    style="color: red; margin-left: 8px; display: none;">(已失效)</span></label>
+                            <textarea rows="5" is="emby-input" type="text" id="DoubanCookies" name="DoubanCookies"
+                                class="emby-input" placeholder="_vwo_uuid_v2=1; __utmv=2; ..."></textarea>
+                            <div class="fieldDescription">可为空，填写可搜索到需登录访问的影片，使用(www.douban.com)分号“;”分隔格式cookie.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label" for="EnableDoubanAvoidRiskControl">
+                                <input id="EnableDoubanAvoidRiskControl" name="EnableDoubanAvoidRiskControl"
+                                    type="checkbox" is="emby-checkbox" />
+                                <span class="checkboxLabel" style="position:relative">启用防封禁
+                                    <!-- <span
+                                        style="width:24px;color:red;font-size:12px;position: absolute;top:-3px;margin-left:3px;">实险</span> -->
+                                    <img style="position: absolute; top:-12px; width: 32px; height:32px"
+                                        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAABS9JREFUeF7tmWtoHFUUx/9ndne2NmLph5q0yc4m1SSzMS2opRIpGEGLtWotqBS0NIIgCCotVD+aItSi+EB80S8V0YgKWouPNhUMqbWKsWqpya5pQjITRb8IKsruzO4cuXcf7m42yTRkgzs799Puzp17z/md/zn3sYQ6b1Tn/sMH4Cugzgn4KVDnAvCLoJ8CfgrUOQE/BepcAP4q4KeAnwJ1TsBPgToXwMWtAudbG5oCGfsVIlwHYF2NwPsFwIhuWDsq2es6BUbWYWVDUP2CgKtrxPFZZuqGNctf1wDGNLWfgCdq1fmc3e/phnVPsQ+uASQ09TwDV9UyAAb/FjPspkUBiGsq17LzedvL08C1AnwAFRTAwIGYYfULuvFI6HMQ9f7fVbKkCqg2ADF+gHlaVULHk449sBSAaw7AUiuspgAQ0N9pWAeWMsWWA8AZBgaJ0Q4F3WBsrFAXvgVwAcA0QJcBvBbM14NoTaEv8xARDZUAyD8srTXfAJgUYxFoNYObAdw6Vy2qKgCGcihmpk7kJ59sa2i0HPs1MO4s2M60r9NMPV9u4MR6rLLt0EEQPSSeVdq1id+LNmSmw3iky7SOlo81poWuJZDYtN1e/qxqAEbbVkSDdqYpHVA2Bck53TFlf581WBozIg1hDOimda/4KM4VQcfeS8A/9qXWU92jsKTUNXVM+M+Oc6P4HptJD8lxWoLZFUZReuWOlHCfPm29JX4ajai7CLgDhHOZoDLQPZk0pqIr1yY5LYKxoRhC1QAkoupOZryfn0xh54YOMz2cc+qYiIZCdFvHdOrj8Sasyajq1wDasv3ptG6ktkhnWtSdipIdZ55V5g8AwyA6pTg84xAGCk4SvapPp6SKEpp6hIG+ZQEQ19Q3AcjoSuOZX4qZ9sMSQCT0spB2QLVWtV/An/GI+iQRtGLDHMbxmGm9PdESbrcV/mkBAFlsQJIJBjv4kcCD6YB6tHvq71/z41Y6v1RNAXFN/RBChrlGwDudhrVLyldTDxKwVTesTcVOV/o8fiXCGUtNLgSAGR+kQfs3mKmJgsMtwV5SaIdu2Htz8846wFUNwFg09BwxyYlzGnhRN+xHC1Jk3q6b9uXyezT0ADv/qWUWiFyVnycFTuiGdYt0snVFKxynTwG2MbAZzEO6acv6sawKSGjh9YDzJYMaxeQOaGuXkTqZBRA6yaCbHIV7uqbsr2RalG6t/2Kmu4hY3DVcg+ydQ3sJgNIUe0Y3rMcKcIvyXBTPQuGscIRflAISWmg3g94oj1SxgeLZePMlLelAZjeYzuaXw4QW3MJQTuXe/UQ3rO35vplApofBqxUok51G6rMKUSs5v4uIAughoEM3LFlAZZQZm5kwzMSDRIHfY1PJKQk5Gt4P5qeL7b5oAHFNfRzAoUr5Wi5RdpQHYz+nZAETreI+AHTYgXM4ZthiM1RoQsqK4+xhQB6u8q3c4EQkvI+Jn2Xm+2Om/XrJGJFQHxEdyb8zqoVvVsCDiwYQ10IvACTzuGJjlmt0oREJ+Z4B8AOAKAixOXaCooSfI8ZZ8S5D3jHG5pwHOMbAdyLSIGzL9yNghkEfMXOjQtjIwBXyWZFdTNRMQPtcQOe8D4hr6rsA7p7HqJp85CoF4lH1UzBklfVSc3UlVr6h8RIAAAtfinrl6qtS4Fxdi+c2D3sAtHok+kvzx4hHYMxyw/WtsA/AowR8BXg0sK7d8hXgGpVHO/oK8GhgXbvlK8A1Ko929BXg0cC6dstXgGtUHu3oK8CjgXXtlq8A16g82vFfwx5yXxq/mYIAAAAASUVORK5CYII="
+                                        alt="beta" />
+                                </span>
+                            </label>
+                            <div class="fieldDescription">勾选后，刮削会变慢，适合刮削大量影片时使用，建议搭配网站cookie一起使用</div>
+                        </div>
+                    </fieldset>
 
                     <fieldset class="verticalSection verticalSection-extrabottompadding">
                         <legend>
@@ -80,10 +101,14 @@
                         $('#current_version').text("v" + config.Version);
 
                         document.querySelector('#DoubanCookies').value = config.DoubanCookies;
+                        document.querySelector('#EnableDoubanAvoidRiskControl').checked = config.EnableDoubanAvoidRiskControl;
                         document.querySelector('#EnableTmdb').checked = config.EnableTmdb;
                         document.querySelector('#EnableTmdbSearch').checked = config.EnableTmdbSearch;
                         document.querySelector('#TmdbApiKey').value = config.TmdbApiKey;
                         document.querySelector('#TmdbHost').value = config.TmdbHost;
+
+                        checkDoubanLogin();
+
                         Dashboard.hideLoadingMsg();
                     });
                 });
@@ -93,18 +118,38 @@
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
                         config.DoubanCookies = document.querySelector('#DoubanCookies').value;
+                        config.EnableDoubanAvoidRiskControl = document.querySelector('#EnableDoubanAvoidRiskControl').checked;
                         config.EnableTmdb = document.querySelector('#EnableTmdb').checked;
                         config.EnableTmdbSearch = document.querySelector('#EnableTmdbSearch').checked;
                         config.TmdbApiKey = document.querySelector('#TmdbApiKey').value;
                         config.TmdbHost = document.querySelector('#TmdbHost').value;
                         ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
+
+                            checkDoubanLogin();
                         });
                     });
 
                     e.preventDefault();
                     return false;
                 });
+
+            function checkDoubanLogin() {
+                let cookie = document.querySelector('#DoubanCookies').value
+                if (!cookie || !$.trim(cookie)) {
+                    $('#login_invalid').hide();
+                    return;
+                }
+
+
+                $.getJSON("/plugin/metashark/douban/checklogin", function (resp) {
+                    if (resp && resp.code != 1) {
+                        $('#login_invalid').show();
+                    } else {
+                        $('#login_invalid').hide();
+                    }
+                })
+            }
         </script>
     </div>
 </body>

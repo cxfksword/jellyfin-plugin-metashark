@@ -82,36 +82,51 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
 
             this.Log($"GuessByDouban of [name]: {info.Name} [file_name]: {fileName} [year]: {info.Year} [search name]: {searchName}");
-            var result = await this._doubanApi.SearchAsync(searchName, cancellationToken).ConfigureAwait(false);
-            var jw = new JaroWinkler();
-            foreach (var item in result)
+            List<DoubanSubject> result;
+            DoubanSubject? item;
+
+            // 假如存在年份，先通过suggest接口查找，减少搜索页访问次数，避免封禁（suggest没法区分电影或电视剧，排序也比搜索页差些）
+            if (config.EnableDoubanAvoidRiskControl)
             {
-                if (info is MovieInfo && item.Category != "电影")
+                if (info.Year != null && info.Year > 0)
                 {
-                    continue;
+                    result = await this._doubanApi.SearchBySuggestAsync(searchName, cancellationToken).ConfigureAwait(false);
+                    item = result.Where(x => x.Year == info.Year && x.Name == searchName).FirstOrDefault();
+                    if (item != null)
+                    {
+                        this.Log($"GuessByDouban of [name]: {searchName} found Sid: {item.Sid} (suggest)");
+                        return item.Sid;
+                    }
+                    item = result.Where(x => x.Year == info.Year).FirstOrDefault();
+                    if (item != null)
+                    {
+                        this.Log($"GuessByDouban of [name]: {searchName} found Sid: {item.Sid} (suggest)");
+                        return item.Sid;
+                    }
                 }
+            }
 
-                if (info is SeriesInfo && item.Category != "电视剧")
+            // 通过搜索页面查找
+            result = await this._doubanApi.SearchAsync(searchName, cancellationToken).ConfigureAwait(false);
+            var cat = info is MovieInfo ? "电影" : "电视剧";
+
+            // 优先返回对应年份的电影
+            if (info.Year != null && info.Year > 0)
+            {
+                item = result.Where(x => x.Category == cat && x.Year == info.Year).FirstOrDefault();
+                if (item != null)
                 {
-                    continue;
-                }
-
-
-                // bt种子都是英文名，但电影是中日韩泰印法地区时，都不适用相似匹配，去掉限制
-
-                // 不存在年份需要比较时，直接返回
-                if (info.Year == null || info.Year == 0)
-                {
-                    this.Log($"GuessByDouban of [name] found Sid: {item.Sid}");
+                    this.Log($"GuessByDouban of [name]: {searchName} found Sid: {item.Sid}");
                     return item.Sid;
                 }
+            }
 
-                if (info.Year == item.Year)
-                {
-                    this.Log($"GuessByDouban of [name] found Sid: {item.Sid}");
-                    return item.Sid;
-                }
-
+            // 不存在年份时，返回第一个
+            item = result.Where(x => x.Category == cat).FirstOrDefault();
+            if (item != null)
+            {
+                this.Log($"GuessByDouban of [name]: {searchName} found Sid: {item.Sid}");
+                return item.Sid;
             }
 
             return null;
@@ -125,22 +140,33 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             this.Log($"GuestDoubanSeasonByYear of [name]: {name} [year]: {year}");
-            var result = await this._doubanApi.SearchAsync(name, cancellationToken).ConfigureAwait(false);
-            var jw = new JaroWinkler();
-            foreach (var item in result)
+
+            // 先通过suggest接口查找，减少搜索页访问次数，避免封禁（suggest没法区分电影或电视剧，排序也比搜索页差些）
+            if (config.EnableDoubanAvoidRiskControl)
             {
-                if (item.Category != "电视剧")
+                var suggestResult = await this._doubanApi.SearchBySuggestAsync(name, cancellationToken).ConfigureAwait(false);
+                var suggestItem = suggestResult.Where(x => x.Year == year && x.Name == name).FirstOrDefault();
+                if (suggestItem != null)
                 {
-                    continue;
+                    this.Log($"GuestDoubanSeasonByYear of [name] found Sid: \"{suggestItem.Sid}\" (suggest)");
+                    return suggestItem.Sid;
                 }
-
-                // bt种子都是英文名，但电影是中日韩泰印法地区时，都不适用相似匹配，去掉限制
-
-                if (year == item.Year)
+                suggestItem = suggestResult.Where(x => x.Year == year).FirstOrDefault();
+                if (suggestItem != null)
                 {
-                    this.Log($"GuestDoubanSeasonByYear of [name] found Sid: \"{item.Sid}\"");
-                    return item.Sid;
+                    this.Log($"GuestDoubanSeasonByYear of [name] found Sid: \"{suggestItem.Sid}\" (suggest)");
+                    return suggestItem.Sid;
                 }
+            }
+
+
+            // 通过搜索页面查找
+            var result = await this._doubanApi.SearchAsync(name, cancellationToken).ConfigureAwait(false);
+            var item = result.Where(x => x.Category == "电视剧" && x.Year == year).FirstOrDefault();
+            if (item != null && !string.IsNullOrEmpty(item.Sid))
+            {
+                this.Log($"GuestDoubanSeasonByYear of [name] found Sid: \"{item.Sid}\"");
+                return item.Sid;
             }
 
             return null;
@@ -158,24 +184,24 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
 
             this.Log($"GuestByTmdb of [name]: {info.Name} [file_name]: {fileName} [year]: {info.Year} [search name]: {searchName}");
-            var jw = new JaroWinkler();
-
             switch (info)
             {
                 case MovieInfo:
                     var movieResults = await this._tmdbApi.SearchMovieAsync(searchName, info.Year ?? 0, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-                    foreach (var item in movieResults)
+                    var movieItem = movieResults.FirstOrDefault();
+                    if (movieItem != null)
                     {
                         // bt种子都是英文名，但电影是中日韩泰印法地区时，都不适用相似匹配，去掉限制
-                        return item.Id.ToString(CultureInfo.InvariantCulture);
+                        return movieItem.Id.ToString(CultureInfo.InvariantCulture);
                     }
                     break;
                 case SeriesInfo:
                     var seriesResults = await this._tmdbApi.SearchSeriesAsync(searchName, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-                    foreach (var item in seriesResults)
+                    var seriesItem = seriesResults.FirstOrDefault();
+                    if (seriesItem != null)
                     {
                         // bt种子都是英文名，但电影是中日韩泰印法地区时，都不适用相似匹配，去掉限制
-                        return item.Id.ToString(CultureInfo.InvariantCulture);
+                        return seriesItem.Id.ToString(CultureInfo.InvariantCulture);
                     }
                     break;
             }

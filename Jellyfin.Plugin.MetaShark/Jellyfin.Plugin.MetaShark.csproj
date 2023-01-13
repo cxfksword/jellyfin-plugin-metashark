@@ -1,5 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Jellyfin.Plugin.MetaShark</RootNamespace>
@@ -8,35 +7,28 @@
     <Nullable>enable</Nullable>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="0.17.1" />
     <PackageReference Include="AnitomySharp" Version="0.2.0" />
     <PackageReference Include="Jellyfin.Controller" Version="10.8.0" />
     <PackageReference Include="Jellyfin.Model" Version="10.8.0" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="SerilogAnalyzer" Version="0.15.0" PrivateAssets="All" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.376" PrivateAssets="All" />
     <PackageReference Include="SmartAnalyzers.MultithreadingAnalyzer" Version="1.1.31" PrivateAssets="All" />
   </ItemGroup>
-
   <ItemGroup>
     <None Remove="Configuration\configPage.html" />
     <EmbeddedResource Include="Configuration\configPage.html" />
   </ItemGroup>
-
   <ItemGroup>
     <None Include="Vendor\TMDbLib\TMDbLib.csproj" />
   </ItemGroup>
-
 </Project>

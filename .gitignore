@@ -7,3 +7,4 @@ artifacts
 metashark/
 manifest_cn.json
 manifest.json
+.vscode

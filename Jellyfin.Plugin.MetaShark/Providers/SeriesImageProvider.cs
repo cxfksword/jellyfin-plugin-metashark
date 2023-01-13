@@ -58,7 +58,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
                 var primary = await this._doubanApi.GetMovieAsync(sid, cancellationToken);
-                if (primary == null)
+                if (primary == null || string.IsNullOrEmpty(primary.ImgMiddle))
                 {
                     return Enumerable.Empty<RemoteImageInfo>();
                 }
@@ -152,7 +152,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return list;
             }
 
-            return photo.Where(x => x.Width > x.Height * 1.3).Select(x =>
+            return photo.Where(x => x.Width > x.Height * 1.3 && !string.IsNullOrEmpty(x.Large)).Select(x =>
             {
                 return new RemoteImageInfo
                 {
