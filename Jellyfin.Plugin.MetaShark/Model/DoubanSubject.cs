@@ -80,8 +80,8 @@ namespace Jellyfin.Plugin.MetaShark.Model
                     return limitCelebrities;
                 }
 
-                limitCelebrities.AddRange(Celebrities.Where(x => x.RoleType == MediaBrowser.Model.Entities.PersonType.Director).Take(5));
-                limitCelebrities.AddRange(Celebrities.Where(x => x.RoleType != MediaBrowser.Model.Entities.PersonType.Director));
+                limitCelebrities.AddRange(Celebrities.Where(x => x.RoleType == MediaBrowser.Model.Entities.PersonType.Director && !string.IsNullOrEmpty(x.Name)).Take(5));
+                limitCelebrities.AddRange(Celebrities.Where(x => x.RoleType != MediaBrowser.Model.Entities.PersonType.Director && !string.IsNullOrEmpty(x.Name)));
 
                 return limitCelebrities;
             }

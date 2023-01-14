@@ -77,7 +77,7 @@ namespace Jellyfin.Plugin.MetaShark.Controllers
         }
 
         /// <summary>
-        /// 代理访问图片.
+        /// 检查豆瓣cookie是否失效.
         /// </summary>
         [Route("douban/checklogin")]
         [HttpGet]

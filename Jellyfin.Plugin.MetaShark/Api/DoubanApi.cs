@@ -243,40 +243,47 @@ namespace Jellyfin.Plugin.MetaShark.Api
             EnsureLoadDoubanCookie();
             await LimitRequestFrequently();
 
-            var encodedKeyword = HttpUtility.UrlEncode(keyword);
-            var url = $"https://www.douban.com/j/search_suggest?q={encodedKeyword}";
-
-            using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, url))
+            try
             {
-                requestMessage.Headers.Add("Origin", "https://www.douban.com");
-                requestMessage.Headers.Add("Referer", "https://www.douban.com/");
+                var encodedKeyword = HttpUtility.UrlEncode(keyword);
+                var url = $"https://www.douban.com/j/search_suggest?q={encodedKeyword}";
 
-                var response = await httpClient.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
-                if (!response.IsSuccessStatusCode)
+                using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, url))
                 {
-                    this._logger.LogWarning("douban suggest请求失败. keyword: {0} statusCode: {1}", keyword, response.StatusCode);
-                    return list;
-                }
+                    requestMessage.Headers.Add("Origin", "https://www.douban.com");
+                    requestMessage.Headers.Add("Referer", "https://www.douban.com/");
 
-                JsonSerializerOptions? serializeOptions = null;
-                var result = await response.Content.ReadFromJsonAsync<DoubanSuggestResult>(serializeOptions, cancellationToken).ConfigureAwait(false);
-
-                if (result != null && result.Cards != null)
-                {
-                    foreach (var suggest in result.Cards)
+                    var response = await httpClient.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
+                    if (!response.IsSuccessStatusCode)
                     {
-                        if (suggest.Type != "movie")
-                        {
-                            continue;
-                        }
+                        this._logger.LogWarning("douban suggest请求失败. keyword: {0} statusCode: {1}", keyword, response.StatusCode);
+                        return list;
+                    }
 
-                        var movie = new DoubanSubject();
-                        movie.Sid = suggest.Sid;
-                        movie.Name = suggest.Title;
-                        movie.Year = suggest.Year.ToInt();
-                        list.Add(movie);
+                    JsonSerializerOptions? serializeOptions = null;
+                    var result = await response.Content.ReadFromJsonAsync<DoubanSuggestResult>(serializeOptions, cancellationToken).ConfigureAwait(false);
+
+                    if (result != null && result.Cards != null)
+                    {
+                        foreach (var suggest in result.Cards)
+                        {
+                            if (suggest.Type != "movie")
+                            {
+                                continue;
+                            }
+
+                            var movie = new DoubanSubject();
+                            movie.Sid = suggest.Sid;
+                            movie.Name = suggest.Title;
+                            movie.Year = suggest.Year.ToInt();
+                            list.Add(movie);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "SearchBySuggestAsync error. keyword: {0}", keyword);
             }
 
             return list;
@@ -427,7 +434,12 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var celebrityImg = celebrityImgStr.GetMatchGroup(this.regBackgroundImage);
                 var celebrityNameStr = node.GetText("div.info a.name") ?? string.Empty;
                 var arr = celebrityNameStr.Split(" ");
-                var celebrityName = arr.Length > 1 ? arr[0] : celebrityNameStr;
+                var celebrityName = arr.Length > 1 ? arr[0].Trim() : celebrityNameStr;
+                // 有时存在演员信息缺少名字的
+                if (string.IsNullOrEmpty(celebrityName))
+                {
+                    continue;
+                }
                 var celebrityRoleStr = node.GetText("div.info span.role") ?? string.Empty;
                 var celebrityRole = celebrityRoleStr.GetMatchGroup(this.regRole);
                 var arrRole = celebrityRoleStr.Split(" ");
@@ -588,9 +600,10 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
         public async Task<List<DoubanPhoto>> GetWallpaperBySidAsync(string sid, CancellationToken cancellationToken)
         {
+            var list = new List<DoubanPhoto>();
             if (string.IsNullOrEmpty(sid))
             {
-                return new List<DoubanPhoto>();
+                return list;
             }
 
             var cacheKey = $"photo_{sid}";
@@ -604,52 +617,59 @@ namespace Jellyfin.Plugin.MetaShark.Api
             EnsureLoadDoubanCookie();
             await LimitRequestFrequently();
 
-            var list = new List<DoubanPhoto>();
-            var url = $"https://movie.douban.com/subject/{sid}/photos?type=W&start=0&sortby=size&size=a&subtype=a";
-            var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                return new List<DoubanPhoto>();
-            }
-
-            var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            var context = BrowsingContext.New();
-            var doc = await context.OpenAsync(req => req.Content(body), cancellationToken).ConfigureAwait(false);
-            var elements = doc.QuerySelectorAll(".poster-col3>li");
-
-            foreach (var node in elements)
-            {
-
-                var id = node.GetAttribute("data-id") ?? string.Empty;
-                var small = $"https://img2.doubanio.com/view/photo/s/public/p{id}.jpg";
-                var medium = $"https://img2.doubanio.com/view/photo/m/public/p{id}.jpg";
-                var large = $"https://img2.doubanio.com/view/photo/l/public/p{id}.jpg";
-                var size = node.GetText("div.prop") ?? string.Empty;
-                var width = string.Empty;
-                var height = string.Empty;
-                if (!string.IsNullOrEmpty(size))
+                var url = $"https://movie.douban.com/subject/{sid}/photos?type=W&start=0&sortby=size&size=a&subtype=a";
+                var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+                if (!response.IsSuccessStatusCode)
                 {
-                    var arr = size.Split('x');
-                    if (arr.Length == 2)
-                    {
-                        width = arr[0];
-                        height = arr[1];
-                    }
+                    return list;
                 }
 
-                var photo = new DoubanPhoto();
-                photo.Id = id;
-                photo.Size = size;
-                photo.Small = small;
-                photo.Medium = medium;
-                photo.Large = large;
-                photo.Width = width.ToInt();
-                photo.Height = height.ToInt();
+                var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                var context = BrowsingContext.New();
+                var doc = await context.OpenAsync(req => req.Content(body), cancellationToken).ConfigureAwait(false);
+                var elements = doc.QuerySelectorAll(".poster-col3>li");
 
-                list.Add(photo);
+                foreach (var node in elements)
+                {
+
+                    var id = node.GetAttribute("data-id") ?? string.Empty;
+                    var small = $"https://img2.doubanio.com/view/photo/s/public/p{id}.jpg";
+                    var medium = $"https://img2.doubanio.com/view/photo/m/public/p{id}.jpg";
+                    var large = $"https://img2.doubanio.com/view/photo/l/public/p{id}.jpg";
+                    var size = node.GetText("div.prop") ?? string.Empty;
+                    var width = string.Empty;
+                    var height = string.Empty;
+                    if (!string.IsNullOrEmpty(size))
+                    {
+                        var arr = size.Split('x');
+                        if (arr.Length == 2)
+                        {
+                            width = arr[0];
+                            height = arr[1];
+                        }
+                    }
+
+                    var photo = new DoubanPhoto();
+                    photo.Id = id;
+                    photo.Size = size;
+                    photo.Small = small;
+                    photo.Medium = medium;
+                    photo.Large = large;
+                    photo.Width = width.ToInt();
+                    photo.Height = height.ToInt();
+
+                    list.Add(photo);
+                }
+
+                _memoryCache.Set<List<DoubanPhoto>>(cacheKey, list, expiredOption);
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "GetWallpaperBySidAsync error. sid: {0}", sid);
             }
 
-            _memoryCache.Set<List<DoubanPhoto>>(cacheKey, list, expiredOption);
             return list;
         }
 
@@ -657,12 +677,19 @@ namespace Jellyfin.Plugin.MetaShark.Api
         {
             EnsureLoadDoubanCookie();
 
-            var url = "https://www.douban.com/mine/";
-            var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-            var requestUrl = response.RequestMessage?.RequestUri?.ToString();
-            if (requestUrl == null || requestUrl.Contains("login") || requestUrl.Contains("sec.douban.com"))
+            try
             {
-                return false;
+                var url = "https://www.douban.com/mine/";
+                var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+                var requestUrl = response.RequestMessage?.RequestUri?.ToString();
+                if (requestUrl == null || requestUrl.Contains("accounts.douban.com") || requestUrl.Contains("login") || requestUrl.Contains("sec.douban.com"))
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "CheckLoginAsync error.");
             }
 
             return true;
