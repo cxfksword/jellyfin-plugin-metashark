@@ -62,7 +62,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     return Enumerable.Empty<RemoteImageInfo>();
                 }
-                var dropback = await GetBackdrop(sid, cancellationToken);
+                var dropback = await GetBackdrop(item, cancellationToken);
 
                 var res = new List<RemoteImageInfo> {
                     new RemoteImageInfo
@@ -139,28 +139,58 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <summary>
         /// Query for a background photo
         /// </summary>
-        /// <param name="sid">a subject/movie id</param>
         /// <param name="cancellationToken">Instance of the <see cref="CancellationToken"/> interface.</param>
-        private async Task<IEnumerable<RemoteImageInfo>> GetBackdrop(string sid, CancellationToken cancellationToken)
+        private async Task<IEnumerable<RemoteImageInfo>> GetBackdrop(BaseItem item, CancellationToken cancellationToken)
         {
-            this.Log("GetBackdrop of sid: {0}", sid);
-            var photo = await this._doubanApi.GetWallpaperBySidAsync(sid, cancellationToken);
+            var sid = item.GetProviderId(DoubanProviderId);
+            var tmdbId = item.GetProviderId(MetadataProvider.Tmdb);
             var list = new List<RemoteImageInfo>();
 
-            if (photo == null)
+            // 从豆瓣获取背景图
+            if (!string.IsNullOrEmpty(sid))
+            {
+                var photo = await this._doubanApi.GetWallpaperBySidAsync(sid, cancellationToken);
+                if (photo != null && photo.Count > 0)
+                {
+                    this.Log("GetBackdrop from douban sid: {0}", sid);
+                    list = photo.Where(x => x.Width > x.Height * 1.3).Select(x =>
+                    {
+                        return new RemoteImageInfo
+                        {
+                            ProviderName = Name,
+                            Url = x.Large,
+                            Type = ImageType.Backdrop,
+                        };
+                    }).ToList();
+
+                }
+            }
+            if (list.Count > 0)
             {
                 return list;
             }
 
-            return photo.Where(x => x.Width > x.Height * 1.3 && !string.IsNullOrEmpty(x.Large)).Select(x =>
+            // 从TheMovieDb获取背景图
+            if (config.EnableTmdbBackdrop && !string.IsNullOrEmpty(tmdbId))
             {
-                return new RemoteImageInfo
+                var language = item.GetPreferredMetadataLanguage();
+                var movie = await _tmdbApi
+                .GetSeriesAsync(tmdbId.ToInt(), language, language, cancellationToken)
+                .ConfigureAwait(false);
+
+                if (movie != null && !string.IsNullOrEmpty(movie.BackdropPath))
                 {
-                    ProviderName = Name,
-                    Url = x.Large,
-                    Type = ImageType.Backdrop,
-                };
-            });
+                    this.Log("GetBackdrop from tmdb id: {0}", tmdbId);
+                    list.Add(new RemoteImageInfo
+                    {
+                        ProviderName = Name,
+                        Url = _tmdbApi.GetBackdropUrl(movie.BackdropPath),
+                        Type = ImageType.Backdrop,
+                    });
+                }
+            }
+
+            return list;
         }
 
     }
