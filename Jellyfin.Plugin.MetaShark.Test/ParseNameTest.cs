@@ -54,6 +54,14 @@ namespace Jellyfin.Plugin.MetaShark.Test
             parseResult = NameParser.Parse(fileName);
             Console.WriteLine(parseResult.ToJson());
 
+            // 只中文
+            fileName = "机动战士高达 逆袭的夏亚";
+            parseResult = NameParser.Parse(fileName);
+            Console.WriteLine(parseResult.ToJson());
+
+            fileName = "秒速5厘米";
+            parseResult = NameParser.Parse(fileName);
+            Console.WriteLine(parseResult.ToJson());
 
 
             // 标题加年份
@@ -98,6 +106,9 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
             // anime混合中日文
             fileName = "[异域-11番小队][罗马浴场 THERMAE_ROMAE][1-6+SP][BDRIP][720P][X264-10bit_AAC]";
+            var anitomyResult = AnitomySharp.AnitomySharp.Parse(fileName);
+            Console.WriteLine(anitomyResult.ToJson());
+
             parseResult = NameParser.Parse(fileName);
             Console.WriteLine(parseResult.ToJson());
 
@@ -121,9 +132,6 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
             // 只英文
             fileName = "She-Hulk.Attorney.At.Law.S01E01.1080p.WEBRip.x265-RARBG";
-            var anitomyResult = AnitomySharp.AnitomySharp.Parse(fileName);
-            Console.WriteLine(anitomyResult.ToJson());
-
             parseResult = NameParser.Parse(fileName);
             Console.WriteLine(parseResult.ToJson());
 

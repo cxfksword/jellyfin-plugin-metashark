@@ -69,6 +69,14 @@
                             </label>
                             <div class="fieldDescription">勾选后，识别时会同时返回TheMovieDb搜索结果</div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label" for="EnableTmdbBackdrop">
+                                <input id="EnableTmdbBackdrop" name="EnableTmdbBackdrop" type="checkbox"
+                                    is="emby-checkbox" />
+                                <span>使用TheMovieDb补全背景图</span>
+                            </label>
+                            <div class="fieldDescription">勾选后，当影片在豆瓣找不到背景图时，改使用TheMovieDb的补全</div>
+                        </div>
                         <div class="inputContainer">
                             <label class="inputLabel inputLabelUnfocused" for="TmdbApiKey">Api Key</label>
                             <input id="TmdbApiKey" name="TmdbApiKey" type="text" is="emby-input" />
@@ -104,6 +112,7 @@
                         document.querySelector('#EnableDoubanAvoidRiskControl').checked = config.EnableDoubanAvoidRiskControl;
                         document.querySelector('#EnableTmdb').checked = config.EnableTmdb;
                         document.querySelector('#EnableTmdbSearch').checked = config.EnableTmdbSearch;
+                        document.querySelector('#EnableTmdbBackdrop').checked = config.EnableTmdbBackdrop;
                         document.querySelector('#TmdbApiKey').value = config.TmdbApiKey;
                         document.querySelector('#TmdbHost').value = config.TmdbHost;
 
@@ -121,6 +130,7 @@
                         config.EnableDoubanAvoidRiskControl = document.querySelector('#EnableDoubanAvoidRiskControl').checked;
                         config.EnableTmdb = document.querySelector('#EnableTmdb').checked;
                         config.EnableTmdbSearch = document.querySelector('#EnableTmdbSearch').checked;
+                        config.EnableTmdbBackdrop = document.querySelector('#EnableTmdbBackdrop').checked;
                         config.TmdbApiKey = document.querySelector('#TmdbApiKey').value;
                         config.TmdbHost = document.querySelector('#TmdbHost').value;
                         ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {

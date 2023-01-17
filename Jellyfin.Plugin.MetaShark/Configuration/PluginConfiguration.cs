@@ -35,6 +35,8 @@ public class PluginConfiguration : BasePluginConfiguration
 
     public bool EnableTmdbSearch { get; set; } = false;
 
+    public bool EnableTmdbBackdrop { get; set; } = false;
+
     public string TmdbApiKey { get; set; } = string.Empty;
 
     public string TmdbHost { get; set; } = string.Empty;

@@ -79,8 +79,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
         Regex regFamily = new Regex(@"家庭成员: \n(.+?)\n", RegexOptions.Compiled);
         Regex regCelebrityImdb = new Regex(@"imdb编号:\s+?(nm\d+)", RegexOptions.Compiled);
 
-        // 默认1秒请求1次
-        private TimeLimiter _defaultTimeConstraint = TimeLimiter.GetFromMaxCountByInterval(1, TimeSpan.FromMilliseconds(1000));
+        // 默认500毫秒请求1次
+        private TimeLimiter _defaultTimeConstraint = TimeLimiter.GetFromMaxCountByInterval(1, TimeSpan.FromMilliseconds(500));
         // 未登录最多1分钟10次请求，不然5分钟后会被封ip
         private TimeLimiter _guestTimeConstraint = TimeLimiter.Compose(new CountByIntervalAwaitableConstraint(10, TimeSpan.FromMinutes(1)), new CountByIntervalAwaitableConstraint(1, TimeSpan.FromMilliseconds(5000)));
         // 登录后最多1分钟20次请求，不然会触发机器人检验

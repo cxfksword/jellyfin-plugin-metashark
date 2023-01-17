@@ -13,7 +13,7 @@ namespace Jellyfin.Plugin.MetaShark.Core
         private static readonly Regex yearReg = new Regex(@"[12][890][0-9][0-9]", RegexOptions.Compiled);
         private static readonly Regex seasonSuffixReg = new Regex(@"[ .]S\d{1,2}$", RegexOptions.Compiled);
 
-        private static readonly Regex unusedReg = new Regex(@"\[.+?\]|\(.+?\)", RegexOptions.Compiled);
+        private static readonly Regex unusedReg = new Regex(@"\[.+?\]|\(.+?\)|【.+?】", RegexOptions.Compiled);
 
         public static ParseNameResult Parse(string fileName, bool isTvSeries = false)
         {
@@ -25,15 +25,16 @@ namespace Jellyfin.Plugin.MetaShark.Core
                 {
                     case AnitomySharp.Element.ElementCategory.ElementAnimeTitle:
                         // 处理混合中英文的标题，中文一般在最前面，如V字仇杀队.V.for.Vendetta
-                        char[] seperatorChars = { ' ', '.' };
-                        var firstSpaceIndex = item.Value.IndexOfAny(seperatorChars);
+                        char[] delimiters = { ' ', '.' };
+                        var firstSpaceIndex = item.Value.IndexOfAny(delimiters);
                         if (firstSpaceIndex > 0)
                         {
                             var firstString = item.Value.Substring(0, firstSpaceIndex);
-                            if (firstString.HasChinese())
+                            var lastString = item.Value.Substring(firstSpaceIndex + 1);
+                            if (firstString.HasChinese() && !lastString.HasChinese())
                             {
                                 parseResult.ChineseName = CleanName(firstString);
-                                parseResult.Name = CleanName(item.Value.Substring(firstSpaceIndex + 1));
+                                parseResult.Name = CleanName(lastString);
                             }
                             else
                             {
