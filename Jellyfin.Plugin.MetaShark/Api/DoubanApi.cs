@@ -450,6 +450,12 @@ namespace Jellyfin.Plugin.MetaShark.Api
                     celebrityRole = celebrityRoleType;
                 }
 
+                // 自己/嘉宾一般用于综艺
+                if (celebrityRoleType != "导演" && celebrityRoleType != "配音" && celebrityRoleType != "演员" && celebrityRoleType != "自己" && celebrityRoleType != "嘉宾")
+                {
+                    continue;
+                }
+
                 var celebrity = new DoubanCelebrity();
                 celebrity.Id = celebrityId;
                 celebrity.Name = celebrityName;
