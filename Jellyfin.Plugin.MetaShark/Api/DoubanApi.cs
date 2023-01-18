@@ -450,11 +450,6 @@ namespace Jellyfin.Plugin.MetaShark.Api
                     celebrityRole = celebrityRoleType;
                 }
 
-                if (celebrityRoleType != "导演" && celebrityRoleType != "配音" && celebrityRoleType != "演员")
-                {
-                    continue;
-                }
-
                 var celebrity = new DoubanCelebrity();
                 celebrity.Id = celebrityId;
                 celebrity.Name = celebrityName;

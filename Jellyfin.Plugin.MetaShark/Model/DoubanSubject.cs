@@ -132,10 +132,10 @@ namespace Jellyfin.Plugin.MetaShark.Model
             {
                 if (string.IsNullOrEmpty(this._roleType))
                 {
-                    return this.Role.Equals("导演", StringComparison.Ordinal) ? MediaBrowser.Model.Entities.PersonType.Director : MediaBrowser.Model.Entities.PersonType.Actor;
+                    return this.Role.Contains("导演", StringComparison.Ordinal) ? MediaBrowser.Model.Entities.PersonType.Director : MediaBrowser.Model.Entities.PersonType.Actor;
                 }
 
-                return this._roleType.Equals("导演", StringComparison.Ordinal) ? MediaBrowser.Model.Entities.PersonType.Director : MediaBrowser.Model.Entities.PersonType.Actor;
+                return this._roleType.Contains("导演", StringComparison.Ordinal) ? MediaBrowser.Model.Entities.PersonType.Director : MediaBrowser.Model.Entities.PersonType.Actor;
             }
             set
             {

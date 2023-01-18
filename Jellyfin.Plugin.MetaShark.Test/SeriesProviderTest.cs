@@ -31,7 +31,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
         [TestMethod]
         public void TestGetMetadata()
         {
-            var info = new SeriesInfo() { Name = "外科医生奉达熙", ProviderIds = new Dictionary<string, string>() { { BaseProvider.DoubanProviderId, "2241528" } } };
+            var info = new SeriesInfo() { Name = "奔跑吧兄弟" };
             var doubanApi = new DoubanApi(loggerFactory);
             var tmdbApi = new TmdbApi(loggerFactory);
             var omdbApi = new OmdbApi(loggerFactory);
