@@ -158,7 +158,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         return new RemoteImageInfo
                         {
                             ProviderName = Name,
-                            Url = this.GetProxyImageUrl(x.Raw, true),
+                            Url = this.GetProxyImageUrl(x.Raw, true, true),
                             Height = x.Height,
                             Width = x.Width,
                             Type = ImageType.Backdrop,

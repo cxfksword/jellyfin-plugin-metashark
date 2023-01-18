@@ -247,7 +247,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <summary>
         /// 浏览器来源请求，返回代理地址（no-referer对于background-image不生效），其他客户端请求，返回原始图片地址
         /// </summary>
-        protected string GetProxyImageUrl(string url, bool absolute = false)
+        protected string GetProxyImageUrl(string url, bool absolute = false, bool force = false)
         {
             var fromWeb = false;
             var domain = string.Empty;
@@ -258,7 +258,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 fromWeb = clientInfo.Contains("Jellyfin Web");
             }
 
-            if (fromWeb)
+            if (fromWeb || force)
             {
                 var encodedUrl = HttpUtility.UrlEncode(url);
                 if (absolute)
