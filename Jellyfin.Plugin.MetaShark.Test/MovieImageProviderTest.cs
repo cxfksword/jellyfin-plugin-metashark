@@ -34,9 +34,9 @@ namespace Jellyfin.Plugin.MetaShark.Test
         {
             var info = new MediaBrowser.Controller.Entities.Movies.Movie()
             {
-                Name = "机动战士高达 逆袭的夏亚",
+                Name = "秒速5厘米",
                 PreferredMetadataLanguage = "zh",
-                ProviderIds = new Dictionary<string, string> { { BaseProvider.DoubanProviderId, "1401536" }, { MetadataProvider.Tmdb.ToString(), "16157" } }
+                ProviderIds = new Dictionary<string, string> { { BaseProvider.DoubanProviderId, "2043546" }, { MetadataProvider.Tmdb.ToString(), "38142" } }
             };
             var doubanApi = new DoubanApi(loggerFactory);
             var tmdbApi = new TmdbApi(loggerFactory);

@@ -78,9 +78,10 @@ namespace Jellyfin.Plugin.MetaShark.Api
         Regex regNickname = new Regex(@"更多外文名: \n(.+?)\n", RegexOptions.Compiled);
         Regex regFamily = new Regex(@"家庭成员: \n(.+?)\n", RegexOptions.Compiled);
         Regex regCelebrityImdb = new Regex(@"imdb编号:\s+?(nm\d+)", RegexOptions.Compiled);
+        Regex regImgHost = new Regex(@"\/\/(img\d+?)\.", RegexOptions.Compiled);
 
-        // 默认500毫秒请求1次
-        private TimeLimiter _defaultTimeConstraint = TimeLimiter.GetFromMaxCountByInterval(1, TimeSpan.FromMilliseconds(500));
+        // 默认200毫秒请求1次
+        private TimeLimiter _defaultTimeConstraint = TimeLimiter.GetFromMaxCountByInterval(1, TimeSpan.FromMilliseconds(200));
         // 未登录最多1分钟10次请求，不然5分钟后会被封ip
         private TimeLimiter _guestTimeConstraint = TimeLimiter.Compose(new CountByIntervalAwaitableConstraint(10, TimeSpan.FromMinutes(1)), new CountByIntervalAwaitableConstraint(1, TimeSpan.FromMilliseconds(5000)));
         // 登录后最多1分钟20次请求，不然会触发机器人检验
@@ -635,21 +636,13 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 {
 
                     var id = node.GetAttribute("data-id") ?? string.Empty;
-                    var small = $"https://img2.doubanio.com/view/photo/s/public/p{id}.jpg";
-                    var medium = $"https://img2.doubanio.com/view/photo/m/public/p{id}.jpg";
-                    var large = $"https://img2.doubanio.com/view/photo/l/public/p{id}.jpg";
+                    var imgUrl = node.QuerySelector("img")?.GetAttribute("src") ?? string.Empty;
+                    var imgHost = regImgHost.FirstMatchGroup(imgUrl, "img2");
+                    var small = $"https://{imgHost}.doubanio.com/view/photo/s/public/p{id}.jpg";
+                    var medium = $"https://{imgHost}.doubanio.com/view/photo/m/public/p{id}.jpg";
+                    var large = $"https://{imgHost}.doubanio.com/view/photo/l/public/p{id}.jpg";
+                    var raw = $"https://{imgHost}.doubanio.com/view/photo/raw/public/p{id}.jpg";
                     var size = node.GetText("div.prop") ?? string.Empty;
-                    var width = string.Empty;
-                    var height = string.Empty;
-                    if (!string.IsNullOrEmpty(size))
-                    {
-                        var arr = size.Split('x');
-                        if (arr.Length == 2)
-                        {
-                            width = arr[0];
-                            height = arr[1];
-                        }
-                    }
 
                     var photo = new DoubanPhoto();
                     photo.Id = id;
@@ -657,8 +650,16 @@ namespace Jellyfin.Plugin.MetaShark.Api
                     photo.Small = small;
                     photo.Medium = medium;
                     photo.Large = large;
-                    photo.Width = width.ToInt();
-                    photo.Height = height.ToInt();
+                    photo.Raw = raw;
+                    if (!string.IsNullOrEmpty(size))
+                    {
+                        var arr = size.Split('x');
+                        if (arr.Length == 2)
+                        {
+                            photo.Width = arr[0].ToInt();
+                            photo.Height = arr[1].ToInt();
+                        }
+                    }
 
                     list.Add(photo);
                 }

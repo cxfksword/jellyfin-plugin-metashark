@@ -150,8 +150,12 @@ namespace Jellyfin.Plugin.MetaShark.Model
         public string Small { get; set; }
         public string Medium { get; set; }
         public string Large { get; set; }
+        /// <summary>
+        /// 原始图片url，必须带referer访问
+        /// </summary>
+        public string Raw { get; set; }
         public string Size { get; set; }
-        public int Width { get; set; }
-        public int Height { get; set; }
+        public int? Width { get; set; }
+        public int? Height { get; set; }
     }
 }

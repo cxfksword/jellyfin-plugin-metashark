@@ -57,8 +57,14 @@ namespace Jellyfin.Plugin.MetaShark.Controllers
                 throw new ResourceNotFoundException();
             }
 
+            HttpResponseMessage response;
             var httpClient = GetHttpClient();
-            var response = await httpClient.GetAsync(url);
+            using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, url))
+            {
+                requestMessage.Headers.Add("Referer", "https://www.douban.com/");
+
+                response = await httpClient.SendAsync(requestMessage);
+            }
             var stream = await response.Content.ReadAsStreamAsync();
 
             Response.StatusCode = (int)response.StatusCode;

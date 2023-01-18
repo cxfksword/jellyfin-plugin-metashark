@@ -153,12 +153,14 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 if (photo != null && photo.Count > 0)
                 {
                     this.Log("GetBackdrop from douban sid: {0}", sid);
-                    list = photo.Where(x => x.Width > x.Height * 1.3).Select(x =>
+                    list = photo.Where(x => x.Width >= 1280 && x.Width <= 4096 && x.Width > x.Height * 1.3).Select(x =>
                     {
                         return new RemoteImageInfo
                         {
                             ProviderName = Name,
-                            Url = x.Large,
+                            Url = this.GetProxyImageUrl(x.Raw, true),
+                            Height = x.Height,
+                            Width = x.Width,
                             Type = ImageType.Backdrop,
                         };
                     }).ToList();
