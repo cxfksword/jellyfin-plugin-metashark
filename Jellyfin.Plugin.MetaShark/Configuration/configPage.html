@@ -48,6 +48,14 @@
                             </label>
                             <div class="fieldDescription">勾选后，刮削会变慢，适合刮削大量影片时使用，建议搭配网站cookie一起使用</div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label" for="EnableDoubanBackdropRaw">
+                                <input id="EnableDoubanBackdropRaw" name="EnableDoubanBackdropRaw" type="checkbox"
+                                    is="emby-checkbox" />
+                                <span>背景图使用原图</span>
+                            </label>
+                            <div class="fieldDescription">原图豆瓣限制更严格，一般不建议开启</div>
+                        </div>
                     </fieldset>
 
                     <fieldset class="verticalSection verticalSection-extrabottompadding">
@@ -110,6 +118,7 @@
 
                         document.querySelector('#DoubanCookies').value = config.DoubanCookies;
                         document.querySelector('#EnableDoubanAvoidRiskControl').checked = config.EnableDoubanAvoidRiskControl;
+                        document.querySelector('#EnableDoubanBackdropRaw').checked = config.EnableDoubanBackdropRaw;
                         document.querySelector('#EnableTmdb').checked = config.EnableTmdb;
                         document.querySelector('#EnableTmdbSearch').checked = config.EnableTmdbSearch;
                         document.querySelector('#EnableTmdbBackdrop').checked = config.EnableTmdbBackdrop;
@@ -128,6 +137,7 @@
                     ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
                         config.DoubanCookies = document.querySelector('#DoubanCookies').value;
                         config.EnableDoubanAvoidRiskControl = document.querySelector('#EnableDoubanAvoidRiskControl').checked;
+                        config.EnableDoubanBackdropRaw = document.querySelector('#EnableDoubanBackdropRaw').checked;
                         config.EnableTmdb = document.querySelector('#EnableTmdb').checked;
                         config.EnableTmdbSearch = document.querySelector('#EnableTmdbSearch').checked;
                         config.EnableTmdbBackdrop = document.querySelector('#EnableTmdbBackdrop').checked;

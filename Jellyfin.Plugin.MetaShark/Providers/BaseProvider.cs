@@ -61,6 +61,38 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
         }
 
+        protected string RequestDomain
+        {
+            get
+            {
+                if (_httpContextAccessor.HttpContext != null)
+                {
+                    return _httpContextAccessor.HttpContext.Request.Scheme + System.Uri.SchemeDelimiter + _httpContextAccessor.HttpContext.Request.Host;
+                }
+                else
+                {
+                    return string.Empty;
+                }
+
+            }
+        }
+
+        protected string RequestPath
+        {
+            get
+            {
+                if (_httpContextAccessor.HttpContext != null)
+                {
+                    return _httpContextAccessor.HttpContext.Request.Path.ToString();
+                }
+                else
+                {
+                    return string.Empty;
+                }
+
+            }
+        }
+
         protected BaseProvider(IHttpClientFactory httpClientFactory, ILogger logger, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
         {
             this._doubanApi = doubanApi;
@@ -250,16 +282,29 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// </summary>
         protected string GetProxyImageUrl(string url)
         {
+            var fromWeb = false;
             if (_httpContextAccessor.HttpContext != null)
             {
-                var domain = _httpContextAccessor.HttpContext.Request.Scheme + System.Uri.SchemeDelimiter + _httpContextAccessor.HttpContext.Request.Host;
+                var userAgent = _httpContextAccessor.HttpContext.Request.Headers.UserAgent.ToString();
+                fromWeb = userAgent.Contains("Chrome") || userAgent.Contains("Safari");
+            }
+
+            if (fromWeb)
+            {
                 var encodedUrl = HttpUtility.UrlEncode(url);
-                return $"{domain}/plugin/metashark/proxy/image/?url={encodedUrl}";
+                return $"/plugin/metashark/proxy/image/?url={encodedUrl}";
             }
             else
             {
                 return url;
             }
+        }
+
+
+        protected string GetAbsoluteProxyImageUrl(string url)
+        {
+            var encodedUrl = HttpUtility.UrlEncode(url);
+            return $"{this.RequestDomain}/plugin/metashark/proxy/image/?url={encodedUrl}";
         }
 
         protected void Log(string? message, params object?[] args)

@@ -28,8 +28,14 @@ public class PluginConfiguration : BasePluginConfiguration
     public string Version { get; } = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty;
 
     public string DoubanCookies { get; set; } = string.Empty;
-
+    /// <summary>
+    /// 开启防封禁
+    /// </summary>
     public bool EnableDoubanAvoidRiskControl { get; set; } = false;
+    /// <summary>
+    /// 背景图使用原图
+    /// </summary>
+    public bool EnableDoubanBackdropRaw { get; set; } = false;
 
     public bool EnableTmdb { get; set; } = true;
 

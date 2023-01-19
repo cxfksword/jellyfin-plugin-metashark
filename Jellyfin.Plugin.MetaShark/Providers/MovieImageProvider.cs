@@ -133,7 +133,19 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             this.Log("GetImageResponse url: {0}", url);
-            return await this._httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
+
+            if (url.Contains("doubanio.com"))
+            {// 豆瓣图，带referer下载
+                using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, url))
+                {
+                    requestMessage.Headers.Add("Referer", "https://www.douban.com/");
+                    return await this._httpClientFactory.CreateClient().SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                return await this._httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
+            }
         }
 
         /// <summary>
@@ -155,14 +167,27 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     this.Log("GetBackdrop from douban sid: {0}", sid);
                     list = photo.Where(x => x.Width >= 1280 && x.Width <= 4096 && x.Width > x.Height * 1.3).Select(x =>
                     {
-                        return new RemoteImageInfo
+                        if (config.EnableDoubanBackdropRaw)
                         {
-                            ProviderName = Name,
-                            Url = this.GetProxyImageUrl(x.Raw),
-                            Height = x.Height,
-                            Width = x.Width,
-                            Type = ImageType.Backdrop,
-                        };
+                            var fromBackdropSearch = RequestPath.Contains("/RemoteImages");
+                            return new RemoteImageInfo
+                            {
+                                ProviderName = Name,
+                                Url = fromBackdropSearch ? GetAbsoluteProxyImageUrl(x.Raw) : x.Raw,
+                                Height = x.Height,
+                                Width = x.Width,
+                                Type = ImageType.Backdrop,
+                            };
+                        }
+                        else
+                        {
+                            return new RemoteImageInfo
+                            {
+                                ProviderName = Name,
+                                Url = x.Large,
+                                Type = ImageType.Backdrop,
+                            };
+                        }
                     }).ToList();
 
                 }
