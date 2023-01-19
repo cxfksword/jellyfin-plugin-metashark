@@ -79,6 +79,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
         Regex regFamily = new Regex(@"家庭成员: \n(.+?)\n", RegexOptions.Compiled);
         Regex regCelebrityImdb = new Regex(@"imdb编号:\s+?(nm\d+)", RegexOptions.Compiled);
         Regex regImgHost = new Regex(@"\/\/(img\d+?)\.", RegexOptions.Compiled);
+        Regex regIntroduceSpace = new Regex(@"\n\s+", RegexOptions.Compiled);
 
         // 默认200毫秒请求1次
         private TimeLimiter _defaultTimeConstraint = TimeLimiter.GetFromMaxCountByInterval(1, TimeSpan.FromMilliseconds(200));
@@ -329,9 +330,11 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var year = yearStr.GetMatchGroup(this.regYear);
                 var rating = contentNode.GetText("div.rating_self strong.rating_num") ?? "0";
                 var img = contentNode.GetAttr("a.nbgnbg>img", "src") ?? string.Empty;
-                var intro = contentNode.GetText("div.indent>span") ?? string.Empty;
-                intro = intro.Replace("©豆瓣", string.Empty);
                 var category = contentNode.QuerySelector("div.episode_list") == null ? "电影" : "电视剧";
+                var intro = contentNode.GetText("div.indent>span") ?? string.Empty;
+                intro = formatIntroduce(intro);
+
+
 
                 var info = contentNode.GetText("#info") ?? string.Empty;
                 var director = info.GetMatchGroup(this.regDirector);
@@ -813,6 +816,12 @@ namespace Jellyfin.Plugin.MetaShark.Api
             }
 
             return string.Empty;
+        }
+
+        private string formatIntroduce(string intro)
+        {
+            intro = intro.Replace("©豆瓣", string.Empty);
+            return regIntroduceSpace.Replace(intro, "\n");
         }
 
         private bool IsEnableAvoidRiskControl()
