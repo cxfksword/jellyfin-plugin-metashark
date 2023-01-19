@@ -248,28 +248,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <summary>
         /// 浏览器来源请求，返回代理地址（no-referer对于background-image不生效），其他客户端请求，返回原始图片地址
         /// </summary>
-        protected string GetProxyImageUrl(string url, bool absolute = false, bool force = false)
+        protected string GetProxyImageUrl(string url)
         {
-            var fromWeb = false;
-            var domain = string.Empty;
             if (_httpContextAccessor.HttpContext != null)
             {
-                domain = _httpContextAccessor.HttpContext.Request.Scheme + System.Uri.SchemeDelimiter + _httpContextAccessor.HttpContext.Request.Host;
-                var clientInfo = _httpContextAccessor.HttpContext.Request.Headers.FirstOrDefault(x => x.Key == "X-Emby-Authorization").Value.FirstOrDefault() ?? string.Empty;
-                fromWeb = clientInfo.Contains("Jellyfin Web");
-            }
-
-            if (fromWeb || force)
-            {
+                var domain = _httpContextAccessor.HttpContext.Request.Scheme + System.Uri.SchemeDelimiter + _httpContextAccessor.HttpContext.Request.Host;
                 var encodedUrl = HttpUtility.UrlEncode(url);
-                if (absolute)
-                {
-                    return $"{domain}/plugin/metashark/proxy/image/?url={encodedUrl}";
-                }
-                else
-                {
-                    return $"/plugin/metashark/proxy/image/?url={encodedUrl}";
-                }
+                return $"{domain}/plugin/metashark/proxy/image/?url={encodedUrl}";
             }
             else
             {
