@@ -63,7 +63,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     return result;
                 }
-                var seriesName = series.Name;
+                var seriesName = RemoveSeasonSubfix(series.Name);
 
                 // 没有季id，但存在tmdbid，尝试从tmdb获取对应季的年份信息，用于从豆瓣搜索对应季数据
                 if (string.IsNullOrEmpty(seasonSid))
