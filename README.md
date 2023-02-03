@@ -1,7 +1,7 @@
 # jellyfin-plugin-metashark
 
 [![metashark](https://img.shields.io/github/v/release/cxfksword/jellyfin-plugin-metashark)](https://github.com/cxfksword/jellyfin-plugin-metashark/releases)
-[![metashark](https://img.shields.io/badge/jellyfin-10.8.x-lightgrey)](https://github.com/cxfksword/jellyfin-plugin-metashark/releases)
+[![metashark](https://img.shields.io/badge/jellyfin-10.8.x-lightgrey?logo=jellyfin)](https://github.com/cxfksword/jellyfin-plugin-metashark/releases)
 [![metashark](https://img.shields.io/github/license/cxfksword/jellyfin-plugin-metashark)](https://github.com/cxfksword/jellyfin-plugin-metashark/main/LICENSE) 
 
 jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TheMovieDb补全缺失的剧集数据。
@@ -10,7 +10,7 @@ jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TheMov
 * 支持从豆瓣和TMDB获取元数据
 * 兼容anime动画命名格式
 
-![preview](doc/logo.png)
+![logo](doc/logo.png)
 
 ## 安装插件
 
@@ -63,6 +63,6 @@ rm -rf MediaBrowser*.dll Microsoft*.dll Newtonsoft*.dll System*.dll Emby*.dll Je
 
 ## FAQ
 
-#### Plugin run in error: `System.BadImageFormatException: Bad IL format.` 
-
-Remove all hidden file and `meta.json` in `metashark` plugin folder
+1. Plugin run in error: `System.BadImageFormatException: Bad IL format.` 
+   
+   Remove all hidden file and `meta.json` in `metashark` plugin folder
