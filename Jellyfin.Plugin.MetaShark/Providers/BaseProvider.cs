@@ -51,7 +51,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         protected readonly IHttpContextAccessor _httpContextAccessor;
 
         protected Regex regMetaSourcePrefix = new Regex(@"^\[.+\]", RegexOptions.Compiled);
-        protected Regex regSeasonNameSuffix = new Regex(@"\s第.季$", RegexOptions.Compiled);
+        protected Regex regSeasonNameSuffix = new Regex(@"\s第[0-9一二三四五六七八九十]+?季$", RegexOptions.Compiled);
 
         protected PluginConfiguration config
         {
@@ -127,13 +127,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     item = result.Where(x => x.Year == info.Year && x.Name == searchName).FirstOrDefault();
                     if (item != null)
                     {
-                        this.Log($"GuessByDouban found [name]: {item.Name} [Sid]: {item.Sid} (suggest)");
+                        this.Log($"GuessByDouban found -> {item.Name}({item.Sid}) (suggest)");
                         return item.Sid;
                     }
                     item = result.Where(x => x.Year == info.Year).FirstOrDefault();
                     if (item != null)
                     {
-                        this.Log($"GuessByDouban found [name]: {item.Name} [Sid]: {item.Sid} (suggest)");
+                        this.Log($"GuessByDouban found -> {item.Name}({item.Sid}) (suggest)");
                         return item.Sid;
                     }
                 }
@@ -149,7 +149,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 item = result.Where(x => x.Category == cat && x.Year == info.Year).FirstOrDefault();
                 if (item != null)
                 {
-                    this.Log($"GuessByDouban found [name]: {item.Name} [Sid]: {item.Sid}");
+                    this.Log($"GuessByDouban found -> {item.Name}({item.Sid})");
                     return item.Sid;
                 }
             }
@@ -158,7 +158,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             item = result.Where(x => x.Category == cat).FirstOrDefault();
             if (item != null)
             {
-                this.Log($"GuessByDouban found [name]: {item.Name} [Sid]: {item.Sid}");
+                this.Log($"GuessByDouban found -> {item.Name}({item.Sid})");
                 return item.Sid;
             }
 
@@ -181,13 +181,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 var suggestItem = suggestResult.Where(x => x.Year == year && x.Name == name).FirstOrDefault();
                 if (suggestItem != null)
                 {
-                    this.Log($"GuestDoubanSeasonByYear found [name]: {suggestItem.Name} [Sid]: {suggestItem.Sid} (suggest)");
+                    this.Log($"GuestDoubanSeasonByYear found -> {suggestItem.Name}({suggestItem.Sid}) (suggest)");
                     return suggestItem.Sid;
                 }
                 suggestItem = suggestResult.Where(x => x.Year == year).FirstOrDefault();
                 if (suggestItem != null)
                 {
-                    this.Log($"GuestDoubanSeasonByYear found [name]: {suggestItem.Name} [Sid]: {suggestItem.Sid} (suggest)");
+                    this.Log($"GuestDoubanSeasonByYear found -> {suggestItem.Name}({suggestItem.Sid}) (suggest)");
                     return suggestItem.Sid;
                 }
             }
@@ -198,7 +198,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var item = result.Where(x => x.Category == "电视剧" && x.Year == year).FirstOrDefault();
             if (item != null && !string.IsNullOrEmpty(item.Sid))
             {
-                this.Log($"GuestDoubanSeasonByYear found [name]: {item.Name} [Sid]: {item.Sid}");
+                this.Log($"GuestDoubanSeasonByYear found -> {item.Name}({item.Sid})");
                 return item.Sid;
             }
 
@@ -226,7 +226,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     if (movieItem != null)
                     {
                         // bt种子都是英文名，但电影是中日韩泰印法地区时，都不适用相似匹配，去掉限制
-                        this.Log($"GuestByTmdb found [name]: {movieItem.Title} [tmdbID]: {movieItem.Id}");
+                        this.Log($"GuestByTmdb found -> {movieItem.Title}({movieItem.Id})");
                         return movieItem.Id.ToString(CultureInfo.InvariantCulture);
                     }
                     break;
@@ -236,7 +236,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     if (seriesItem != null)
                     {
                         // bt种子都是英文名，但电影是中日韩泰印法地区时，都不适用相似匹配，去掉限制
-                        this.Log($"GuestByTmdb found [name]: {seriesItem.Name} [tmdbID]: {seriesItem.Id}");
+                        this.Log($"GuestByTmdb found -> {seriesItem.Name}({seriesItem.Id})");
                         return seriesItem.Id.ToString(CultureInfo.InvariantCulture);
                     }
                     break;

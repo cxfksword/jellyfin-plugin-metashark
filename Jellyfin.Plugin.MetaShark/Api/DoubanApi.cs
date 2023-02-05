@@ -62,7 +62,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
         Regex regCountry = new Regex(@"制片国家/地区: (.+?)\n", RegexOptions.Compiled);
         Regex regLanguage = new Regex(@"语言: (.+?)\n", RegexOptions.Compiled);
         Regex regDuration = new Regex(@"片长: (.+?)\n", RegexOptions.Compiled);
-        Regex regScreen = new Regex(@"上映日期: (.+?)\n", RegexOptions.Compiled);
+        Regex regScreen = new Regex(@"(上映日期|首播): (.+?)\n", RegexOptions.Compiled);
         Regex regSubname = new Regex(@"又名: (.+?)\n", RegexOptions.Compiled);
         Regex regImdb = new Regex(@"IMDb: (tt\d+)", RegexOptions.Compiled);
         Regex regSite = new Regex(@"官方网站: (.+?)\n", RegexOptions.Compiled);
@@ -344,10 +344,11 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var country = info.GetMatchGroup(this.regCountry);
                 var language = info.GetMatchGroup(this.regLanguage);
                 var duration = info.GetMatchGroup(this.regDuration);
-                var screen = info.GetMatchGroup(this.regScreen);
                 var subname = info.GetMatchGroup(this.regSubname);
                 var imdb = info.GetMatchGroup(this.regImdb);
                 var site = info.GetMatchGroup(this.regSite);
+                var matchs = this.regScreen.Match(info);
+                var screen = matchs.Groups.Count > 2 ? matchs.Groups[2].Value : string.Empty;
 
                 movie.Sid = sid;
                 movie.Name = name;

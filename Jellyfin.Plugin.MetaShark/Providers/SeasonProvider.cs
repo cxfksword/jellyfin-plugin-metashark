@@ -57,13 +57,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
-                // 从sereis获取正确名称，季名称有时不对
+                // 从sereis获取正确名称，info的季名称是第x季
                 var series = await this._doubanApi.GetMovieAsync(sid, cancellationToken).ConfigureAwait(false);
                 if (series == null)
                 {
                     return result;
                 }
-                var seriesName = RemoveSeasonSubfix(series.Name);
+                var seasonName = RemoveSeasonSubfix(series.Name);
 
                 // 没有季id，但存在tmdbid，尝试从tmdb获取对应季的年份信息，用于从豆瓣搜索对应季数据
                 if (string.IsNullOrEmpty(seasonSid))
@@ -77,9 +77,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         seasonYear = season?.AirDate?.Year ?? 0;
                     }
 
-                    if (!string.IsNullOrEmpty(seriesName) && seasonYear > 0)
+                    if (!string.IsNullOrEmpty(seasonName) && seasonYear > 0)
                     {
-                        seasonSid = await this.GuestDoubanSeasonByYearAsync(seriesName, seasonYear, cancellationToken).ConfigureAwait(false);
+                        seasonSid = await this.GuestDoubanSeasonByYearAsync(seasonName, seasonYear, cancellationToken).ConfigureAwait(false);
                     }
                 }
 
@@ -101,7 +101,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                             Overview = subject.Intro,
                             ProductionYear = subject.Year,
                             Genres = subject.Genres,
-                            PremiereDate = subject.ScreenTime,
+                            PremiereDate = subject.ScreenTime,  // 发行日期
                             IndexNumber = info.IndexNumber,
                         };
 
@@ -132,21 +132,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
 
 
-                // 从豆瓣获取不到季信息，直接使用series信息（还是不替换旧有信息好？？）
-                result.Item = new Season
-                {
-                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, sid } },
-                    Name = series.Name,
-                    OriginalTitle = series.OriginalName,
-                    CommunityRating = series.Rating,
-                    Overview = series.Intro,
-                    ProductionYear = series.Year,
-                    Genres = series.Genres,
-                    PremiereDate = series.ScreenTime,
-                };
-
-                result.QueriedById = true;
-                result.HasMetadata = true;
+                // 从豆瓣获取不到季信息
                 return result;
             }
 
@@ -161,47 +147,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     return tmdbResult;
                 }
             }
-
-
-            // 季手工修正（先手工修改元数据，再刷新元数据->覆盖所有元数据），通过季名称重新搜索
-            // var guessName = Regex.Replace(info.Name, Pattern, " ");
-            // this.Log($"Try search season by name. original name: {info.Name} guess name: {guessName}");
-            // var guessSid = await this.GuestByDoubanAsync(info, cancellationToken).ConfigureAwait(false);
-            // if (!string.IsNullOrEmpty(guessSid))
-            // {
-
-            //     var subject = await this._doubanApi.GetMovieAsync(guessSid, cancellationToken).ConfigureAwait(false);
-            //     if (subject != null)
-            //     {
-            //         subject.Celebrities = await this._doubanApi.GetCelebritiesBySidAsync(guessSid, cancellationToken).ConfigureAwait(false);
-
-            //         var movie = new Season
-            //         {
-            //             ProviderIds = new Dictionary<string, string> { { DoubanProviderId, subject.Sid } },
-            //             Name = subject.Name,
-            //             OriginalTitle = subject.OriginalName,
-            //             CommunityRating = subject.Rating,
-            //             Overview = subject.Intro,
-            //             ProductionYear = subject.Year,
-            //             Genres = subject.Genres,
-            //             PremiereDate = subject.ScreenTime,
-            //             IndexNumber = info.IndexNumber,
-            //         };
-
-            //         result.Item = movie;
-            //         result.HasMetadata = true;
-            //         subject.Celebrities.Take(this.config.MaxCastMembers).ToList().ForEach(c => result.AddPerson(new PersonInfo
-            //         {
-            //             Name = c.Name,
-            //             Type = c.RoleType,
-            //             Role = c.Role,
-            //             ImageUrl = c.Img,
-            //             ProviderIds = new Dictionary<string, string> { { DoubanProviderId, c.Id } },
-            //         }));
-
-            //         return result;
-            //     }
-            // }
 
             return result;
         }
@@ -222,6 +167,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             result.HasMetadata = true;
             result.Item = new Season
             {
+                Name = seasonResult.Name,
                 IndexNumber = seasonNumber,
                 Overview = seasonResult.Overview,
                 PremiereDate = seasonResult.AirDate,

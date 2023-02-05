@@ -67,7 +67,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     {
                         SearchProviderName = TmdbProviderName,
                         ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), x.Id.ToString(CultureInfo.InvariantCulture) } },
-                        Name = x.Name ?? x.OriginalName,
+                        Name = string.Format("[TMDB]{0}", x.Name ?? x.OriginalName),
                         ImageUrl = this._tmdbApi.GetPosterUrl(x.PosterPath),
                         Overview = x.Overview,
                         ProductionYear = x.FirstAirDate?.Year,
