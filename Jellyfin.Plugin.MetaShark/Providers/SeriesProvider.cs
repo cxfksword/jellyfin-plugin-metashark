@@ -126,9 +126,10 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     item.SetProviderId(MetadataProvider.Imdb, subject.Imdb);
 
                     // 通过imdb获取TMDB id
-                    tmdbId = await this.GetTmdbIdByImdbAsync(subject.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-                    if (!string.IsNullOrEmpty(tmdbId))
+                    var newTmdbId = await this.GetTmdbIdByImdbAsync(subject.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
+                    if (!string.IsNullOrEmpty(newTmdbId))
                     {
+                        tmdbId = newTmdbId;
                         item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
                     }
                 }
@@ -136,9 +137,10 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 // 尝试通过搜索匹配获取tmdbId
                 if (string.IsNullOrEmpty(tmdbId))
                 {
-                    tmdbId = await this.GuestByTmdbAsync(info, cancellationToken).ConfigureAwait(false);
-                    if (!string.IsNullOrEmpty(tmdbId))
+                    var newTmdbId = await this.GuestByTmdbAsync(info, cancellationToken).ConfigureAwait(false);
+                    if (!string.IsNullOrEmpty(newTmdbId))
                     {
+                        tmdbId = newTmdbId;
                         item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
                     }
                 }
