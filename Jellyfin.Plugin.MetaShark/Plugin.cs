@@ -25,19 +25,15 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// </summary>
     public const string ProviderId = "MetaSharkID";
 
-    protected readonly IHttpContextAccessor _httpContextAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Plugin"/> class.
     /// </summary>
     /// <param name="applicationPaths">Instance of the <see cref="IApplicationPaths"/> interface.</param>
     /// <param name="xmlSerializer">Instance of the <see cref="IXmlSerializer"/> interface.</param>
-    /// /// <param name="httpContextAccessor">Instance of the <see cref="IHttpContextAccessor"/> interface.</param>
-    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, IHttpContextAccessor httpContextAccessor)
+    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer)
         : base(applicationPaths, xmlSerializer)
     {
-        this._httpContextAccessor = httpContextAccessor;
-
         Plugin.Instance = this;
     }
 
@@ -63,30 +59,5 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
                 EmbeddedResourcePath = string.Format(CultureInfo.InvariantCulture, "{0}.Configuration.configPage.html", GetType().Namespace)
             }
         };
-    }
-
-
-    /// <summary>
-    /// jellyfin web服务域名
-    /// 注意：经过nginx代理后，会拿不到真正的域名，需要用户配置http服务传入真正host
-    /// </summary>
-    public string BaseUrl
-    {
-        get
-        {
-            if (_httpContextAccessor.HttpContext != null)
-            {
-                // // 使用web浏览器访问直接使用相对链接？？？可解决用户配置了http反代
-                // var userAgent = _httpContextAccessor.HttpContext.Request.Headers.UserAgent.ToString();
-                // var fromWeb = userAgent.Contains("Chrome") || userAgent.Contains("Safari");
-                // if (fromWeb) return string.Empty;
-
-                return _httpContextAccessor.HttpContext.Request.Scheme + System.Uri.SchemeDelimiter + _httpContextAccessor.HttpContext.Request.Host;
-            }
-            else
-            {
-                return string.Empty;
-            }
-        }
     }
 }
