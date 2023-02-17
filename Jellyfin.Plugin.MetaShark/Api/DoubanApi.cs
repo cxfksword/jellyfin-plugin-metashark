@@ -79,7 +79,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
         Regex regFamily = new Regex(@"家庭成员: \n(.+?)\n", RegexOptions.Compiled);
         Regex regCelebrityImdb = new Regex(@"imdb编号:\s+?(nm\d+)", RegexOptions.Compiled);
         Regex regImgHost = new Regex(@"\/\/(img\d+?)\.", RegexOptions.Compiled);
-        Regex regIntroduceSpace = new Regex(@"\n\s+", RegexOptions.Compiled);
+        // 匹配除了换行符之外所有空白
+        Regex regOverviewSpace = new Regex(@"\n[^\S\n]+", RegexOptions.Compiled);
 
         // 默认200毫秒请求1次
         private TimeLimiter _defaultTimeConstraint = TimeLimiter.GetFromMaxCountByInterval(1, TimeSpan.FromMilliseconds(200));
@@ -332,7 +333,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var img = contentNode.GetAttr("a.nbgnbg>img", "src") ?? string.Empty;
                 var category = contentNode.QuerySelector("div.episode_list") == null ? "电影" : "电视剧";
                 var intro = contentNode.GetText("div.indent>span") ?? string.Empty;
-                intro = formatIntroduce(intro);
+                intro = formatOverview(intro);
 
 
 
@@ -536,7 +537,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 celebrity.Imdb = imdb;
                 celebrity.Birthplace = birthplace;
                 celebrity.Name = name;
-                celebrity.Intro = intro;
+                celebrity.Intro = formatOverview(intro);
                 celebrity.Constellation = constellation;
                 celebrity.Role = role;
                 _memoryCache.Set<DoubanCelebrity?>(cacheKey, celebrity, expiredOption);
@@ -819,10 +820,10 @@ namespace Jellyfin.Plugin.MetaShark.Api
             return string.Empty;
         }
 
-        private string formatIntroduce(string intro)
+        private string formatOverview(string intro)
         {
             intro = intro.Replace("©豆瓣", string.Empty);
-            return regIntroduceSpace.Replace(intro, "\n");
+            return regOverviewSpace.Replace(intro, "\n").Trim();
         }
 
         private bool IsEnableAvoidRiskControl()
