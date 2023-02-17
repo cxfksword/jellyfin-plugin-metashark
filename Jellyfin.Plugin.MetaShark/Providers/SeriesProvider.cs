@@ -121,17 +121,15 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     PremiereDate = subject.ScreenTime,
                 };
 
-                // 通过imdb获取tmdbId
                 if (!string.IsNullOrEmpty(subject.Imdb))
                 {
                     item.SetProviderId(MetadataProvider.Imdb, subject.Imdb);
-                    if (string.IsNullOrEmpty(tmdbId))
+
+                    // 通过imdb获取TMDB id
+                    tmdbId = await this.GetTmdbIdByImdbAsync(subject.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
+                    if (!string.IsNullOrEmpty(tmdbId))
                     {
-                        tmdbId = await this.GetTmdbIdByImdbAsync(subject.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-                        if (!string.IsNullOrEmpty(tmdbId))
-                        {
-                            item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
-                        }
+                        item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
                     }
                 }
 

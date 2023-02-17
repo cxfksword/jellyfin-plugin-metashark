@@ -134,27 +134,26 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     movie.SetProviderId(MetadataProvider.Imdb, subject.Imdb);
 
                     // 通过imdb获取TMDB id
-                    if (string.IsNullOrEmpty(tmdbId))
+                    tmdbId = await this.GetTmdbIdByImdbAsync(subject.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
+                    if (!string.IsNullOrEmpty(tmdbId))
                     {
-                        tmdbId = await this.GetTmdbIdByImdbAsync(subject.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-                        if (!string.IsNullOrEmpty(tmdbId))
-                        {
-                            movie.SetProviderId(MetadataProvider.Tmdb, tmdbId);
-
-                            // 获取电影系列信息
-                            if (this.config.EnableTmdbCollection)
-                            {
-                                var movieResult = await _tmdbApi
-                                                .GetMovieAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
-                                                .ConfigureAwait(false);
-                                if (movieResult != null && movieResult.BelongsToCollection != null)
-                                {
-                                    movie.CollectionName = movieResult.BelongsToCollection.Name;
-                                }
-                            }
-                        }
+                        movie.SetProviderId(MetadataProvider.Tmdb, tmdbId);
                     }
                 }
+
+                // 通过imdb获取电影系列信息
+                if (this.config.EnableTmdbCollection && !string.IsNullOrEmpty(tmdbId))
+                {
+                    var movieResult = await _tmdbApi
+                                    .GetMovieAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
+                                    .ConfigureAwait(false);
+                    if (movieResult != null && movieResult.BelongsToCollection != null)
+                    {
+                        movie.CollectionName = movieResult.BelongsToCollection.Name;
+                    }
+                }
+
+
                 result.Item = movie;
                 result.QueriedById = true;
                 result.HasMetadata = true;
@@ -175,8 +174,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             {
                 this.Log($"GetMovieMetadata of tmdb [id]: \"{tmdbId}\"");
                 var movieResult = await _tmdbApi
-                .GetMovieAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
-                .ConfigureAwait(false);
+                            .GetMovieAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
+                            .ConfigureAwait(false);
 
                 if (movieResult == null)
                 {
