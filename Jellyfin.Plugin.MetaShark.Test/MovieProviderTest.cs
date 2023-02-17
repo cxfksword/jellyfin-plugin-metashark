@@ -32,7 +32,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
         [TestMethod]
         public void TestGetMetadata()
         {
-            var info = new MovieInfo() { Name = "南极料理人" };
+
             var doubanApi = new DoubanApi(loggerFactory);
             var tmdbApi = new TmdbApi(loggerFactory);
             var omdbApi = new OmdbApi(loggerFactory);
@@ -42,6 +42,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
             Task.Run(async () =>
             {
+                var info = new MovieInfo() { Name = "南极料理人", MetadataLanguage = "zh" };
                 var provider = new MovieProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
                 var result = await provider.GetMetadata(info, CancellationToken.None);
                 Assert.IsNotNull(result);

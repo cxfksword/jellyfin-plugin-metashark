@@ -140,6 +140,18 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         if (!string.IsNullOrEmpty(tmdbId))
                         {
                             movie.SetProviderId(MetadataProvider.Tmdb, tmdbId);
+
+                            // 获取电影系列信息
+                            if (this.config.EnableTmdbCollection)
+                            {
+                                var movieResult = await _tmdbApi
+                                                .GetMovieAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
+                                                .ConfigureAwait(false);
+                                if (movieResult != null && movieResult.BelongsToCollection != null)
+                                {
+                                    movie.CollectionName = movieResult.BelongsToCollection.Name;
+                                }
+                            }
                         }
                     }
                 }
@@ -189,6 +201,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 movie.SetProviderId(MetadataProvider.Tmdb, tmdbId);
                 movie.SetProviderId(MetadataProvider.Imdb, movieResult.ImdbId);
                 movie.SetProviderId(Plugin.ProviderId, MetaSource.Tmdb);
+
+                // 获取电影系列信息
+                if (this.config.EnableTmdbCollection && movieResult.BelongsToCollection != null)
+                {
+                    movie.CollectionName = movieResult.BelongsToCollection.Name;
+                }
 
                 movie.CommunityRating = (float)System.Math.Round(movieResult.VoteAverage, 2);
                 movie.PremiereDate = movieResult.ReleaseDate;
