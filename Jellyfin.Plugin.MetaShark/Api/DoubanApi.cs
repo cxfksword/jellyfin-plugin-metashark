@@ -42,7 +42,6 @@ namespace Jellyfin.Plugin.MetaShark.Api
         private readonly ILogger<DoubanApi> _logger;
         private HttpClient httpClient;
         private CookieContainer _cookieContainer;
-        private string oldLoadedCookies = string.Empty;
         private readonly JsonSerializerOptions _jsonOptions = JsonDefaults.Options;
         private readonly IMemoryCache _memoryCache;
         private static readonly object _lock = new object();
@@ -106,56 +105,57 @@ namespace Jellyfin.Plugin.MetaShark.Api
             httpClient.DefaultRequestHeaders.Add("User-Agent", HTTP_USER_AGENT);
             httpClient.DefaultRequestHeaders.Add("Origin", "https://movie.douban.com");
             httpClient.DefaultRequestHeaders.Add("Referer", "https://movie.douban.com/");
+
+            this.LoadLoadDoubanCookie();
+            Plugin.Instance!.ConfigurationChanged += (_, _) =>
+            {
+                this.LoadLoadDoubanCookie();
+            };
         }
 
 
 
-        private void EnsureLoadDoubanCookie()
+        private void LoadLoadDoubanCookie()
         {
             var configCookie = Plugin.Instance?.Configuration.DoubanCookies.Trim() ?? string.Empty;
 
             lock (_lock)
             {
-                if (oldLoadedCookies != configCookie)
+                var uri = new Uri("https://douban.com/");
+
+                // 清空旧的cookie
+                var cookies = _cookieContainer.GetCookies(uri);
+                foreach (Cookie co in cookies)
                 {
-                    oldLoadedCookies = configCookie;
-
-                    var uri = new Uri("https://douban.com/");
-
-                    // 清空旧的cookie
-                    var cookies = _cookieContainer.GetCookies(uri);
-                    foreach (Cookie co in cookies)
-                    {
-                        co.Expires = DateTime.Now.Subtract(TimeSpan.FromDays(1));
-                    }
-
-
-                    // 附加新的cookie
-                    if (!string.IsNullOrEmpty(configCookie))
-                    {
-                        var arr = configCookie.Split(';');
-                        foreach (var str in arr)
-                        {
-                            var cookieArr = str.Split('=');
-                            if (cookieArr.Length != 2)
-                            {
-                                continue;
-                            }
-
-                            var key = cookieArr[0].Trim();
-                            var value = cookieArr[1].Trim();
-                            try
-                            {
-                                _cookieContainer.Add(new Cookie(key, value, "/", ".douban.com"));
-                            }
-                            catch (Exception ex)
-                            {
-                                this._logger.LogError(ex, ex.Message);
-                            }
-                        }
-                    }
+                    co.Expires = DateTime.Now.Subtract(TimeSpan.FromDays(1));
                 }
 
+
+                // 附加新的cookie
+                if (!string.IsNullOrEmpty(configCookie))
+                {
+                    var arr = configCookie.Split(';');
+                    foreach (var str in arr)
+                    {
+                        var cookieArr = str.Split('=');
+                        if (cookieArr.Length != 2)
+                        {
+                            continue;
+                        }
+
+                        var key = cookieArr[0].Trim();
+                        var value = cookieArr[1].Trim();
+                        try
+                        {
+                            _cookieContainer.Add(new Cookie(key, value, "/", ".douban.com"));
+                        }
+                        catch (Exception ex)
+                        {
+                            this._logger.LogDebug(ex, ex.Message);
+                        }
+                    }
+
+                }
             }
         }
 
@@ -168,15 +168,13 @@ namespace Jellyfin.Plugin.MetaShark.Api
             }
 
             var cacheKey = $"search_{keyword}";
-            var expiredOption = new MemoryCacheEntryOptions() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30) };
+            var expiredOption = new MemoryCacheEntryOptions() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) };
             List<DoubanSubject> searchResult;
             if (_memoryCache.TryGetValue<List<DoubanSubject>>(cacheKey, out searchResult))
             {
                 return searchResult;
             }
 
-
-            EnsureLoadDoubanCookie();
             await LimitRequestFrequently();
 
             var encodedKeyword = HttpUtility.UrlEncode(keyword);
@@ -243,7 +241,6 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return list;
             }
 
-            EnsureLoadDoubanCookie();
             await LimitRequestFrequently();
 
             try
@@ -307,7 +304,6 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return movie;
             }
 
-            EnsureLoadDoubanCookie();
             await LimitRequestFrequently();
 
             var url = $"https://movie.douban.com/subject/{sid}/";
@@ -415,7 +411,6 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return celebrities;
             }
 
-            EnsureLoadDoubanCookie();
             await LimitRequestFrequently();
 
             var list = new List<DoubanCelebrity>();
@@ -491,8 +486,6 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return celebrity;
             }
 
-            EnsureLoadDoubanCookie();
-
             var url = $"https://movie.douban.com/celebrity/{id}/";
             var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
@@ -567,9 +560,6 @@ namespace Jellyfin.Plugin.MetaShark.Api
             }
 
 
-            EnsureLoadDoubanCookie();
-
-
             keyword = HttpUtility.UrlEncode(keyword);
             var url = $"https://movie.douban.com/celebrities/search?search_text={keyword}";
             var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
@@ -621,7 +611,6 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return photos;
             }
 
-            EnsureLoadDoubanCookie();
             await LimitRequestFrequently();
 
             try
@@ -682,8 +671,6 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
         public async Task<bool> CheckLoginAsync(CancellationToken cancellationToken)
         {
-            EnsureLoadDoubanCookie();
-
             try
             {
                 var url = "https://www.douban.com/mine/";
@@ -720,53 +707,6 @@ namespace Jellyfin.Plugin.MetaShark.Api
             {
                 await this._defaultTimeConstraint;
             }
-
-            // var diff = 0;
-            // Double interval = 0.0;
-            // if (IsEnableAvoidRiskControl())
-            // {
-            //     var configCookie = Plugin.Instance?.Configuration.DoubanCookies.Trim() ?? string.Empty;
-            //     if (string.IsNullOrEmpty(configCookie))
-            //     {
-            //         interval = 3000;
-            //     }
-            //     else
-            //     {
-            //         interval = 6000;
-            //     }
-            //     // // 启用防止封禁
-            //     // this._logger.LogWarning("thread开始等待." + Thread.CurrentThread.ManagedThreadId);
-            //     // await this._limitTimeConstraint;
-            //     // this._logger.LogWarning("thread等待结束." + Thread.CurrentThread.ManagedThreadId);
-            // }
-            // else
-            // {
-            //     interval = 1000;
-            //     // 默认限制
-            //     // await this._defaultTimeConstraint;
-            // }
-
-            // this._logger.LogWarning("thread进入." + Thread.CurrentThread.ManagedThreadId);
-            // lock (_lock)
-            // {
-            //     this._logger.LogWarning("thread开始等待." + Thread.CurrentThread.ManagedThreadId);
-
-            //     lastRequestTime = lastRequestTime.AddMilliseconds(interval);
-            //     diff = (int)(lastRequestTime - DateTime.Now).TotalMilliseconds;
-            //     if (diff <= 0)
-            //     {
-            //         lastRequestTime = DateTime.Now;
-            //     }
-            // }
-
-            // if (diff > 0)
-            // {
-            //     this._logger.LogInformation("请求太频繁，等待{0}毫秒后继续执行..." + Thread.CurrentThread.ManagedThreadId, diff);
-            //     // Thread.Sleep(diff);
-            //     await Task.Delay(diff);
-            // }
-
-            // this._logger.LogWarning("thread等待结束." + Thread.CurrentThread.ManagedThreadId);
         }
 
         private string GetTitle(string body)

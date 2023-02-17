@@ -37,8 +37,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
             _logger = loggerFactory.CreateLogger<TmdbApi>();
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
             var config = Plugin.Instance?.Configuration;
-            var apiKey = config == null || string.IsNullOrEmpty(config.TmdbApiKey) ? DEFAULT_API_KEY : config.TmdbApiKey;
-            var host = config == null || string.IsNullOrEmpty(config.TmdbHost) ? DEFAULT_API_HOST : config.TmdbHost;
+            var apiKey = string.IsNullOrEmpty(config?.TmdbApiKey) ? DEFAULT_API_KEY : config.TmdbApiKey;
+            var host = string.IsNullOrEmpty(config?.TmdbHost) ? DEFAULT_API_HOST : config.TmdbHost;
             _tmDbClient = new TMDbClient(apiKey, true, host);
             _tmDbClient.RequestTimeout = TimeSpan.FromSeconds(10);
             // Not really interested in NotFoundException
