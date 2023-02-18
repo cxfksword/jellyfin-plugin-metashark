@@ -92,10 +92,14 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             this.Log($"GetMovieMetadata of [name]: {info.Name}");
             var result = new MetadataResult<Movie>();
 
+            // 使用刷新元数据时，providerIds会保留旧有值，只有识别/新增才会没值
             var sid = info.GetProviderId(DoubanProviderId);
             var tmdbId = info.GetProviderId(MetadataProvider.Tmdb);
-            var metaSource = info.GetProviderId(Plugin.ProviderId); // 刷新元数据时会有值
-            if (string.IsNullOrEmpty(sid) && string.IsNullOrEmpty(tmdbId))
+            var metaSource = info.GetProviderId(Plugin.ProviderId);
+            // 注意：会存在元数据有tmdbId，但metaSource没值的情况（之前由TMDB插件刮削导致）
+            var hasTmdbMeta = metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(tmdbId);
+            var hasDoubanMeta = metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid);
+            if (!hasDoubanMeta && !hasTmdbMeta)
             {
                 // 自动扫描搜索匹配元数据
                 sid = await this.GuessByDoubanAsync(info, cancellationToken).ConfigureAwait(false);
@@ -145,13 +149,18 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 // 通过imdb获取电影系列信息
                 if (this.config.EnableTmdbCollection && !string.IsNullOrEmpty(tmdbId))
                 {
-                    var movieResult = await _tmdbApi
-                                    .GetMovieAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
-                                    .ConfigureAwait(false);
-                    if (movieResult != null && movieResult.BelongsToCollection != null)
+                    try
                     {
-                        movie.CollectionName = movieResult.BelongsToCollection.Name;
+                        var movieResult = await _tmdbApi
+                                        .GetMovieAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
+                                        .ConfigureAwait(false);
+                        if (movieResult != null && movieResult.BelongsToCollection != null)
+                        {
+                            movie.CollectionName = movieResult.BelongsToCollection.Name;
+                        }
                     }
+                    catch (Exception ex)
+                    { }
                 }
 
 

@@ -84,10 +84,14 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             this.Log($"GetSeriesMetadata of [name]: {info.Name} [providerIds]: {info.ProviderIds.ToJson()}");
             var result = new MetadataResult<Series>();
 
+            // 使用刷新元数据时，providerIds会保留旧有值，只有识别/新增才会没值
             var sid = info.GetProviderId(DoubanProviderId);
             var tmdbId = info.GetProviderId(MetadataProvider.Tmdb);
-            var metaSource = info.GetProviderId(Plugin.ProviderId); // 刷新元数据时会有值
-            if (string.IsNullOrEmpty(sid) && string.IsNullOrEmpty(tmdbId))
+            var metaSource = info.GetProviderId(Plugin.ProviderId);
+            // 注意：会存在元数据有tmdbId，但metaSource没值的情况（之前由TMDB插件刮削导致）
+            var hasTmdbMeta = metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(tmdbId);
+            var hasDoubanMeta = metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid);
+            if (!hasDoubanMeta && !hasTmdbMeta)
             {
                 // 自动扫描搜索匹配元数据
                 sid = await this.GuessByDoubanAsync(info, cancellationToken).ConfigureAwait(false);
