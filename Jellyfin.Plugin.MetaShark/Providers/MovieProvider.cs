@@ -149,18 +149,11 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 // 通过imdb获取电影系列信息
                 if (this.config.EnableTmdbCollection && !string.IsNullOrEmpty(tmdbId))
                 {
-                    try
+                    var collectionName = await this.GetBelongsToCollection(info, tmdbId, cancellationToken).ConfigureAwait(false);
+                    if (!string.IsNullOrEmpty(collectionName))
                     {
-                        var movieResult = await _tmdbApi
-                                        .GetMovieAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
-                                        .ConfigureAwait(false);
-                        if (movieResult != null && movieResult.BelongsToCollection != null)
-                        {
-                            movie.CollectionName = movieResult.BelongsToCollection.Name;
-                        }
+                        movie.CollectionName = collectionName;
                     }
-                    catch (Exception ex)
-                    { }
                 }
 
 
@@ -316,6 +309,20 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
             }
 
+        }
+
+        private async Task<String?> GetBelongsToCollection(MovieInfo info, string tmdbId, CancellationToken cancellationToken)
+        {
+
+            var movieResult = await _tmdbApi
+                            .GetMovieAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
+                            .ConfigureAwait(false);
+            if (movieResult != null && movieResult.BelongsToCollection != null)
+            {
+                return movieResult.BelongsToCollection.Name;
+            }
+
+            return null;
         }
 
 
