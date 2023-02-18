@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -14,6 +15,8 @@ namespace Jellyfin.Plugin.MetaShark.Core
         private static readonly Regex seasonSuffixReg = new Regex(@"[ .]S\d{1,2}$", RegexOptions.Compiled);
 
         private static readonly Regex unusedReg = new Regex(@"\[.+?\]|\(.+?\)|【.+?】", RegexOptions.Compiled);
+
+        private static readonly Regex extrasReg = new Regex(@"\[(CM|Menu|NCED|NCOP|Drama)[0-9_]*?\]", RegexOptions.Compiled);
 
         public static ParseNameResult Parse(string fileName, bool isTvSeries = false)
         {
@@ -136,10 +139,33 @@ namespace Jellyfin.Plugin.MetaShark.Core
             return 0;
         }
 
+        public static bool IsSpecial(string path)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(path) ?? string.Empty;
+            if (IsAnime(fileName))
+            {
+                if (fileName.Contains("[SP]"))
+                {
+                    return true;
+                }
+
+                string folder = Path.GetFileName(Path.GetDirectoryName(path)) ?? string.Empty;
+                return folder == "SPs" && !extrasReg.IsMatch(fileName);
+            }
+
+            return false;
+        }
+
+        public static bool IsExtra(string name)
+        {
+            return IsAnime(name) && extrasReg.IsMatch(name);
+        }
+
+
 
         // 判断是否为动漫
         // https://github.com/jxxghp/nas-tools/blob/f549c924558fd49e183333285bc6a804af1a2cb7/app/media/meta/metainfo.py#L51
-        private static bool IsAnime(string name)
+        public static bool IsAnime(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
             {

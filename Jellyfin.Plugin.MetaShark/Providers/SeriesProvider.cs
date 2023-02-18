@@ -123,6 +123,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     Genres = subject.Genres,
                     // ProductionLocations = [x?.Country],
                     PremiereDate = subject.ScreenTime,
+                    Tagline = string.Empty,
                 };
 
                 if (!string.IsNullOrEmpty(subject.Imdb))

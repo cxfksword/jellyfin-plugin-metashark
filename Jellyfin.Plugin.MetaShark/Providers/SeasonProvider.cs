@@ -57,13 +57,15 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
-                // 从sereis获取正确名称，info的季名称是第x季
+                // 从sereis获取正确名称，info.Name当是标准格式如S01等时，会变成第x季，非标准名称没法识别时默认文件名
                 var series = await this._doubanApi.GetMovieAsync(sid, cancellationToken).ConfigureAwait(false);
                 if (series == null)
                 {
                     return result;
                 }
                 var seasonName = RemoveSeasonSubfix(series.Name);
+
+                // TODO:季文件夹名称不规范，没法拿到seasonNumber，尝试从文件名猜出？？？
 
                 // 没有季id，但存在tmdbid，尝试从tmdb获取对应季的年份信息，用于从豆瓣搜索对应季数据
                 if (string.IsNullOrEmpty(seasonSid))
@@ -118,6 +120,10 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
                         return result;
                     }
+                }
+                else
+                {
+                    this.Log($"GetSeasonMetaData of [name]: {info.Name} not found douban season id!");
                 }
 
 

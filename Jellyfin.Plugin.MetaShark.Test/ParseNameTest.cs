@@ -140,11 +140,41 @@ namespace Jellyfin.Plugin.MetaShark.Test
             parseResult = NameParser.Parse(fileName);
             Console.WriteLine(parseResult.ToJson());
 
+            // anime带季数
             fileName = "[WMSUB][Detective Conan - Zero‘s Tea Time ][S01][E06][BIG5][1080P].mp4";
             parseResult = NameParser.Parse(fileName);
             Console.WriteLine(parseResult.ToJson());
 
+            fileName = "[KTXP][Machikado_Mazoku_S2][01][BIG5][1080p]";
+            parseResult = NameParser.Parse(fileName);
+            Console.WriteLine(parseResult.ToJson());
 
+
+            // anime特典
+            fileName = "[KissSub][Steins;Gate][SP][GB_BIG5_JP][BDrip][1080P][HEVC] 边界曲面的缺失之环";
+            parseResult = NameParser.Parse(fileName);
+            Console.WriteLine(parseResult.ToJson());
+
+        }
+
+        [TestMethod]
+        public void TestCheckExtra()
+        {
+            var name = "[VCB-Studio] Spice and Wolf [CM02][Ma10p_1080p][x265_flac]";
+            var result = NameParser.IsExtra(name);
+            Console.WriteLine(result);
+
+            name = "[VCB-Studio] Spice and Wolf [Menu01_2][Ma10p_1080p][x265_flac]";
+            result = NameParser.IsExtra(name);
+            Console.WriteLine(result);
+
+            name = "[VCB-Studio] Spice and Wolf [NCED][Ma10p_1080p][x265_flac]";
+            result = NameParser.IsExtra(name);
+            Console.WriteLine(result);
+
+            name = "[VCB-Studio] Spice and Wolf [NCOP][Ma10p_1080p][x265_flac]";
+            result = NameParser.IsExtra(name);
+            Console.WriteLine(result);
         }
 
     }

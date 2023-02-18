@@ -1,4 +1,5 @@
-﻿using Jellyfin.Plugin.MetaShark.Api;
+﻿using System.Reflection.Metadata;
+using Jellyfin.Plugin.MetaShark.Api;
 using Jellyfin.Plugin.MetaShark.Core;
 using Jellyfin.Plugin.MetaShark.Model;
 using MediaBrowser.Common.Net;
@@ -62,6 +63,14 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             this.Log($"GetEpisodeMetadata of [name]: {info.Name} number: {info.IndexNumber} ParentIndexNumber: {info.ParentIndexNumber}");
             var result = new MetadataResult<Episode>();
 
+            // 动画特典和extras处理
+            var specialEpisode = this.HandleAnimeSpecialAndExtras(info.Path);
+            if (specialEpisode != null)
+            {
+                result.HasMetadata = true;
+                result.Item = specialEpisode;
+                return result;
+            }
 
             // 剧集信息只有tmdb有
             info.SeriesProviderIds.TryGetValue(MetadataProvider.Tmdb.ToString(), out var seriesTmdbId);
@@ -82,9 +91,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 seasonNumber = 1;
             }
             // 修正anime命名格式导致的episodeNumber错误
-            var fileName = Path.GetFileName(info.Path) ?? string.Empty;
+            var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? string.Empty;
             var guessInfo = this.GuessEpisodeNumber(fileName);
-            this.Log("GuessEpisodeNumber: fileName: {0} seasonNumber: {1} episodeNumber: {2}", fileName, guessInfo.seasonNumber, guessInfo.episodeNumber);
+            this.Log("GuessEpisodeNumber: fileName: {0} seasonNumber: {1} episodeNumber: {2} name: {3}", fileName, guessInfo.seasonNumber, guessInfo.episodeNumber, guessInfo.Name);
             if (guessInfo.seasonNumber.HasValue && guessInfo.seasonNumber != seasonNumber)
             {
                 seasonNumber = guessInfo.seasonNumber.Value;
@@ -99,6 +108,10 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     ParentIndexNumber = seasonNumber,
                     IndexNumber = episodeNumber
                 };
+                if (!string.IsNullOrEmpty(guessInfo.Name))
+                {
+                    result.Item.Name = guessInfo.Name;
+                }
             }
 
             if (episodeNumber is null or 0 || seasonNumber is null or 0 || string.IsNullOrEmpty(seriesTmdbId))
@@ -197,7 +210,44 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 guessInfo.episodeNumber = null;
             }
 
+            var animeName = parseResult.FirstOrDefault(x => x.Category == AnitomySharp.Element.ElementCategory.ElementAnimeTitle);
+            if (animeName != null && NameParser.IsAnime(fileName))
+            {
+                guessInfo.Name = animeName.Value;
+            }
+
             return guessInfo;
+        }
+
+        private Episode? HandleAnimeSpecialAndExtras(string filePath)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(filePath) ?? string.Empty;
+            if (NameParser.IsExtra(fileName))
+            {
+                this.Log($"Found anime extra of [name]: {fileName}");
+                return new Episode
+                {
+                    Name = fileName
+                };
+            }
+            if (NameParser.IsSpecial(filePath))
+            {
+                this.Log($"Found anime sp of [name]: {fileName}");
+                var guessInfo = this.GuessEpisodeNumber(fileName);
+                var ep = new Episode
+                {
+                    ParentIndexNumber = 0,
+                    IndexNumber = guessInfo.episodeNumber,
+                };
+                if (!string.IsNullOrEmpty(guessInfo.Name))
+                {
+                    ep.Name = guessInfo.Name;
+                }
+
+                return ep;
+            }
+
+            return null;
         }
 
 

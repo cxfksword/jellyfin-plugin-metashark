@@ -209,7 +209,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
             }
             catch (Exception ex)
             {
-                _memoryCache.Set(key, season, TimeSpan.FromHours(CacheDurationInHours));
+                // 可能网络有问题，缓存一下避免频繁请求
+                _memoryCache.Set(key, season, TimeSpan.FromSeconds(30));
                 this._logger.LogError(ex, ex.Message);
                 return null;
             }

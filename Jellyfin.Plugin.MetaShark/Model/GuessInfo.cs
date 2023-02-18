@@ -11,5 +11,7 @@ namespace Jellyfin.Plugin.MetaShark.Model
         public int? episodeNumber { get; set; }
 
         public int? seasonNumber { get; set; }
+
+        public string? Name { get; set; }
     }
 }
