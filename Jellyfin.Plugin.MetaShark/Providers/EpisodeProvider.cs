@@ -132,6 +132,11 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             // 判断tmdb剧集信息数目和视频是否一致，不一致不处理
             var videoFilesCount = this.GetVideoFileCount(Path.GetDirectoryName(info.Path));
+            if (!info.IsAutomated && parent is Season)
+            {
+                // 刷新元数据时，直接从season拿准确的视频数，并排除特典等没有季号的视频
+                videoFilesCount = ((Season)parent).GetEpisodes().Where(x => x.ParentIndexNumber == parent.IndexNumber).Count();
+            }
             if (videoFilesCount > 0 && seasonResult.Episodes.Count != videoFilesCount)
             {
                 this.Log("Tmdb episode number not match. Name: {0} tmdb episode count: {1} video files count: {2}", info.Name, seasonResult.Episodes.Count, videoFilesCount);
