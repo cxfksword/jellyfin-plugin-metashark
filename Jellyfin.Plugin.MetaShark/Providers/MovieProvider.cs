@@ -146,6 +146,17 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     }
                 }
 
+                // 尝试通过搜索匹配获取tmdbId
+                if (string.IsNullOrEmpty(tmdbId) && subject.Year > 0)
+                {
+                    var newTmdbId = await this.GuestByTmdbAsync(subject.Name, subject.Year, info, cancellationToken).ConfigureAwait(false);
+                    if (!string.IsNullOrEmpty(newTmdbId))
+                    {
+                        tmdbId = newTmdbId;
+                        movie.SetProviderId(MetadataProvider.Tmdb, tmdbId);
+                    }
+                }
+
                 // 通过imdb获取电影系列信息
                 if (this.config.EnableTmdbCollection && !string.IsNullOrEmpty(tmdbId))
                 {

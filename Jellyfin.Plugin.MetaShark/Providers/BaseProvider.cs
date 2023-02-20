@@ -149,7 +149,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 item = result.Where(x => x.Category == cat && x.Year == info.Year).FirstOrDefault();
                 if (item != null)
                 {
-                    this.Log($"GuessByDouban found -> {item.Name}({item.Sid})");
+                    this.Log($"Found douban [id]: {item.Name}({item.Sid})");
                     return item.Sid;
                 }
             }
@@ -181,13 +181,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 var suggestItem = suggestResult.Where(x => x.Year == year && x.Name == name).FirstOrDefault();
                 if (suggestItem != null)
                 {
-                    this.Log($"GuestDoubanSeasonByYear found -> {suggestItem.Name}({suggestItem.Sid}) (suggest)");
+                    this.Log($"Found douban [id]: {suggestItem.Name}({suggestItem.Sid}) (suggest)");
                     return suggestItem.Sid;
                 }
                 suggestItem = suggestResult.Where(x => x.Year == year).FirstOrDefault();
                 if (suggestItem != null)
                 {
-                    this.Log($"GuestDoubanSeasonByYear found -> {suggestItem.Name}({suggestItem.Sid}) (suggest)");
+                    this.Log($"Found douban [id]: {suggestItem.Name}({suggestItem.Sid}) (suggest)");
                     return suggestItem.Sid;
                 }
             }
@@ -198,7 +198,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var item = result.Where(x => x.Category == "电视剧" && x.Year == year).FirstOrDefault();
             if (item != null && !string.IsNullOrEmpty(item.Sid))
             {
-                this.Log($"GuestDoubanSeasonByYear found -> {item.Name}({item.Sid})");
+                this.Log($"Found douban [id]: {item.Name}({item.Sid})");
                 return item.Sid;
             }
 
@@ -207,36 +207,30 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         }
 
 
-        protected async Task<string?> GuestByTmdbAsync(ItemLookupInfo info, CancellationToken cancellationToken)
+        protected async Task<string?> GuestByTmdbAsync(string name, int? year, ItemLookupInfo info, CancellationToken cancellationToken)
         {
-            // ParseName is required here.
-            // Caller provides the filename with extension stripped and NOT the parsed filename
             var fileName = GetNotParsedName(info);
-            var parseResult = NameParser.Parse(fileName);
-            var searchName = !string.IsNullOrEmpty(parseResult.ChineseName) ? parseResult.ChineseName : parseResult.Name;
-            info.Year = parseResult.Year;  // 默认parser对anime年份会解析出错，以anitomy为准
 
-
-            this.Log($"GuestByTmdb of [name]: {info.Name} [file_name]: {fileName} [year]: {info.Year} [search name]: {searchName}");
+            this.Log($"GuestByTmdb of [name]: {name} [year]: {year}");
             switch (info)
             {
                 case MovieInfo:
-                    var movieResults = await this._tmdbApi.SearchMovieAsync(searchName, info.Year ?? 0, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
+                    var movieResults = await this._tmdbApi.SearchMovieAsync(name, year ?? 0, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
                     var movieItem = movieResults.FirstOrDefault();
                     if (movieItem != null)
                     {
                         // bt种子都是英文名，但电影是中日韩泰印法地区时，都不适用相似匹配，去掉限制
-                        this.Log($"GuestByTmdb found -> {movieItem.Title}({movieItem.Id})");
+                        this.Log($"Found tmdb [id]: {movieItem.Title}({movieItem.Id})");
                         return movieItem.Id.ToString(CultureInfo.InvariantCulture);
                     }
                     break;
                 case SeriesInfo:
-                    var seriesResults = await this._tmdbApi.SearchSeriesAsync(searchName, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
+                    var seriesResults = await this._tmdbApi.SearchSeriesAsync(name, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
                     var seriesItem = seriesResults.FirstOrDefault();
                     if (seriesItem != null)
                     {
                         // bt种子都是英文名，但电影是中日韩泰印法地区时，都不适用相似匹配，去掉限制
-                        this.Log($"GuestByTmdb found -> {seriesItem.Name}({seriesItem.Id})");
+                        this.Log($"Found tmdb [id]: -> {seriesItem.Name}({seriesItem.Id})");
                         return seriesItem.Id.ToString(CultureInfo.InvariantCulture);
                     }
                     break;

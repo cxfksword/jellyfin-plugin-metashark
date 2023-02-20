@@ -16,7 +16,7 @@ namespace Jellyfin.Plugin.MetaShark.Core
 
         private static readonly Regex unusedReg = new Regex(@"\[.+?\]|\(.+?\)|【.+?】", RegexOptions.Compiled);
 
-        private static readonly Regex extrasReg = new Regex(@"\[(CM|Menu|NCED|NCOP|Drama)[0-9_]*?\]", RegexOptions.Compiled);
+        private static readonly Regex extrasReg = new Regex(@"\[(OP|ED|PV|CM|Menu|NCED|NCOP|Drama|PreView)[0-9_]*?\]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public static ParseNameResult Parse(string fileName, bool isTvSeries = false)
         {

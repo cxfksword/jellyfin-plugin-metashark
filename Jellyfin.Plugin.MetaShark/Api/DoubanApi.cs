@@ -107,10 +107,13 @@ namespace Jellyfin.Plugin.MetaShark.Api
             httpClient.DefaultRequestHeaders.Add("Referer", "https://movie.douban.com/");
 
             this.LoadLoadDoubanCookie();
-            Plugin.Instance!.ConfigurationChanged += (_, _) =>
+            if (Plugin.Instance != null)
             {
-                this.LoadLoadDoubanCookie();
-            };
+                Plugin.Instance.ConfigurationChanged += (_, _) =>
+                {
+                    this.LoadLoadDoubanCookie();
+                };
+            }
         }
 
 

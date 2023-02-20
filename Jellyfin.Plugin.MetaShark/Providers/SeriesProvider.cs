@@ -81,7 +81,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <inheritdoc />
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
-            this.Log($"GetSeriesMetadata of [name]: {info.Name} [providerIds]: {info.ProviderIds.ToJson()}");
+            this.Log($"GetSeriesMetadata of [name]: {info.Name} [providerIds]: {info.ProviderIds.ToJson()}  IsAutomated: {info.IsAutomated}");
             var result = new MetadataResult<Series>();
 
             // 使用刷新元数据时，providerIds会保留旧有值，只有识别/新增才会没值
@@ -95,10 +95,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             {
                 // 自动扫描搜索匹配元数据
                 sid = await this.GuessByDoubanAsync(info, cancellationToken).ConfigureAwait(false);
-                // if (string.IsNullOrEmpty(sid))
-                // {
-                //     tmdbId = await this.GuestByTmdbAsync(info, cancellationToken).ConfigureAwait(false);
-                // }
             }
 
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
@@ -111,10 +107,11 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
                 subject.Celebrities = await this._doubanApi.GetCelebritiesBySidAsync(sid, cancellationToken).ConfigureAwait(false);
 
+                var seriesName = RemoveSeasonSubfix(subject.Name);
                 var item = new Series
                 {
                     ProviderIds = new Dictionary<string, string> { { DoubanProviderId, subject.Sid }, { Plugin.ProviderId, MetaSource.Douban } },
-                    Name = RemoveSeasonSubfix(subject.Name),
+                    Name = seriesName,
                     OriginalTitle = subject.OriginalName,
                     CommunityRating = subject.Rating,
                     Overview = subject.Intro,
@@ -142,7 +139,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 // 尝试通过搜索匹配获取tmdbId
                 if (string.IsNullOrEmpty(tmdbId))
                 {
-                    var newTmdbId = await this.GuestByTmdbAsync(info, cancellationToken).ConfigureAwait(false);
+                    var newTmdbId = await this.GuestByTmdbAsync(seriesName, subject.Year, info, cancellationToken).ConfigureAwait(false);
                     if (!string.IsNullOrEmpty(newTmdbId))
                     {
                         tmdbId = newTmdbId;

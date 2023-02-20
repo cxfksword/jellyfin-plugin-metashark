@@ -53,7 +53,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             info.SeriesProviderIds.TryGetValue(DoubanProviderId, out var sid);
             var seasonNumber = info.IndexNumber; // S00/Season 00特典目录会为0
             var seasonSid = info.GetProviderId(DoubanProviderId);
-            this.Log($"GetSeasonMetaData of [name]: {info.Name}  number: {info.IndexNumber} seriesTmdbId: {seriesTmdbId} sid: {sid} metaSource: {metaSource}");
+            this.Log($"GetSeasonMetaData of [name]: {info.Name}  number: {info.IndexNumber} seriesTmdbId: {seriesTmdbId} sid: {sid} metaSource: {metaSource} IsAutomated: {info.IsAutomated}");
 
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
@@ -63,7 +63,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     return result;
                 }
-                var seasonName = RemoveSeasonSubfix(series.Name);
+                var seriesName = RemoveSeasonSubfix(series.Name);
 
                 // TODO:季文件夹名称不规范，没法拿到seasonNumber，尝试从文件名猜出？？？
 
@@ -79,9 +79,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         seasonYear = season?.AirDate?.Year ?? 0;
                     }
 
-                    if (!string.IsNullOrEmpty(seasonName) && seasonYear > 0)
+                    if (!string.IsNullOrEmpty(seriesName) && seasonYear > 0)
                     {
-                        seasonSid = await this.GuestDoubanSeasonByYearAsync(seasonName, seasonYear, cancellationToken).ConfigureAwait(false);
+                        seasonSid = await this.GuestDoubanSeasonByYearAsync(seriesName, seasonYear, cancellationToken).ConfigureAwait(false);
                     }
                 }
 

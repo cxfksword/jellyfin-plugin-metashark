@@ -1,5 +1,4 @@
-﻿using System.Reflection.Metadata;
-using Jellyfin.Plugin.MetaShark.Api;
+﻿using Jellyfin.Plugin.MetaShark.Api;
 using Jellyfin.Plugin.MetaShark.Core;
 using Jellyfin.Plugin.MetaShark.Model;
 using MediaBrowser.Common.Net;
@@ -58,18 +57,19 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <inheritdoc />
         public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
         {
-            // 重新识别时，info的IndexNumber和ParentIndexNumber是从文件路径解析出来的，假如命名不规范，就会导致解析出错误值
-            // 刷新元数据不覆盖时，IndexNumber和ParentIndexNumber是从当前的元数据获取
-            this.Log($"GetEpisodeMetadata of [name]: {info.Name} number: {info.IndexNumber} ParentIndexNumber: {info.ParentIndexNumber}");
+            // 刷新元数据四种模式差别：
+            // 自动扫描匹配：info的Name、IndexNumber和ParentIndexNumber是从文件名解析出来的，假如命名不规范，就会导致解析出错误值
+            // 识别：info的Name、IndexNumber和ParentIndexNumber是从文件名解析出来的，provinceIds有指定选择项的ProvinceId
+            // 搜索缺少的元数据：info的Name、IndexNumber和ParentIndexNumber是从当前的元数据获取，provinceIds保留所有旧值
+            // 覆盖所有元数据：info的Name、IndexNumber和ParentIndexNumber是从当前的元数据获取，provinceIds保留所有旧值
+            this.Log($"GetEpisodeMetadata of [name]: {info.Name} number: {info.IndexNumber} ParentIndexNumber: {info.ParentIndexNumber} IsAutomated: {info.IsAutomated}");
             var result = new MetadataResult<Episode>();
 
             // 动画特典和extras处理
-            var specialEpisode = this.HandleAnimeSpecialAndExtras(info.Path);
-            if (specialEpisode != null)
+            var specialResult = this.HandleAnimeSpecialAndExtras(info);
+            if (specialResult != null)
             {
-                result.HasMetadata = true;
-                result.Item = specialEpisode;
-                return result;
+                return specialResult;
             }
 
             // 剧集信息只有tmdb有
@@ -78,8 +78,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var episodeNumber = info.IndexNumber;
             var indexNumberEnd = info.IndexNumberEnd;
             // 修正anime命名格式导致的seasonNumber错误（从season元数据读取)
-            var parent = _libraryManager.FindByPath(Path.GetDirectoryName(info.Path), true);
-            if (parent is Season season && seasonNumber != season.IndexNumber)
+            var episodeItem = _libraryManager.FindByPath(info.Path, false);
+            var season = episodeItem != null ? ((Episode)episodeItem).Season : null;
+            if (season != null && seasonNumber != season.IndexNumber)
             {
                 this.Log("FixSeasionNumber: old: {0} new: {1}", seasonNumber, season.IndexNumber);
                 seasonNumber = season.IndexNumber;
@@ -130,17 +131,15 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return result;
             }
 
-            // 判断tmdb剧集信息数目和视频是否一致，不一致不处理
-            var videoFilesCount = this.GetVideoFileCount(Path.GetDirectoryName(info.Path));
-            if (!info.IsAutomated && parent is Season)
+            // 自动搜索匹配时，判断tmdb剧集信息数目和视频是否一致，不一致不处理
+            if (info.IsAutomated)
             {
-                // 刷新元数据时，直接从season拿准确的视频数，并排除特典等没有季号的视频
-                videoFilesCount = ((Season)parent).GetEpisodes().Where(x => x.ParentIndexNumber == parent.IndexNumber).Count();
-            }
-            if (videoFilesCount > 0 && seasonResult.Episodes.Count != videoFilesCount)
-            {
-                this.Log("Tmdb episode number not match. Name: {0} tmdb episode count: {1} video files count: {2}", info.Name, seasonResult.Episodes.Count, videoFilesCount);
-                return result;
+                var videoFilesCount = this.GetVideoFileCount(Path.GetDirectoryName(info.Path));
+                if (videoFilesCount > 0 && seasonResult.Episodes.Count != videoFilesCount)
+                {
+                    this.Log("Tmdb episode number not match. Name: {0} tmdb episode count: {1} video files count: {2}", info.Name, seasonResult.Episodes.Count, videoFilesCount);
+                    return result;
+                }
             }
 
             var episodeResult = seasonResult.Episodes[episodeNumber.Value - 1];
@@ -224,32 +223,47 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return guessInfo;
         }
 
-        private Episode? HandleAnimeSpecialAndExtras(string filePath)
+        private MetadataResult<Episode>? HandleAnimeSpecialAndExtras(EpisodeInfo info)
         {
-            var fileName = Path.GetFileNameWithoutExtension(filePath) ?? string.Empty;
+            var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? string.Empty;
             if (NameParser.IsExtra(fileName))
             {
                 this.Log($"Found anime extra of [name]: {fileName}");
-                return new Episode
+                var result = new MetadataResult<Episode>();
+                result.HasMetadata = true;
+
+                // 假如已有ParentIndexNumber，设为特典覆盖掉
+                if (info.ParentIndexNumber.HasValue)
+                {
+                    result.Item = new Episode
+                    {
+                        ParentIndexNumber = 0,
+                        IndexNumber = null,
+                        Name = fileName
+                    };
+                    return result;
+                }
+
+                // 没ParentIndexNumber时使用文件名
+                result.Item = new Episode
                 {
                     Name = fileName
                 };
+                return result;
             }
-            if (NameParser.IsSpecial(filePath))
+            if (NameParser.IsSpecial(info.Path))
             {
                 this.Log($"Found anime sp of [name]: {fileName}");
-                var guessInfo = this.GuessEpisodeNumber(fileName);
-                var ep = new Episode
+                var result = new MetadataResult<Episode>();
+                result.HasMetadata = true;
+                result.Item = new Episode
                 {
                     ParentIndexNumber = 0,
-                    IndexNumber = guessInfo.episodeNumber,
+                    IndexNumber = null,
+                    Name = fileName
                 };
-                if (!string.IsNullOrEmpty(guessInfo.Name))
-                {
-                    ep.Name = guessInfo.Name;
-                }
 
-                return ep;
+                return result;
             }
 
             return null;
