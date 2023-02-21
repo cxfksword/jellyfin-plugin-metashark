@@ -72,48 +72,20 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return specialResult;
             }
 
+            // 使用AnitomySharp进行重新解析，解决anime识别错误
+            info = this.FixParseInfo(info);
+
             // 剧集信息只有tmdb有
             info.SeriesProviderIds.TryGetValue(MetadataProvider.Tmdb.ToString(), out var seriesTmdbId);
             var seasonNumber = info.ParentIndexNumber;
             var episodeNumber = info.IndexNumber;
-            var indexNumberEnd = info.IndexNumberEnd;
-            // 修正anime命名格式导致的seasonNumber错误（从season元数据读取)
-            var episodeItem = _libraryManager.FindByPath(info.Path, false);
-            var season = episodeItem != null ? ((Episode)episodeItem).Season : null;
-            if (season != null && seasonNumber != season.IndexNumber)
+            result.HasMetadata = true;
+            result.Item = new Episode
             {
-                this.Log("FixSeasionNumber: old: {0} new: {1}", seasonNumber, season.IndexNumber);
-                seasonNumber = season.IndexNumber;
-            }
-            // 没有season级目录或目录不命名不规范时，会为null
-            if (seasonNumber is null)
-            {
-                this.Log("FixSeasionNumber: season number is null, set to default 1");
-                seasonNumber = 1;
-            }
-            // 修正anime命名格式导致的episodeNumber错误
-            var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? string.Empty;
-            var guessInfo = this.GuessEpisodeNumber(fileName);
-            this.Log("GuessEpisodeNumber: fileName: {0} seasonNumber: {1} episodeNumber: {2} name: {3}", fileName, guessInfo.seasonNumber, guessInfo.episodeNumber, guessInfo.Name);
-            if (guessInfo.seasonNumber.HasValue && guessInfo.seasonNumber != seasonNumber)
-            {
-                seasonNumber = guessInfo.seasonNumber.Value;
-            }
-            if (guessInfo.episodeNumber.HasValue)
-            {
-                episodeNumber = guessInfo.episodeNumber;
-
-                result.HasMetadata = true;
-                result.Item = new Episode
-                {
-                    ParentIndexNumber = seasonNumber,
-                    IndexNumber = episodeNumber
-                };
-                if (!string.IsNullOrEmpty(guessInfo.Name))
-                {
-                    result.Item.Name = guessInfo.Name;
-                }
-            }
+                ParentIndexNumber = seasonNumber,
+                IndexNumber = episodeNumber,
+                Name = info.Name,
+            };
 
             if (episodeNumber is null or 0 || seasonNumber is null or 0 || string.IsNullOrEmpty(seriesTmdbId))
             {
@@ -131,7 +103,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return result;
             }
 
-            // 自动搜索匹配时，判断tmdb剧集信息数目和视频是否一致，不一致不处理
+            // TODO：自动搜索匹配或识别时，判断tmdb剧集信息数目和视频是否一致，不一致不处理（现在通过IsAutomated判断不太准确）
             if (info.IsAutomated)
             {
                 var videoFilesCount = this.GetVideoFileCount(Path.GetDirectoryName(info.Path));
@@ -157,7 +129,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             {
                 IndexNumber = episodeNumber,
                 ParentIndexNumber = seasonNumber,
-                IndexNumberEnd = info.IndexNumberEnd
             };
 
 
@@ -172,86 +143,99 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return result;
         }
 
-        /// <inheritdoc />
-        public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
+        public EpisodeInfo FixParseInfo(EpisodeInfo info)
         {
-            this.Log("GetImageResponse url: {0}", url);
-            return _httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken);
-        }
+            // 使用AnitomySharp进行重新解析，解决anime识别错误
+            var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
+            var parseResult = NameParser.Parse(fileName);
+            info.Name = parseResult.Name;
+            info.Year = parseResult.Year;
 
-        public GuessInfo GuessEpisodeNumber(string fileName, double max = double.PositiveInfinity)
-        {
-            var guessInfo = new GuessInfo();
-
-            var parseResult = AnitomySharp.AnitomySharp.Parse(fileName);
-            var animeSpecialType = parseResult.FirstOrDefault(x => x.Category == AnitomySharp.Element.ElementCategory.ElementAnimeType && x.Value == "SP");
-            if (animeSpecialType != null)
+            // 没有season级目录或文件命名不规范时，ParentIndexNumber会为null
+            if (info.ParentIndexNumber is null)
             {
-                guessInfo.seasonNumber = 0;
-            }
-            var animeEpisode = parseResult.FirstOrDefault(x => x.Category == AnitomySharp.Element.ElementCategory.ElementEpisodeNumber);
-            if (animeEpisode != null)
-            {
-                guessInfo.episodeNumber = animeEpisode.Value.ToInt();
+                info.ParentIndexNumber = parseResult.ParentIndexNumber;
             }
 
-            if (!guessInfo.episodeNumber.HasValue)
+            // 修正anime命名格式导致的seasonNumber错误（从season元数据读取)
+            if (info.ParentIndexNumber is null)
             {
-                foreach (var regex in EpisodeFileNameRegex)
+                var episodeItem = _libraryManager.FindByPath(info.Path, false);
+                var season = episodeItem != null ? ((Episode)episodeItem).Season : null;
+                if (season != null && info.ParentIndexNumber != season.IndexNumber)
                 {
-                    if (!regex.IsMatch(fileName))
-                        continue;
-                    if (!int.TryParse(regex.Match(fileName).Groups[1].Value.Trim('.'), out var index))
-                        continue;
-                    guessInfo.episodeNumber = index;
-                    break;
+                    this.Log("FixSeasonNumber: old: {0} new: {1}", info.ParentIndexNumber, season.IndexNumber);
+                    info.ParentIndexNumber = season.IndexNumber;
+                }
+
+
+                // 当没有season级目录时，默认为1，即当成只有一季
+                if (info.ParentIndexNumber is null && season != null && season.LocationType == LocationType.Virtual)
+                {
+                    this.Log("FixSeasonNumber: season is virtual, set to default 1");
+                    info.ParentIndexNumber = 1;
                 }
             }
 
-            if (guessInfo.episodeNumber > 1000)
+
+            if (NameParser.IsAnime(fileName))
             {
-                // 可能解析了分辨率，忽略返回
-                guessInfo.episodeNumber = null;
+                // 特典
+                if (parseResult.IsSpecial)
+                {
+                    info.ParentIndexNumber = 0;
+                }
+
+                // 动画的OP/ED/MENU等
+                if (parseResult.IsExtra)
+                {
+                    info.ParentIndexNumber = null;
+                }
             }
 
-            var animeName = parseResult.FirstOrDefault(x => x.Category == AnitomySharp.Element.ElementCategory.ElementAnimeTitle);
-            if (animeName != null && NameParser.IsAnime(fileName))
+            // 大于1000，可能错误解析了分辨率
+            if (parseResult.IndexNumber.HasValue && parseResult.IndexNumber < 1000)
             {
-                guessInfo.Name = animeName.Value;
+                info.IndexNumber = parseResult.IndexNumber;
             }
 
-            return guessInfo;
+            this.Log("FixParseInfo: fileName: {0} seasonNumber: {1} episodeNumber: {2} name: {3}", fileName, info.ParentIndexNumber, info.IndexNumber, info.Name);
+            return info;
         }
+
 
         private MetadataResult<Episode>? HandleAnimeSpecialAndExtras(EpisodeInfo info)
         {
-            var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? string.Empty;
-            if (NameParser.IsExtra(fileName))
+            // 特典或extra视频可能和正片剧集放在同一目录
+            var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
+            var parseResult = NameParser.Parse(fileName);
+            if (parseResult.IsExtra)
             {
                 this.Log($"Found anime extra of [name]: {fileName}");
                 var result = new MetadataResult<Episode>();
                 result.HasMetadata = true;
 
-                // 假如已有ParentIndexNumber，设为特典覆盖掉
+                // 假如已有ParentIndexNumber，设为特典覆盖掉（设为null不会替换旧值）
                 if (info.ParentIndexNumber.HasValue)
                 {
                     result.Item = new Episode
                     {
                         ParentIndexNumber = 0,
                         IndexNumber = null,
-                        Name = fileName
+                        Name = parseResult.ExtraName
                     };
                     return result;
                 }
 
-                // 没ParentIndexNumber时使用文件名
+                // 没ParentIndexNumber时只修改名称
                 result.Item = new Episode
                 {
-                    Name = fileName
+                    Name = parseResult.ExtraName
                 };
                 return result;
             }
-            if (NameParser.IsSpecial(info.Path))
+
+            if (parseResult.IsSpecial || NameParser.IsSpecialDirectory(info.Path))
             {
                 this.Log($"Found anime sp of [name]: {fileName}");
                 var result = new MetadataResult<Episode>();
@@ -259,8 +243,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 result.Item = new Episode
                 {
                     ParentIndexNumber = 0,
-                    IndexNumber = null,
-                    Name = fileName
+                    IndexNumber = parseResult.IndexNumber,
+                    Name = parseResult.EpisodeName ?? parseResult.Name,
                 };
 
                 return result;
@@ -285,6 +269,10 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             var dirInfo = new DirectoryInfo(dir);
+            if (dirInfo == null)
+            {
+                return 0;
+            }
             var files = dirInfo.GetFiles();
             var nameOptions = new Emby.Naming.Common.NamingOptions();
 
@@ -300,6 +288,14 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             this._memoryCache.Set<int>(cacheKey, videoFilesCount, expiredOption);
             return videoFilesCount;
         }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
+        {
+            this.Log("GetImageResponse url: {0}", url);
+            return _httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken);
+        }
+
 
         public void Dispose()
         {

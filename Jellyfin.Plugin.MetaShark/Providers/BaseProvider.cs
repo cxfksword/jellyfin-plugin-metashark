@@ -106,9 +106,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
         protected async Task<string?> GuessByDoubanAsync(ItemLookupInfo info, CancellationToken cancellationToken)
         {
-            // ParseName is required here.
-            // Caller provides the filename with extension stripped and NOT the parsed filename
-            var fileName = GetNotParsedName(info);
+            var fileName = GetOriginalFileName(info);
             var parseResult = NameParser.Parse(fileName);
             var searchName = !string.IsNullOrEmpty(parseResult.ChineseName) ? parseResult.ChineseName : parseResult.Name;
             info.Year = parseResult.Year;  // 默认parser对anime年份会解析出错，以anitomy为准
@@ -154,7 +152,15 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
             }
 
-            // 不存在年份时，返回第一个
+            //// 不存在年份，计算相似度，返回相似度大于0.8的第一个（可能出现冷门资源名称更相同的情况。。。）
+            // var jw = new JaroWinkler();
+            // item = result.Where(x => x.Category == cat && x.Rating > 5).OrderByDescending(x => Math.Max(jw.Similarity(searchName, x.Name), jw.Similarity(searchName, x.OriginalName))).FirstOrDefault();
+            // if (item != null && Math.Max(jw.Similarity(searchName, item.Name), jw.Similarity(searchName, item.OriginalName)) > 0.8)
+            // {
+            //     return item.Sid;
+            // }
+
+            // 不存在年份时，返回豆瓣结果第一个
             item = result.Where(x => x.Category == cat).FirstOrDefault();
             if (item != null)
             {
@@ -209,7 +215,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
         protected async Task<string?> GuestByTmdbAsync(string name, int? year, ItemLookupInfo info, CancellationToken cancellationToken)
         {
-            var fileName = GetNotParsedName(info);
+            var fileName = GetOriginalFileName(info);
 
             this.Log($"GuestByTmdb of [name]: {name} [year]: {year}");
             switch (info)
@@ -417,15 +423,16 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return language;
         }
 
-        protected string GetNotParsedName(ItemLookupInfo info)
+        protected string GetOriginalFileName(ItemLookupInfo info)
         {
-            var directoryName = Path.GetFileName(Path.GetDirectoryName(info.Path));
-            if (directoryName != null && directoryName.StartsWith(info.Name))
+            switch (info)
             {
-                return directoryName;
+                case SeriesInfo:
+                case SeasonInfo:
+                    return Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
+                default:
+                    return Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
             }
-
-            return Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
         }
 
         protected string RemoveSeasonSubfix(string name)

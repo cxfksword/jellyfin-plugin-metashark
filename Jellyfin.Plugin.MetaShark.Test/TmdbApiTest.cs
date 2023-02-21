@@ -96,15 +96,14 @@ namespace Jellyfin.Plugin.MetaShark.Test
         [TestMethod]
         public void TestSearch()
         {
-            var keyword = "重返少年时";
+            var keyword = "狼与香辛料";
             var api = new TmdbApi(loggerFactory);
 
             Task.Run(async () =>
             {
                 try
                 {
-                    var result = await api.SearchSeriesAsync(keyword, "zh", CancellationToken.None)
-               .ConfigureAwait(false);
+                    var result = await api.SearchSeriesAsync(keyword, "zh", CancellationToken.None).ConfigureAwait(false);
                     Assert.IsNotNull(result);
                     TestContext.WriteLine(result.ToJson());
                 }

@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Model.Serialization;
 using Microsoft.AspNetCore.Http;
+using MediaBrowser.Model.Entities;
 
 namespace Jellyfin.Plugin.MetaShark.Test
 {
@@ -29,9 +30,38 @@ namespace Jellyfin.Plugin.MetaShark.Test
                 }));
 
 
+        [TestMethod]
+        public void TestGetMetadata()
+        {
+
+            var doubanApi = new DoubanApi(loggerFactory);
+            var tmdbApi = new TmdbApi(loggerFactory);
+            var omdbApi = new OmdbApi(loggerFactory);
+            var httpClientFactory = new DefaultHttpClientFactory();
+            var libraryManagerStub = new Mock<ILibraryManager>();
+            var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
+
+            Task.Run(async () =>
+            {
+                var info = new EpisodeInfo()
+                {
+                    Name = "Spice and Wolf",
+                    Path = "/test/Spice and Wolf/Spice and Wolf II/[VCB-Studio] Spice and Wolf II [01][Ma10p_1080p][x265_flac].mp4",
+                    MetadataLanguage = "zh",
+                    SeriesProviderIds = new Dictionary<string, string>() { { MetadataProvider.Tmdb.ToString(), "26707" } },
+                    IsAutomated = false,
+                };
+                var provider = new EpisodeProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
+                var result = await provider.GetMetadata(info, CancellationToken.None);
+                Assert.IsNotNull(result);
+
+                var str = result.ToJson();
+                Console.WriteLine(result.ToJson());
+            }).GetAwaiter().GetResult();
+        }
 
         [TestMethod]
-        public void TestGuessEpisodeNumber()
+        public void TestFixParseInfo()
         {
             var httpClientFactory = new DefaultHttpClientFactory();
             var libraryManagerStub = new Mock<ILibraryManager>();
@@ -42,18 +72,18 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var omdbApi = new OmdbApi(loggerFactory);
 
             var provider = new EpisodeProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
-            var guessInfo = provider.GuessEpisodeNumber("[POPGO][Stand_Alone_Complex][05][1080P][BluRay][x264_FLACx2_AC3x1][chs_jpn][D87C36B6].mkv");
-            Assert.AreEqual(guessInfo.episodeNumber, 5);
+            var parseResult = provider.FixParseInfo(new EpisodeInfo() { Path = "/test/[POPGO][Stand_Alone_Complex][05][1080P][BluRay][x264_FLACx2_AC3x1][chs_jpn][D87C36B6].mkv" });
+            Assert.AreEqual(parseResult.IndexNumber, 5);
 
-            guessInfo = provider.GuessEpisodeNumber("Fullmetal Alchemist Brotherhood.E05.1920X1080");
-            Assert.AreEqual(guessInfo.episodeNumber, 5);
+            parseResult = provider.FixParseInfo(new EpisodeInfo() { Path = "/test/Fullmetal Alchemist Brotherhood.E05.1920X1080" });
+            Assert.AreEqual(parseResult.IndexNumber, 5);
 
-            guessInfo = provider.GuessEpisodeNumber("[SAIO-Raws] Neon Genesis Evangelion 05 [BD 1440x1080 HEVC-10bit OPUSx2 ASSx2].mkv");
-            Assert.AreEqual(guessInfo.episodeNumber, 5);
+            parseResult = provider.FixParseInfo(new EpisodeInfo() { Path = "/test/[SAIO-Raws] Neon Genesis Evangelion 05 [BD 1440x1080 HEVC-10bit OPUSx2 ASSx2].mkv" });
+            Assert.AreEqual(parseResult.IndexNumber, 5);
 
-            guessInfo = provider.GuessEpisodeNumber("[Moozzi2] Samurai Champloo [SP03] Battlecry (Opening) PV (BD 1920x1080 x.264 AC3).mkv");
-            Assert.AreEqual(guessInfo.episodeNumber, 3);
-            Assert.AreEqual(guessInfo.seasonNumber, 0);
+            parseResult = provider.FixParseInfo(new EpisodeInfo() { Path = "/test/[Moozzi2] Samurai Champloo [SP03] Battlecry (Opening) PV (BD 1920x1080 x.264 AC3).mkv" });
+            Assert.AreEqual(parseResult.IndexNumber, 3);
+            Assert.AreEqual(parseResult.ParentIndexNumber, 0);
         }
 
     }

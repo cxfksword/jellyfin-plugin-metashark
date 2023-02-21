@@ -66,3 +66,8 @@ rm -rf MediaBrowser*.dll Microsoft*.dll Newtonsoft*.dll System*.dll Emby*.dll Je
 1. Plugin run in error: `System.BadImageFormatException: Bad IL format.` 
    
    Remove all hidden file and `meta.json` in `metashark` plugin folder
+
+
+## Thanks
+
+[AnitomySharp](https://github.com/chu-shen/AnitomySharp)

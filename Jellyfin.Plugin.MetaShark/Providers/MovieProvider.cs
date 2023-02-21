@@ -103,10 +103,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             {
                 // 自动扫描搜索匹配元数据
                 sid = await this.GuessByDoubanAsync(info, cancellationToken).ConfigureAwait(false);
-                // if (string.IsNullOrEmpty(sid))
-                // {
-                //     tmdbId = await this.GuestByTmdbAsync(info, cancellationToken).ConfigureAwait(false);
-                // }
             }
 
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))

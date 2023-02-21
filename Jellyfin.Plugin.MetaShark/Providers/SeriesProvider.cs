@@ -84,7 +84,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             this.Log($"GetSeriesMetadata of [name]: {info.Name} [providerIds]: {info.ProviderIds.ToJson()}  IsAutomated: {info.IsAutomated}");
             var result = new MetadataResult<Series>();
 
-            // 使用刷新元数据时，providerIds会保留旧有值，只有识别/新增才会没值
             var sid = info.GetProviderId(DoubanProviderId);
             var tmdbId = info.GetProviderId(MetadataProvider.Tmdb);
             var metaSource = info.GetProviderId(Plugin.ProviderId);
@@ -99,7 +98,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
-                this.Log($"GetSeriesMetadata of douban [sid]: \"{sid}\"");
+                this.Log($"GetSeriesMetadata of douban [sid]: {sid}");
                 var subject = await this._doubanApi.GetMovieAsync(sid, cancellationToken).ConfigureAwait(false);
                 if (subject == null)
                 {
@@ -123,28 +122,18 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     Tagline = string.Empty,
                 };
 
+                // 设置imdb元数据
                 if (!string.IsNullOrEmpty(subject.Imdb))
                 {
                     item.SetProviderId(MetadataProvider.Imdb, subject.Imdb);
-
-                    // 通过imdb获取TMDB id
-                    var newTmdbId = await this.GetTmdbIdByImdbAsync(subject.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-                    if (!string.IsNullOrEmpty(newTmdbId))
-                    {
-                        tmdbId = newTmdbId;
-                        item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
-                    }
                 }
 
-                // 尝试通过搜索匹配获取tmdbId
-                if (string.IsNullOrEmpty(tmdbId))
+                // 搜索匹配tmdbId
+                var newTmdbId = await this.FindTmdbId(seriesName, subject.Imdb, subject.Year, info, cancellationToken).ConfigureAwait(false);
+                if (!string.IsNullOrEmpty(newTmdbId))
                 {
-                    var newTmdbId = await this.GuestByTmdbAsync(seriesName, subject.Year, info, cancellationToken).ConfigureAwait(false);
-                    if (!string.IsNullOrEmpty(newTmdbId))
-                    {
-                        tmdbId = newTmdbId;
-                        item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
-                    }
+                    tmdbId = newTmdbId;
+                    item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
                 }
 
 
@@ -164,35 +153,66 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
 
-            if (!string.IsNullOrEmpty(tmdbId))
+            return await this.GetMetadataByTmdb(tmdbId, info, cancellationToken).ConfigureAwait(false);
+        }
+
+        private async Task<MetadataResult<Series>> GetMetadataByTmdb(string? tmdbId, ItemLookupInfo info, CancellationToken cancellationToken)
+        {
+            var result = new MetadataResult<Series>();
+            if (string.IsNullOrEmpty(tmdbId))
             {
-                this.Log($"GetSeriesMetadata of tmdb [id]: \"{tmdbId}\"");
-                var tvShow = await _tmdbApi
-                    .GetSeriesAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (tvShow == null)
-                {
-                    return result;
-                }
-
-                result = new MetadataResult<Series>
-                {
-                    Item = MapTvShowToSeries(tvShow, info.MetadataCountryCode),
-                    ResultLanguage = info.MetadataLanguage ?? tvShow.OriginalLanguage
-                };
-
-                foreach (var person in GetPersons(tvShow))
-                {
-                    result.AddPerson(person);
-                }
-
-                result.QueriedById = true;
-                result.HasMetadata = true;
                 return result;
             }
 
+            this.Log($"GetSeriesMetadata of tmdb [id]: \"{tmdbId}\"");
+            var tvShow = await _tmdbApi
+                .GetSeriesAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (tvShow == null)
+            {
+                return result;
+            }
+
+            result = new MetadataResult<Series>
+            {
+                Item = MapTvShowToSeries(tvShow, info.MetadataCountryCode),
+                ResultLanguage = info.MetadataLanguage ?? tvShow.OriginalLanguage
+            };
+
+            foreach (var person in GetPersons(tvShow))
+            {
+                result.AddPerson(person);
+            }
+
+            result.QueriedById = true;
+            result.HasMetadata = true;
             return result;
+        }
+
+        private async Task<string?> FindTmdbId(string name, string imdb, int? year, ItemLookupInfo info, CancellationToken cancellationToken)
+        {
+            // 通过imdb获取TMDB id
+            if (!string.IsNullOrEmpty(imdb))
+            {
+                var tmdbId = await this.GetTmdbIdByImdbAsync(imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
+                if (!string.IsNullOrEmpty(tmdbId))
+                {
+                    return tmdbId;
+                }
+            }
+
+            // 尝试通过搜索匹配获取tmdbId
+            if (!string.IsNullOrEmpty(name) && year != null && year > 0)
+            {
+                var tmdbId = await this.GuestByTmdbAsync(name, year, info, cancellationToken).ConfigureAwait(false);
+                if (!string.IsNullOrEmpty(tmdbId))
+                {
+                    return tmdbId;
+                }
+            }
+
+            return null;
         }
 
         private Series MapTvShowToSeries(TvShow seriesResult, string preferredCountryCode)
@@ -365,9 +385,5 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return this._httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken);
         }
 
-        private void Log(string? message, params object?[] args)
-        {
-            this._logger.LogInformation($"[MetaShark] {message}", args);
-        }
     }
 }

@@ -14,10 +14,10 @@
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="0.17.1" />
-    <PackageReference Include="AnitomySharp" Version="0.2.0" />
+    <PackageReference Include="AngleSharp" Version="1.0.1" />
     <PackageReference Include="Jellyfin.Controller" Version="10.8.0" />
     <PackageReference Include="Jellyfin.Model" Version="10.8.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="SerilogAnalyzer" Version="0.15.0" PrivateAssets="All" />

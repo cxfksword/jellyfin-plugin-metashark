@@ -51,5 +51,36 @@ namespace Jellyfin.Plugin.MetaShark.Test
             }).GetAwaiter().GetResult();
         }
 
+        [TestMethod]
+        public void TestGuessSeasonNumberByFileName()
+        {
+            var info = new SeasonInfo() { };
+            var doubanApi = new DoubanApi(loggerFactory);
+            var tmdbApi = new TmdbApi(loggerFactory);
+            var omdbApi = new OmdbApi(loggerFactory);
+            var httpClientFactory = new DefaultHttpClientFactory();
+            var libraryManagerStub = new Mock<ILibraryManager>();
+            var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
+
+            var provider = new SeasonProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
+            var result = provider.GuessSeasonNumberByFileName("/data/downloads/jellyfin/tv/向往的生活/第2季");
+            Assert.AreEqual(result, 2);
+
+            result = provider.GuessSeasonNumberByFileName("/data/downloads/jellyfin/tv/向往的生活 第2季");
+            Assert.AreEqual(result, 2);
+
+            result = provider.GuessSeasonNumberByFileName("/data/downloads/jellyfin/tv/向往的生活/第三季");
+            Assert.AreEqual(result, 3);
+
+            result = provider.GuessSeasonNumberByFileName("/data/downloads/jellyfin/tv/攻壳机动队Ghost_in_The_Shell_S.A.C._2nd_GIG");
+            Assert.AreEqual(result, 2);
+
+            result = provider.GuessSeasonNumberByFileName("/data/downloads/jellyfin/tv/Spice and Wolf/Spice and Wolf 2");
+            Assert.AreEqual(result, 2);
+
+            result = provider.GuessSeasonNumberByFileName("/data/downloads/jellyfin/tv/Spice and Wolf/Spice and Wolf 2 test");
+            Assert.AreEqual(result, null);
+        }
+
     }
 }

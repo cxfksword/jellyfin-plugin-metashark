@@ -16,12 +16,13 @@ namespace Jellyfin.Plugin.MetaShark.Core
 
         private static readonly Regex unusedReg = new Regex(@"\[.+?\]|\(.+?\)|【.+?】", RegexOptions.Compiled);
 
-        private static readonly Regex extrasReg = new Regex(@"\[(OP|ED|PV|CM|Menu|NCED|NCOP|Drama|PreView)[0-9_]*?\]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex fixSeasonNumberReg = new Regex(@"(\[|\.)S(\d{1,2})(\]|\.)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public static ParseNameResult Parse(string fileName, bool isTvSeries = false)
         {
             var parseResult = new ParseNameResult();
             var anitomyResult = AnitomySharp.AnitomySharp.Parse(fileName);
+            var isAnime = IsAnime(fileName);
             foreach (var item in anitomyResult)
             {
                 switch (item.Category)
@@ -49,6 +50,16 @@ namespace Jellyfin.Plugin.MetaShark.Core
                             parseResult.Name = CleanName(item.Value);
                         }
                         break;
+                    case AnitomySharp.Element.ElementCategory.ElementEpisodeTitle:
+                        parseResult.EpisodeName = item.Value;
+                        break;
+                    case AnitomySharp.Element.ElementCategory.ElementAnimeSeason:
+                        var seasonNumber = item.Value.ToInt();
+                        if (seasonNumber > 0)
+                        {
+                            parseResult.ParentIndexNumber = seasonNumber;
+                        }
+                        break;
                     case AnitomySharp.Element.ElementCategory.ElementEpisodeNumber:
                         var year = ParseYear(item.Value);
                         if (year > 0)
@@ -57,18 +68,15 @@ namespace Jellyfin.Plugin.MetaShark.Core
                         }
                         else
                         {
-                            var indexNumber = item.Value.ToInt();
-                            if (indexNumber > 0)
+                            var episodeNumber = item.Value.ToInt();
+                            if (episodeNumber > 0)
                             {
-                                parseResult.IndexNumber = item.Value.ToInt();
+                                parseResult.IndexNumber = episodeNumber;
                             }
                         }
                         break;
                     case AnitomySharp.Element.ElementCategory.ElementAnimeType:
-                        if (item.Value == "SP")
-                        {
-                            parseResult.IsSpecial = true;
-                        }
+                        parseResult.AnimeType = item.Value;
                         break;
                     case AnitomySharp.Element.ElementCategory.ElementAnimeYear:
                         parseResult.Year = item.Value.ToInt();
@@ -78,8 +86,18 @@ namespace Jellyfin.Plugin.MetaShark.Core
                 }
             }
 
+            // 修正动画季信息特殊情况，格式：[SXX]
+            if (!parseResult.ParentIndexNumber.HasValue && isAnime)
+            {
+                var match = fixSeasonNumberReg.Match(fileName);
+                if (match.Success && match.Groups.Count > 2)
+                {
+                    parseResult.ParentIndexNumber = match.Groups[2].Value.ToInt();
+                }
+            }
+
             // 假如Anitomy解析不到year，尝试使用jellyfin默认parser，看能不能解析成功
-            if (parseResult.Year == null && !IsAnime(fileName))
+            if (parseResult.Year == null && !isAnime)
             {
                 var nativeParseResult = ParseMovie(fileName);
                 if (nativeParseResult.Year != null)
@@ -139,7 +157,7 @@ namespace Jellyfin.Plugin.MetaShark.Core
             return 0;
         }
 
-        public static bool IsSpecial(string path)
+        public static bool IsSpecialDirectory(string path)
         {
             var fileName = Path.GetFileNameWithoutExtension(path) ?? string.Empty;
             if (IsAnime(fileName))
@@ -150,17 +168,11 @@ namespace Jellyfin.Plugin.MetaShark.Core
                 }
 
                 string folder = Path.GetFileName(Path.GetDirectoryName(path)) ?? string.Empty;
-                return folder == "SPs" && !extrasReg.IsMatch(fileName);
+                return folder == "SPs";
             }
 
             return false;
         }
-
-        public static bool IsExtra(string name)
-        {
-            return IsAnime(name) && extrasReg.IsMatch(name);
-        }
-
 
 
         // 判断是否为动漫

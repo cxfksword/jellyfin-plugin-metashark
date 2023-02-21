@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageId>AnitomySharp.NET6</PackageId>
+        <Authors>tabratton;senritsu</Authors>
+        <Description>AnitomySharp is a C# port of Anitomy by erengy, a library for parsing anime video filenames. All credit to erengy for the actual library and logic.
+        </Description>
+        <RepositoryUrl>https://github.com/chu-shen/AnitomySharp.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <AssemblyVersion>0.3.0</AssemblyVersion>
+        <FileVersion>0.3.0</FileVersion>
+        <Version>0.3.0</Version>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+        <DocumentationFile>AnitomySharp.xml</DocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\LICENSE" Pack="true" Visible="false" PackagePath="" />
+        <PackageReference Include="Microsoft.DocAsCode.App" Version="2.60.0" />
+    </ItemGroup>
+
+</Project>
