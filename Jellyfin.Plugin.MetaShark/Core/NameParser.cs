@@ -18,6 +18,8 @@ namespace Jellyfin.Plugin.MetaShark.Core
 
         private static readonly Regex fixSeasonNumberReg = new Regex(@"(\[|\.)S(\d{1,2})(\]|\.)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        private static readonly Regex startWithHyphenCharReg = new Regex(@"^[-～~]", RegexOptions.Compiled);
+
         public static ParseNameResult Parse(string fileName, bool isTvSeries = false)
         {
             var parseResult = new ParseNameResult();
@@ -35,7 +37,7 @@ namespace Jellyfin.Plugin.MetaShark.Core
                         {
                             var firstString = item.Value.Substring(0, firstSpaceIndex);
                             var lastString = item.Value.Substring(firstSpaceIndex + 1);
-                            if (firstString.HasChinese() && !lastString.HasChinese())
+                            if (firstString.HasChinese() && !lastString.HasChinese() && !startWithHyphenCharReg.IsMatch(lastString))
                             {
                                 parseResult.ChineseName = CleanName(firstString);
                                 parseResult.Name = CleanName(lastString);

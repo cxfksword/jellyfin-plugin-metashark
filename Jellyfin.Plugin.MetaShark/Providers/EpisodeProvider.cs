@@ -139,7 +139,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
             var parseResult = NameParser.Parse(fileName);
             info.Year = parseResult.Year;
-            info.Name = parseResult.Name;
+            info.Name = parseResult.ChineseName ?? parseResult.Name;
 
             // 没有season级目录或文件命名不规范时，ParentIndexNumber会为null
             if (info.ParentIndexNumber is null)

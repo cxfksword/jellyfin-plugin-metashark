@@ -190,6 +190,11 @@ namespace Jellyfin.Plugin.MetaShark.Test
             Assert.AreEqual(parseResult.ParentIndexNumber, null);
             Assert.AreEqual(parseResult.IndexNumber, 1);
 
+            fileName = "[異域字幕組][她和她的貓 - Everything Flows -][She and Her Cat - Everything Flows -][01][720p][繁體]";
+            parseResult = NameParser.Parse(fileName);
+            Assert.AreEqual(parseResult.Name, "她和她的貓 - Everything Flows");
+            Assert.AreEqual(parseResult.ParentIndexNumber, null);
+            Assert.AreEqual(parseResult.IndexNumber, 1);
 
             // anime特典
             fileName = "[KissSub][Steins;Gate][SP][GB_BIG5_JP][BDrip][1080P][HEVC] 边界曲面的缺失之环";
