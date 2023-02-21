@@ -217,7 +217,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         ParentIndexNumber = 0,
                         IndexNumber = null,
                         Name = parseResult.ExtraName,
-                        AirsAfterSeasonNumber = 1,
                     };
                     return result;
                 }
@@ -226,7 +225,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 result.Item = new Episode
                 {
                     Name = parseResult.ExtraName,
-                    AirsAfterSeasonNumber = 1,
                 };
                 return result;
             }
@@ -241,7 +239,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     ParentIndexNumber = 0,
                     IndexNumber = parseResult.IndexNumber,
                     Name = parseResult.SpecialName == info.Name ? fileName : parseResult.SpecialName,
-                    AirsAfterSeasonNumber = 1,
                 };
 
                 return result;
