@@ -170,13 +170,19 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
 
                 // 当没有season级目录时，默认为1，即当成只有一季
-                if (info.ParentIndexNumber is null && season != null && season.LocationType == LocationType.Virtual)
-                {
-                    this.Log("FixSeasonNumber: season is virtual, set to default 1");
-                    info.ParentIndexNumber = 1;
-                }
+                // if (info.ParentIndexNumber is null && season != null && season.LocationType == LocationType.Virtual)
+                // {
+                //     this.Log("FixSeasonNumber: season is virtual, set to default 1");
+                //     info.ParentIndexNumber = 1;
+                // }
             }
 
+            // 设为默认季数为1
+            if (info.ParentIndexNumber is null)
+            {
+                this.Log("FixSeasonNumber: season number is null, set to default 1");
+                info.ParentIndexNumber = 1;
+            }
 
             if (NameParser.IsAnime(fileName))
             {
@@ -222,7 +228,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     {
                         ParentIndexNumber = 0,
                         IndexNumber = null,
-                        Name = parseResult.ExtraName
+                        Name = parseResult.ExtraName,
+                        AirsAfterSeasonNumber = 1,
                     };
                     return result;
                 }
@@ -230,7 +237,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 // 没ParentIndexNumber时只修改名称
                 result.Item = new Episode
                 {
-                    Name = parseResult.ExtraName
+                    Name = parseResult.ExtraName,
+                    AirsAfterSeasonNumber = 1,
                 };
                 return result;
             }
@@ -245,6 +253,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     ParentIndexNumber = 0,
                     IndexNumber = parseResult.IndexNumber,
                     Name = parseResult.EpisodeName ?? parseResult.Name,
+                    AirsAfterSeasonNumber = 1,
                 };
 
                 return result;
