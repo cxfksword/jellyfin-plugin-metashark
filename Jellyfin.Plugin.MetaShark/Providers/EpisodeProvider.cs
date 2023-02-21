@@ -87,7 +87,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var seasonResult = await this._tmdbApi
                 .GetSeasonAsync(seriesTmdbId.ToInt(), seasonNumber.Value, info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
                 .ConfigureAwait(false);
-            if (seasonResult == null || seasonResult.Episodes.Count < episodeNumber.Value)
+            if (seasonResult == null || seasonResult.Episodes == null || seasonResult.Episodes.Count < episodeNumber.Value)
             {
                 this.Log("Can‘t found episode data from tmdb. Name: {0} seriesTmdbId: {1} seasonNumber: {2} episodeNumber: {3}", info.Name, seriesTmdbId, seasonNumber, episodeNumber);
                 return result;
