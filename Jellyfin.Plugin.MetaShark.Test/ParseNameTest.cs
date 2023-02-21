@@ -220,6 +220,10 @@ namespace Jellyfin.Plugin.MetaShark.Test
             parseResult = NameParser.Parse(fileName);
             Assert.IsTrue(parseResult.IsExtra);
 
+            fileName = "[VCB-Studio] Spice and Wolf II [Drama02][Ma10p_1080p][x265_flac].mp4";
+            parseResult = NameParser.Parse(fileName);
+            Assert.IsTrue(parseResult.IsExtra);
+
 
         }
 

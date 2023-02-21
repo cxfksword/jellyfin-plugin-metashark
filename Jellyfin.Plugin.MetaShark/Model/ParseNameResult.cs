@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,12 +66,29 @@ namespace Jellyfin.Plugin.MetaShark.Model
             {
                 if (IndexNumber.HasValue)
                 {
-                    return $"{Name} {AnimeType} {PaddingZeroIndexNumber}";
+                    return $"{AnimeType} {PaddingZeroIndexNumber}";
                 }
                 else
                 {
-                    return $"{Name} {AnimeType}";
+                    return $"{AnimeType}";
                 }
+            }
+        }
+
+        public string SpecialName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(EpisodeName) && IndexNumber.HasValue)
+                {
+                    return $"{EpisodeName} {IndexNumber}";
+                }
+                else if (!string.IsNullOrEmpty(EpisodeName))
+                {
+                    return EpisodeName;
+                }
+
+                return Name;
             }
         }
     }

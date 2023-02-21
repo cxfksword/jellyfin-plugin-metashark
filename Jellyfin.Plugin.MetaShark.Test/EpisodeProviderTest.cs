@@ -46,8 +46,9 @@ namespace Jellyfin.Plugin.MetaShark.Test
                 var info = new EpisodeInfo()
                 {
                     Name = "Spice and Wolf",
-                    Path = "/test/Spice and Wolf/Spice and Wolf II/[VCB-Studio] Spice and Wolf II [01][Ma10p_1080p][x265_flac].mp4",
+                    Path = "/test/Spice and Wolf/S00/[VCB-Studio] Spice and Wolf II [01][Hi444pp_1080p][x264_flac].mkv",
                     MetadataLanguage = "zh",
+                    ParentIndexNumber = 0,
                     SeriesProviderIds = new Dictionary<string, string>() { { MetadataProvider.Tmdb.ToString(), "26707" } },
                     IsAutomated = false,
                 };

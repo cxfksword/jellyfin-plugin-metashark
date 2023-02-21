@@ -28,16 +28,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
     {
         private readonly IMemoryCache _memoryCache;
 
-        private static readonly Regex[] EpisodeFileNameRegex =
-        {
-            new(@"\[([\d\.]{2,})\]"),
-            new(@"- ?([\d\.]{2,})"),
-            new(@"EP?([\d\.]{2,})", RegexOptions.IgnoreCase),
-            new(@"\[([\d\.]{2,})"),
-            new(@"#([\d\.]{2,})"),
-            new(@"(\d{2,})")
-        };
-
         public EpisodeProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
             : base(httpClientFactory, loggerFactory.CreateLogger<EpisodeProvider>(), libraryManager, httpContextAccessor, doubanApi, tmdbApi, omdbApi)
         {
@@ -87,9 +77,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 Name = info.Name,
             };
 
-            if (episodeNumber is null or 0 || seasonNumber is null or 0 || string.IsNullOrEmpty(seriesTmdbId))
+            if (episodeNumber is null or 0 || seasonNumber is null || string.IsNullOrEmpty(seriesTmdbId))
             {
-                this.Log("Lack meta message. episodeNumber: {0} seasonNumber: {1} seriesTmdbId:{2}", episodeNumber, seasonNumber, seriesTmdbId);
+                this.Log("Lack meta data. episodeNumber: {0} seasonNumber: {1} seriesTmdbId:{2}", episodeNumber, seasonNumber, seriesTmdbId);
                 return result;
             }
 
@@ -148,8 +138,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 使用AnitomySharp进行重新解析，解决anime识别错误
             var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
             var parseResult = NameParser.Parse(fileName);
-            info.Name = parseResult.Name;
             info.Year = parseResult.Year;
+            info.Name = parseResult.Name;
 
             // 没有season级目录或文件命名不规范时，ParentIndexNumber会为null
             if (info.ParentIndexNumber is null)
@@ -184,20 +174,18 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 info.ParentIndexNumber = 1;
             }
 
-            if (NameParser.IsAnime(fileName))
+            // 特典
+            if (NameParser.IsAnime(fileName) && parseResult.IsSpecial)
             {
-                // 特典
-                if (parseResult.IsSpecial)
-                {
-                    info.ParentIndexNumber = 0;
-                }
-
-                // 动画的OP/ED/MENU等
-                if (parseResult.IsExtra)
-                {
-                    info.ParentIndexNumber = null;
-                }
+                info.ParentIndexNumber = 0;
             }
+
+            // 特典优先使用文件名
+            if (info.ParentIndexNumber.HasValue && info.ParentIndexNumber == 0)
+            {
+                info.Name = parseResult.SpecialName == info.Name ? fileName : parseResult.SpecialName;
+            }
+
 
             // 大于1000，可能错误解析了分辨率
             if (parseResult.IndexNumber.HasValue && parseResult.IndexNumber < 1000)
@@ -252,7 +240,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     ParentIndexNumber = 0,
                     IndexNumber = parseResult.IndexNumber,
-                    Name = parseResult.EpisodeName ?? parseResult.Name,
+                    Name = parseResult.SpecialName == info.Name ? fileName : parseResult.SpecialName,
                     AirsAfterSeasonNumber = 1,
                 };
 
