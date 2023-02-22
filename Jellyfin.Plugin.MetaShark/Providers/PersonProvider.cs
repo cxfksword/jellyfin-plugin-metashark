@@ -69,7 +69,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
 
             var res = await this._doubanApi.SearchCelebrityAsync(searchInfo.Name, cancellationToken).ConfigureAwait(false);
-            result.AddRange(res.Take(this.config.MaxSearchResult).Select(x =>
+            result.AddRange(res.Take(Configuration.PluginConfiguration.MAX_SEARCH_RESULT).Select(x =>
             {
                 return new RemoteSearchResult
                 {
@@ -84,7 +84,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         }
 
         /// <inheritdoc />
-        public async Task<MetadataResult<Person>?> GetMetadata(PersonLookupInfo info, CancellationToken cancellationToken)
+        public async Task<MetadataResult<Person>> GetMetadata(PersonLookupInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Person>();
 

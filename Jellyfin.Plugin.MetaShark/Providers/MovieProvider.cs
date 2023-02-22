@@ -52,7 +52,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             // 从douban搜索
             var res = await this._doubanApi.SearchAsync(info.Name, cancellationToken).ConfigureAwait(false);
-            result.AddRange(res.Take(this.config.MaxSearchResult).Select(x =>
+            result.AddRange(res.Take(Configuration.PluginConfiguration.MAX_SEARCH_RESULT).Select(x =>
             {
                 return new RemoteSearchResult
                 {
@@ -69,7 +69,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (this.config.EnableTmdbSearch)
             {
                 var tmdbList = await _tmdbApi.SearchMovieAsync(info.Name, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-                result.AddRange(tmdbList.Take(this.config.MaxSearchResult).Select(x =>
+                result.AddRange(tmdbList.Take(Configuration.PluginConfiguration.MAX_SEARCH_RESULT).Select(x =>
                 {
                     return new RemoteSearchResult
                     {

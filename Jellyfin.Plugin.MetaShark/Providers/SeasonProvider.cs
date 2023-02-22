@@ -56,10 +56,11 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
-                // 季文件夹名称不规范，没法拿到seasonNumber，尝试从文件名猜出
+                // 季文件夹名称不规范，没法拿到seasonNumber，尝试从文件夹名猜出
+                // 注意：本办法没法处理没有季文件夹的/虚拟季，因为path会为空
                 if (seasonNumber is null)
                 {
-                    seasonNumber = this.GuessSeasonNumberByFileName(info.Path);
+                    seasonNumber = this.GuessSeasonNumberByDirectoryName(info.Path);
                 }
 
                 // 搜索豆瓣季id
@@ -130,68 +131,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return await this.GetMetadataByTmdb(info, seriesTmdbId, seasonNumber, cancellationToken).ConfigureAwait(false);
         }
 
-        public int? GuessSeasonNumberByFileName(string path)
-        {
-            // 当没有season级目录时，path为空，直接返回
-            if (string.IsNullOrEmpty(path))
-            {
-                return null;
-            }
-
-            // TODO: 有时series name中会带有季信息
-            var fileName = Path.GetFileName(path);
-            if (string.IsNullOrEmpty(fileName))
-            {
-                return null;
-            }
-
-            var regSeason = new Regex(@"第(.)(季|部)", RegexOptions.Compiled);
-            var match = regSeason.Match(fileName);
-            if (match.Success && match.Groups.Count > 1)
-            {
-                var seasonNumber = match.Groups[1].Value.ToInt();
-                if (seasonNumber <= 0)
-                {
-                    seasonNumber = Utils.ChineseNumberToInt(match.Groups[1].Value) ?? 0;
-                }
-                if (seasonNumber > 0)
-                {
-                    this.Log($"Found season number of filename: {fileName} seasonNumber: {seasonNumber}");
-                    return seasonNumber;
-                }
-            }
-
-
-            var seasonNameMap = new Dictionary<string, int>() {
-                {@"[ ._](I|1st)[ ._]", 1},
-                {@"[ ._](II|2nd)[ ._]", 2},
-                {@"[ ._](III|3rd)[ ._]", 3},
-                {@"[ ._](IIII|4th)[ ._]", 3},
-            };
-
-            foreach (var entry in seasonNameMap)
-            {
-                if (Regex.IsMatch(fileName, entry.Key))
-                {
-                    this.Log($"Found season number of filename: {fileName} seasonNumber: {entry.Value}");
-                    return entry.Value;
-                }
-            }
-
-            // 带数字末尾的
-            match = Regex.Match(fileName, @"[ ._](\d{1,2})$");
-            if (match.Success && match.Groups.Count > 1)
-            {
-                var seasonNumber = match.Groups[1].Value.ToInt();
-                if (seasonNumber > 0)
-                {
-                    this.Log($"Found season number of filename: {fileName} seasonNumber: {seasonNumber}");
-                    return seasonNumber;
-                }
-            }
-
-            return null;
-        }
 
         public async Task<string?> GuessDoubanSeasonId(string? sid, string? seriesTmdbId, int? seasonNumber, ItemLookupInfo info, CancellationToken cancellationToken)
         {

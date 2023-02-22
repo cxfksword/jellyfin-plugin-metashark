@@ -63,23 +63,43 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
 
             var provider = new SeasonProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
-            var result = provider.GuessSeasonNumberByFileName("/data/downloads/jellyfin/tv/向往的生活/第2季");
+            var result = provider.GuessSeasonNumberByDirectoryName("/data/downloads/jellyfin/tv/向往的生活/第2季");
             Assert.AreEqual(result, 2);
 
-            result = provider.GuessSeasonNumberByFileName("/data/downloads/jellyfin/tv/向往的生活 第2季");
+            result = provider.GuessSeasonNumberByDirectoryName("/data/downloads/jellyfin/tv/向往的生活 第2季");
             Assert.AreEqual(result, 2);
 
-            result = provider.GuessSeasonNumberByFileName("/data/downloads/jellyfin/tv/向往的生活/第三季");
+            result = provider.GuessSeasonNumberByDirectoryName("/data/downloads/jellyfin/tv/向往的生活/第三季");
             Assert.AreEqual(result, 3);
 
-            result = provider.GuessSeasonNumberByFileName("/data/downloads/jellyfin/tv/攻壳机动队Ghost_in_The_Shell_S.A.C._2nd_GIG");
+            result = provider.GuessSeasonNumberByDirectoryName("/data/downloads/jellyfin/tv/攻壳机动队Ghost_in_The_Shell_S.A.C._2nd_GIG");
             Assert.AreEqual(result, 2);
 
-            result = provider.GuessSeasonNumberByFileName("/data/downloads/jellyfin/tv/Spice and Wolf/Spice and Wolf 2");
+            result = provider.GuessSeasonNumberByDirectoryName("/data/downloads/jellyfin/tv/Spice and Wolf/Spice and Wolf 2");
             Assert.AreEqual(result, 2);
 
-            result = provider.GuessSeasonNumberByFileName("/data/downloads/jellyfin/tv/Spice and Wolf/Spice and Wolf 2 test");
+            result = provider.GuessSeasonNumberByDirectoryName("/data/downloads/jellyfin/tv/Spice and Wolf/Spice and Wolf 2 test");
             Assert.AreEqual(result, null);
+
+            result = provider.GuessSeasonNumberByDirectoryName("/data/downloads/jellyfin/tv/[BDrip] Made in Abyss S02 [7鲁ACG x Sakurato]");
+            Assert.AreEqual(result, 2);
+        }
+
+        [TestMethod]
+        public void TestGuestDoubanSeasonByYearAsync()
+        {
+            var doubanApi = new DoubanApi(loggerFactory);
+            var tmdbApi = new TmdbApi(loggerFactory);
+            var omdbApi = new OmdbApi(loggerFactory);
+            var httpClientFactory = new DefaultHttpClientFactory();
+            var libraryManagerStub = new Mock<ILibraryManager>();
+            var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
+            Task.Run(async () =>
+            {
+                var provider = new SeasonProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
+                var result = await provider.GuestDoubanSeasonByYearAsync("机动战士高达0083 星尘的回忆", 1991, CancellationToken.None);
+                Assert.AreEqual(result, "1766564");
+            }).GetAwaiter().GetResult();
         }
 
     }

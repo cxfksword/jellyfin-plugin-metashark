@@ -21,20 +21,29 @@ namespace Jellyfin.Plugin.MetaShark.Core
         /// </summary>
         public static int? ChineseNumberToInt(string str)
         {
-            switch (str)
+            if (string.IsNullOrEmpty(str)) return null;
+
+            var chineseNumberMap = new Dictionary<Char, Char>() {
+                {'一', '1'},
+                {'二', '2'},
+                {'三', '3'},
+                {'四', '4'},
+                {'五', '5'},
+                {'六', '6'},
+                {'七', '7'},
+                {'八', '8'},
+                {'九', '9'},
+                {'零', '0'},
+            };
+
+            var numberArr = str.ToCharArray().Select(x => chineseNumberMap.ContainsKey(x) ? chineseNumberMap[x] : x).ToArray();
+            var newNumberStr = new string(numberArr);
+            if (int.TryParse(new string(numberArr), out var number))
             {
-                case "一": return 1;
-                case "二": return 2;
-                case "三": return 3;
-                case "四": return 4;
-                case "五": return 5;
-                case "六": return 6;
-                case "七": return 7;
-                case "八": return 8;
-                case "九": return 9;
-                case "零": return 0;
-                default: return null;
+                return number;
             }
+
+            return null;
         }
     }
 }

@@ -171,7 +171,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return null;
         }
 
-        protected async Task<string?> GuestDoubanSeasonByYearAsync(string name, int? year, CancellationToken cancellationToken)
+        public async Task<string?> GuestDoubanSeasonByYearAsync(string name, int? year, CancellationToken cancellationToken)
         {
             if (year == null || year == 0)
             {
@@ -275,6 +275,71 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 this.Log($"Found tmdb [id]: {tmdbId} by imdb id: {imdb}");
                 return $"{tmdbId}";
             }
+
+            return null;
+        }
+
+
+        public int? GuessSeasonNumberByDirectoryName(string path)
+        {
+            // TODO: 有时series name中会带有季信息
+            // 当没有season级目录时，path为空，直接返回
+            if (string.IsNullOrEmpty(path))
+            {
+                return null;
+            }
+
+
+            var fileName = Path.GetFileName(path);
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return null;
+            }
+
+            var regSeason = new Regex(@"第([0-9零一二三四五六七八九]+?)(季|部)", RegexOptions.Compiled);
+            var match = regSeason.Match(fileName);
+            if (match.Success && match.Groups.Count > 1)
+            {
+                var seasonNumber = match.Groups[1].Value.ToInt();
+                if (seasonNumber <= 0)
+                {
+                    seasonNumber = Utils.ChineseNumberToInt(match.Groups[1].Value) ?? 0;
+                }
+                if (seasonNumber > 0)
+                {
+                    this.Log($"Found season number of filename: {fileName} seasonNumber: {seasonNumber}");
+                    return seasonNumber;
+                }
+            }
+
+
+            var seasonNameMap = new Dictionary<string, int>() {
+                {@"[ ._](I|1st|S01|S1)[ ._]", 1},
+                {@"[ ._](II|2nd|S02|S2)[ ._]", 2},
+                {@"[ ._](III|3rd|S03|S3)[ ._]", 3},
+                {@"[ ._](IIII|4th|S04|S4)[ ._]", 3},
+            };
+
+            foreach (var entry in seasonNameMap)
+            {
+                if (Regex.IsMatch(fileName, entry.Key))
+                {
+                    this.Log($"Found season number of filename: {fileName} seasonNumber: {entry.Value}");
+                    return entry.Value;
+                }
+            }
+
+            // // 带数字末尾的
+            // match = Regex.Match(fileName, @"[ ._](\d{1,2})$");
+            // if (match.Success && match.Groups.Count > 1)
+            // {
+            //     var seasonNumber = match.Groups[1].Value.ToInt();
+            //     if (seasonNumber > 0)
+            //     {
+            //         this.Log($"Found season number of filename: {fileName} seasonNumber: {seasonNumber}");
+            //         return seasonNumber;
+            //     }
+            // }
 
             return null;
         }

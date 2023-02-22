@@ -48,6 +48,12 @@ namespace Jellyfin.Plugin.MetaShark.Test
             Assert.AreEqual(parseResult.Name, "Roman Holiday");
             Assert.AreEqual(parseResult.Year, 1953);
 
+            fileName = "【更多蓝光电影访问】红辣椒[简繁中文字幕].Paprika.2006.RERiP.1080p.BluRay.x264.DTS-WiKi";
+            parseResult = NameParser.Parse(fileName);
+            Assert.AreEqual(parseResult.ChineseName, "红辣椒");
+            Assert.AreEqual(parseResult.Name, "Paprika");
+            Assert.AreEqual(parseResult.Year, 2006);
+
             // 只英文
             fileName = "A.Chinese.Odyssey.Part.1.1995.BluRay.1080p.x265.10bit.2Audio-MiniHD";
             parseResult = NameParser.Parse(fileName);
@@ -169,6 +175,13 @@ namespace Jellyfin.Plugin.MetaShark.Test
             Assert.AreEqual(parseResult.Name, "She-Hulk Attorney At Law");
             Assert.AreEqual(parseResult.ParentIndexNumber, 1);
             Assert.AreEqual(parseResult.IndexNumber, 1);
+
+            // 只中文
+            fileName = "齊天大聖 第02集";
+            parseResult = NameParser.Parse(fileName);
+            Assert.AreEqual(parseResult.Name, "齊天大聖 第02集");
+            Assert.AreEqual(parseResult.ParentIndexNumber, null);
+            Assert.AreEqual(parseResult.IndexNumber, 2);
 
             // anime
             fileName = "[YYDM-11FANS][THERMAE_ROMAE][02][BDRIP][720P][X264-10bit_AAC][7FF2269F]";

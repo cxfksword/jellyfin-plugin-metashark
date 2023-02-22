@@ -25,6 +25,9 @@ public enum SomeOptions
 /// </summary>
 public class PluginConfiguration : BasePluginConfiguration
 {
+    public const int MAX_CAST_MEMBERS = 15;
+    public const int MAX_SEARCH_RESULT = 5;
+
     public string Version { get; } = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty;
 
     public string DoubanCookies { get; set; } = string.Empty;
@@ -55,7 +58,7 @@ public class PluginConfiguration : BasePluginConfiguration
 
     public int MaxCastMembers { get; set; } = 15;
 
-    public int MaxSearchResult { get; set; } = 3;
+    public int MaxSearchResult { get; set; } = 5;
 
 
 

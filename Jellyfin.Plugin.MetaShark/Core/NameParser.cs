@@ -20,6 +20,8 @@ namespace Jellyfin.Plugin.MetaShark.Core
 
         private static readonly Regex startWithHyphenCharReg = new Regex(@"^[-～~]", RegexOptions.Compiled);
 
+        private static readonly Regex chineseIndexNumberReg = new Regex(@"第([0-9零一二三四五六七八九]+?)(集|章|话|話)", RegexOptions.Compiled);
+
         public static ParseNameResult Parse(string fileName, bool isTvSeries = false)
         {
             var parseResult = new ParseNameResult();
@@ -108,6 +110,12 @@ namespace Jellyfin.Plugin.MetaShark.Core
                 }
             }
 
+            // 修复纯中文集数
+            if (parseResult.IndexNumber is null)
+            {
+                parseResult.IndexNumber = ParseChineseIndexNumber(fileName);
+            }
+
             // 解析不到title时，使用默认名
             if (string.IsNullOrEmpty(parseResult.Name))
             {
@@ -159,21 +167,36 @@ namespace Jellyfin.Plugin.MetaShark.Core
             return 0;
         }
 
+        private static int? ParseChineseIndexNumber(string fileName)
+        {
+            var match = chineseIndexNumberReg.Match(fileName);
+            if (match.Success && match.Groups.Count > 1)
+            {
+                if (int.TryParse(match.Groups[1].Value, out var seasonNumber))
+                {
+                    return seasonNumber;
+                }
+
+                var number = Utils.ChineseNumberToInt(match.Groups[1].Value);
+                if (number.HasValue)
+                {
+                    return number;
+                }
+            }
+
+            return null;
+        }
+
         public static bool IsSpecialDirectory(string path)
         {
             var fileName = Path.GetFileNameWithoutExtension(path) ?? string.Empty;
-            if (IsAnime(fileName))
+            if (IsAnime(fileName) && fileName.Contains("[SP]"))
             {
-                if (fileName.Contains("[SP]"))
-                {
-                    return true;
-                }
-
-                string folder = Path.GetFileName(Path.GetDirectoryName(path)) ?? string.Empty;
-                return folder == "SPs";
+                return true;
             }
 
-            return false;
+            var folder = Path.GetFileName(Path.GetDirectoryName(path)) ?? string.Empty;
+            return folder == "SPs" || folder.Contains("特典");
         }
 
 

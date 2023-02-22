@@ -50,7 +50,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
         Regex regId = new Regex(@"/(\d+?)/", RegexOptions.Compiled);
         Regex regSid = new Regex(@"sid: (\d+?),", RegexOptions.Compiled);
         Regex regCat = new Regex(@"\[(.+?)\]", RegexOptions.Compiled);
-        Regex regYear = new Regex(@"(\d{4})", RegexOptions.Compiled);
+        Regex regYear = new Regex(@"([12][890][0-9][0-9])", RegexOptions.Compiled);
         Regex regTitle = new Regex(@"<title>([\w\W]+?)</title>", RegexOptions.Compiled);
         Regex regKeywordMeta = new Regex(@"<meta name=""keywords"" content=""(.+?)""", RegexOptions.Compiled);
         Regex regOriginalName = new Regex(@"原名[:：](.+?)\s*?\/", RegexOptions.Compiled);

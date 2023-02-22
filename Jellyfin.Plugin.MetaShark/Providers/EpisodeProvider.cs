@@ -56,7 +56,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var result = new MetadataResult<Episode>();
 
             // 动画特典和extras处理
-            var specialResult = this.HandleAnimeSpecialAndExtras(info);
+            var specialResult = this.HandleAnimeExtras(info);
             if (specialResult != null)
             {
                 return specialResult;
@@ -94,15 +94,15 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             // TODO：自动搜索匹配或识别时，判断tmdb剧集信息数目和视频是否一致，不一致不处理（现在通过IsAutomated判断不太准确）
-            if (info.IsAutomated)
-            {
-                var videoFilesCount = this.GetVideoFileCount(Path.GetDirectoryName(info.Path));
-                if (videoFilesCount > 0 && seasonResult.Episodes.Count != videoFilesCount)
-                {
-                    this.Log("Tmdb episode number not match. Name: {0} tmdb episode count: {1} video files count: {2}", info.Name, seasonResult.Episodes.Count, videoFilesCount);
-                    return result;
-                }
-            }
+            // if (info.IsAutomated)
+            // {
+            //     var videoFilesCount = this.GetVideoFileCount(Path.GetDirectoryName(info.Path));
+            //     if (videoFilesCount > 0 && seasonResult.Episodes.Count != videoFilesCount)
+            //     {
+            //         this.Log("Tmdb episode number not match. Name: {0} tmdb episode count: {1} video files count: {2}", info.Name, seasonResult.Episodes.Count, videoFilesCount);
+            //         return result;
+            //     }
+            // }
 
             var episodeResult = seasonResult.Episodes[episodeNumber.Value - 1];
 
@@ -133,6 +133,10 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return result;
         }
 
+        /// <summary>
+        /// 重新解析文件名
+        /// 注意：这里修改替换ParentIndexNumber值后，会重新触发SeasonProvier的GetMetadata方法，并带上最新的季数IndexNumber
+        /// </summary>
         public EpisodeInfo FixParseInfo(EpisodeInfo info)
         {
             // 使用AnitomySharp进行重新解析，解决anime识别错误
@@ -152,7 +156,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             {
                 var episodeItem = _libraryManager.FindByPath(info.Path, false);
                 var season = episodeItem != null ? ((Episode)episodeItem).Season : null;
-                if (season != null && info.ParentIndexNumber != season.IndexNumber)
+                if (season != null && season.IndexNumber.HasValue && info.ParentIndexNumber != season.IndexNumber)
                 {
                     this.Log("FixSeasonNumber: old: {0} new: {1}", info.ParentIndexNumber, season.IndexNumber);
                     info.ParentIndexNumber = season.IndexNumber;
@@ -167,6 +171,20 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 // }
             }
 
+            // 从series文件夹名称猜出season number （没有季文件夹的在SeasonProvider处理不了，因为info.Path会为空，只能在这里处理）
+            var seasonFolderPath = Path.GetDirectoryName(info.Path);
+            if (info.ParentIndexNumber is null && seasonFolderPath != null)
+            {
+                info.ParentIndexNumber = this.GuessSeasonNumberByDirectoryName(seasonFolderPath);
+            }
+
+
+            // 识别特典
+            if (info.ParentIndexNumber is null && NameParser.IsAnime(fileName) && (parseResult.IsSpecial || NameParser.IsSpecialDirectory(info.Path)))
+            {
+                info.ParentIndexNumber = 0;
+            }
+
             // 设为默认季数为1
             if (info.ParentIndexNumber is null)
             {
@@ -174,13 +192,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 info.ParentIndexNumber = 1;
             }
 
-            // 特典
-            if (NameParser.IsAnime(fileName) && parseResult.IsSpecial)
-            {
-                info.ParentIndexNumber = 0;
-            }
 
-            // 特典优先使用文件名
+            // 特典优先使用文件名（特典除了前面特别设置，还有SXX/Season XX等默认的）
             if (info.ParentIndexNumber.HasValue && info.ParentIndexNumber == 0)
             {
                 info.Name = parseResult.SpecialName == info.Name ? fileName : parseResult.SpecialName;
@@ -198,7 +211,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         }
 
 
-        private MetadataResult<Episode>? HandleAnimeSpecialAndExtras(EpisodeInfo info)
+        private MetadataResult<Episode>? HandleAnimeExtras(EpisodeInfo info)
         {
             // 特典或extra视频可能和正片剧集放在同一目录
             var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
@@ -229,20 +242,21 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return result;
             }
 
-            if (parseResult.IsSpecial || NameParser.IsSpecialDirectory(info.Path))
-            {
-                this.Log($"Found anime sp of [name]: {fileName}");
-                var result = new MetadataResult<Episode>();
-                result.HasMetadata = true;
-                result.Item = new Episode
-                {
-                    ParentIndexNumber = 0,
-                    IndexNumber = parseResult.IndexNumber,
-                    Name = parseResult.SpecialName == info.Name ? fileName : parseResult.SpecialName,
-                };
+            //// 特典也有剧集信息，不在这里处理
+            // if (parseResult.IsSpecial || NameParser.IsSpecialDirectory(info.Path))
+            // {
+            //     this.Log($"Found anime sp of [name]: {fileName}");
+            //     var result = new MetadataResult<Episode>();
+            //     result.HasMetadata = true;
+            //     result.Item = new Episode
+            //     {
+            //         ParentIndexNumber = 0,
+            //         IndexNumber = parseResult.IndexNumber,
+            //         Name = parseResult.SpecialName == info.Name ? fileName : parseResult.SpecialName,
+            //     };
 
-                return result;
-            }
+            //     return result;
+            // }
 
             return null;
         }
