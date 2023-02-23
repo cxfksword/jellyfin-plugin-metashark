@@ -145,7 +145,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             info.Year = parseResult.Year;
             info.Name = parseResult.ChineseName ?? parseResult.Name;
 
-            // 没有season级目录或文件命名不规范时，ParentIndexNumber会为null
+            // 没有season级目录(即虚拟季)ParentIndexNumber默认是1，季文件夹命名不规范时，ParentIndexNumber默认是null
             if (info.ParentIndexNumber is null)
             {
                 info.ParentIndexNumber = parseResult.ParentIndexNumber;
@@ -163,7 +163,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
 
 
-                // 当没有season级目录时，默认为1，即当成只有一季
+                // // 当没有season级目录时，默认为1，即当成只有一季（不需要处理，虚拟季jellyfin默认传的ParentIndexNumber=1）
                 // if (info.ParentIndexNumber is null && season != null && season.LocationType == LocationType.Virtual)
                 // {
                 //     this.Log("FixSeasonNumber: season is virtual, set to default 1");
@@ -171,7 +171,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 // }
             }
 
-            // 从series文件夹名称猜出season number （没有季文件夹的在SeasonProvider处理不了，因为info.Path会为空，只能在这里处理）
+            // 从季文件夹名称猜出season number
             var seasonFolderPath = Path.GetDirectoryName(info.Path);
             if (info.ParentIndexNumber is null && seasonFolderPath != null)
             {
@@ -185,12 +185,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 info.ParentIndexNumber = 0;
             }
 
-            // 设为默认季数为1
-            if (info.ParentIndexNumber is null)
-            {
-                this.Log("FixSeasonNumber: season number is null, set to default 1");
-                info.ParentIndexNumber = 1;
-            }
+            // // 设为默认季数为1（问题：当同时存在S01和剧场版季文件夹时，剧场版的影片会因为默认第一季而在S01也显示出来）
+            // if (info.ParentIndexNumber is null)
+            // {
+            //     this.Log("FixSeasonNumber: season number is null, set to default 1");
+            //     info.ParentIndexNumber = 1;
+            // }
 
 
             // 特典优先使用文件名（特典除了前面特别设置，还有SXX/Season XX等默认的）

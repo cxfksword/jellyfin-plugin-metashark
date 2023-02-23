@@ -139,6 +139,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return null;
             }
 
+            // 没有季文件夹（即虚拟季），info.Path会为空，直接用series的sid
+            if (string.IsNullOrEmpty(info.Path))
+            {
+                return sid;
+            }
+
             // 从sereis获取正确名称，info.Name当是标准格式如S01等时，会变成第x季，非标准名称默认文件名
             var series = await this._doubanApi.GetMovieAsync(sid, cancellationToken).ConfigureAwait(false);
             if (series == null)
