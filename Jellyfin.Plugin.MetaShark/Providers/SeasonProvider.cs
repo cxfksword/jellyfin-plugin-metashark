@@ -165,7 +165,17 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             if (!string.IsNullOrEmpty(seriesName) && seasonYear > 0)
             {
-                return await this.GuestDoubanSeasonByYearAsync(seriesName, seasonYear, cancellationToken).ConfigureAwait(false);
+                var seasonSid = await this.GuestDoubanSeasonByYearAsync(seriesName, seasonYear, cancellationToken).ConfigureAwait(false);
+                if (!string.IsNullOrEmpty(seasonSid))
+                {
+                    return seasonSid;
+                }
+            }
+
+            // 通过季名匹配douban id，作为关闭tmdb api/api超时的后备方法使用
+            if (!string.IsNullOrEmpty(seriesName) && seasonNumber.HasValue && seasonNumber > 0)
+            {
+                return await this.GuestDoubanSeasonBySeasonNameAsync(seriesName, seasonNumber, cancellationToken).ConfigureAwait(false);
             }
 
             return null;

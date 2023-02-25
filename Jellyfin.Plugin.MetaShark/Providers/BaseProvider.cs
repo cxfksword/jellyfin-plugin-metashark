@@ -51,7 +51,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         protected readonly IHttpContextAccessor _httpContextAccessor;
 
         protected Regex regMetaSourcePrefix = new Regex(@"^\[.+\]", RegexOptions.Compiled);
-        protected Regex regSeasonNameSuffix = new Regex(@"\s第[0-9一二三四五六七八九十]+?季$", RegexOptions.Compiled);
+        protected Regex regSeasonNameSuffix = new Regex(@"\s第[0-9一二三四五六七八九十]+?季$|(?<![0-9a-zA-Z])\d$", RegexOptions.Compiled);
 
         protected PluginConfiguration config
         {
@@ -209,6 +209,41 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             this.Log($"GuestDoubanSeasonByYear not found!");
+            return null;
+        }
+
+        public async Task<string?> GuestDoubanSeasonBySeasonNameAsync(string name, int? seasonNumber, CancellationToken cancellationToken)
+        {
+            if (seasonNumber is null or 0)
+            {
+                return null;
+            }
+
+            var chineseSeasonNumber = Utils.ToChineseNumber(seasonNumber);
+            if (string.IsNullOrEmpty(chineseSeasonNumber))
+            {
+                return null;
+            }
+
+            var seasonName = $"{name}{seasonNumber}";
+            var chineseSeasonName = $"{name} 第{chineseSeasonNumber}季";
+            if (seasonNumber == 1)
+            {
+                seasonName = name;
+            }
+            this.Log($"GuestDoubanSeasonBySeasonNameAsync of [name]: {seasonName} 或 {chineseSeasonName}");
+
+            // 通过名称精确匹配
+            var result = await this._doubanApi.SearchAsync(name, cancellationToken).ConfigureAwait(false);
+            var item = result.Where(x => x.Category == "电视剧" && x.Rating > 0 && (x.Name == seasonName || x.Name == chineseSeasonName)).FirstOrDefault();
+            if (item != null && !string.IsNullOrEmpty(item.Sid))
+            {
+                this.Log($"Found douban [id]: {item.Name}({item.Sid})");
+                return item.Sid;
+            }
+
+
+            this.Log($"GuestDoubanSeasonBySeasonNameAsync not found!");
             return null;
         }
 
