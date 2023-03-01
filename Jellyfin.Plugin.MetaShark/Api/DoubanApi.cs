@@ -331,7 +331,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var rating = contentNode.GetText("div.rating_self strong.rating_num") ?? "0";
                 var img = contentNode.GetAttr("a.nbgnbg>img", "src") ?? string.Empty;
                 var category = contentNode.QuerySelector("div.episode_list") == null ? "电影" : "电视剧";
-                var intro = contentNode.GetText("div.indent>span") ?? string.Empty;
+                var intro = contentNode.GetText("div#link-report-intra>span.all") ?? contentNode.GetText("div#link-report-intra>span") ?? string.Empty;
                 intro = formatOverview(intro);
 
 
