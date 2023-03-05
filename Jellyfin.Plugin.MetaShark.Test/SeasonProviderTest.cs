@@ -97,7 +97,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
             Task.Run(async () =>
             {
                 var provider = new SeasonProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
-                var result = await provider.GuestDoubanSeasonByYearAsync("机动战士高达0083 星尘的回忆", 1991, CancellationToken.None);
+                var result = await provider.GuestDoubanSeasonByYearAsync("机动战士高达0083 星尘的回忆", 1991, null, CancellationToken.None);
                 Assert.AreEqual(result, "1766564");
             }).GetAwaiter().GetResult();
         }

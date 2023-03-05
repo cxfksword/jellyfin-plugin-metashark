@@ -171,20 +171,20 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return null;
         }
 
-        public async Task<string?> GuestDoubanSeasonByYearAsync(string name, int? year, CancellationToken cancellationToken)
+        public async Task<string?> GuestDoubanSeasonByYearAsync(string seriesName, int? year, int? seasonNumber, CancellationToken cancellationToken)
         {
             if (year == null || year == 0)
             {
                 return null;
             }
 
-            this.Log($"GuestDoubanSeasonByYear of [name]: {name} [year]: {year}");
+            this.Log($"GuestDoubanSeasonByYear of [name]: {seriesName} [year]: {year}");
 
             // 先通过suggest接口查找，减少搜索页访问次数，避免封禁（suggest没法区分电影或电视剧，排序也比搜索页差些）
             if (config.EnableDoubanAvoidRiskControl)
             {
-                var suggestResult = await this._doubanApi.SearchBySuggestAsync(name, cancellationToken).ConfigureAwait(false);
-                var suggestItem = suggestResult.Where(x => x.Year == year && x.Name == name).FirstOrDefault();
+                var suggestResult = await this._doubanApi.SearchBySuggestAsync(seriesName, cancellationToken).ConfigureAwait(false);
+                var suggestItem = suggestResult.Where(x => x.Year == year && x.Name == seriesName).FirstOrDefault();
                 if (suggestItem != null)
                 {
                     this.Log($"Found douban [id]: {suggestItem.Name}({suggestItem.Sid}) (suggest)");
@@ -200,10 +200,18 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
 
             // 通过搜索页面查找
-            var result = await this._doubanApi.SearchAsync(name, cancellationToken).ConfigureAwait(false);
+            var result = await this._doubanApi.SearchAsync(seriesName, cancellationToken).ConfigureAwait(false);
             var item = result.Where(x => x.Category == "电视剧" && x.Year == year).FirstOrDefault();
             if (item != null && !string.IsNullOrEmpty(item.Sid))
             {
+                // 判断名称中是否有第X季，有的话和seasonNumber比较，用于修正多季都在同一年时，每次都是错误取第一个的情况
+                var nameIndexNumber = ParseChineseSeasonNumberByName(item.Name);
+                if (nameIndexNumber.HasValue && seasonNumber.HasValue && nameIndexNumber != seasonNumber)
+                {
+                    this.Log($"GuestDoubanSeasonByYear not found!");
+                    return null;
+                }
+
                 this.Log($"Found douban [id]: {item.Name}({item.Sid})");
                 return item.Sid;
             }
@@ -376,6 +384,26 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             //     }
             // }
 
+            return null;
+        }
+
+
+        public int? ParseChineseSeasonNumberByName(string name)
+        {
+            var regSeason = new Regex(@"\s第([0-9零一二三四五六七八九]+?)(季|部)", RegexOptions.Compiled);
+            var match = regSeason.Match(name);
+            if (match.Success && match.Groups.Count > 1)
+            {
+                var seasonNumber = match.Groups[1].Value.ToInt();
+                if (seasonNumber <= 0)
+                {
+                    seasonNumber = Utils.ChineseNumberToInt(match.Groups[1].Value) ?? 0;
+                }
+                if (seasonNumber > 0)
+                {
+                    return seasonNumber;
+                }
+            }
             return null;
         }
 

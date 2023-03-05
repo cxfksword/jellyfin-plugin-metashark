@@ -176,12 +176,33 @@ namespace Jellyfin.Plugin.MetaShark.Test
             Assert.AreEqual(parseResult.ParentIndexNumber, 1);
             Assert.AreEqual(parseResult.IndexNumber, 1);
 
+
+            // 日文
+            fileName = "プロポーズ大作戦Ep05_x264.mp4";
+            parseResult = NameParser.Parse(fileName);
+            Assert.AreEqual(parseResult.Name, "プロポーズ大作戦Ep05");
+            Assert.AreEqual(parseResult.ParentIndexNumber, null);
+            Assert.AreEqual(parseResult.IndexNumber, 5);
+
+            fileName = "[01] [ANK-Raws] あっちこっち 01 (BDrip 1920x1080 HEVC-YUV420P10 FLAC)";
+            parseResult = NameParser.Parse(fileName);
+            Assert.AreEqual(parseResult.Name, "あっちこっち 01");
+            Assert.AreEqual(parseResult.ParentIndexNumber, null);
+            Assert.AreEqual(parseResult.IndexNumber, 1);
+
             // 只中文
             fileName = "齊天大聖 第02集";
             parseResult = NameParser.Parse(fileName);
             Assert.AreEqual(parseResult.Name, "齊天大聖 第02集");
             Assert.AreEqual(parseResult.ParentIndexNumber, null);
             Assert.AreEqual(parseResult.IndexNumber, 2);
+
+            fileName = "齊天大聖 第 02 期";
+            parseResult = NameParser.Parse(fileName);
+            Assert.AreEqual(parseResult.Name, "齊天大聖");
+            Assert.AreEqual(parseResult.ParentIndexNumber, null);
+            Assert.AreEqual(parseResult.IndexNumber, 2);
+
 
             // anime
             fileName = "[YYDM-11FANS][THERMAE_ROMAE][02][BDRIP][720P][X264-10bit_AAC][7FF2269F]";

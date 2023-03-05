@@ -13,17 +13,22 @@ namespace Jellyfin.Plugin.MetaShark.Core
     {
         private static readonly Regex yearReg = new Regex(@"[12][890][0-9][0-9]", RegexOptions.Compiled);
         private static readonly Regex seasonSuffixReg = new Regex(@"[ .]S\d{1,2}$", RegexOptions.Compiled);
-
         private static readonly Regex unusedReg = new Regex(@"\[.+?\]|\(.+?\)|【.+?】", RegexOptions.Compiled);
 
         private static readonly Regex fixSeasonNumberReg = new Regex(@"(\[|\.)S(\d{1,2})(\]|\.)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex startWithHyphenCharReg = new Regex(@"^[-～~]", RegexOptions.Compiled);
 
-        private static readonly Regex chineseIndexNumberReg = new Regex(@"第([0-9零一二三四五六七八九]+?)(集|章|话|話)", RegexOptions.Compiled);
+        private static readonly Regex chineseIndexNumberReg = new Regex(@"第\s*?([0-9零一二三四五六七八九]+?)\s*?(集|章|话|話|期)", RegexOptions.Compiled);
 
-        public static ParseNameResult Parse(string fileName, bool isTvSeries = false)
+        private static readonly Regex normalizeNameReg = new Regex(@"第\s*?([0-9零一二三四五六七八九]+?)\s*?(集|章|话|話|期)", RegexOptions.Compiled);
+
+        private static readonly Regex specialIndexNumberReg = new Regex(@"ep(\d{1,2})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        public static ParseNameResult Parse(string fileName, bool isEpisode = false)
         {
+            fileName = NormalizeFileName(fileName);
+
             var parseResult = new ParseNameResult();
             var anitomyResult = AnitomySharp.AnitomySharp.Parse(fileName);
             var isAnime = IsAnime(fileName);
@@ -110,13 +115,13 @@ namespace Jellyfin.Plugin.MetaShark.Core
                 }
             }
 
-            // 修复纯中文集数
+            // 修复纯中文集数/特殊标识集数
             if (parseResult.IndexNumber is null)
             {
-                parseResult.IndexNumber = ParseChineseIndexNumber(fileName);
+                parseResult.IndexNumber = ParseChineseOrSpecialIndexNumber(fileName);
             }
 
-            // 解析不到title时，使用默认名
+            // 解析不到title时，或解析出多个title时，使用默认名
             if (string.IsNullOrEmpty(parseResult.Name))
             {
                 parseResult.Name = fileName;
@@ -167,14 +172,22 @@ namespace Jellyfin.Plugin.MetaShark.Core
             return 0;
         }
 
-        private static int? ParseChineseIndexNumber(string fileName)
+        private static string NormalizeFileName(string fileName)
+        {
+            // 去掉中文集数之间的空格（要不然Anitomy解析不正确）
+            fileName = normalizeNameReg.Replace(fileName, m => m.Value.Replace(" ", ""));
+
+            return fileName;
+        }
+
+        private static int? ParseChineseOrSpecialIndexNumber(string fileName)
         {
             var match = chineseIndexNumberReg.Match(fileName);
             if (match.Success && match.Groups.Count > 1)
             {
-                if (int.TryParse(match.Groups[1].Value, out var seasonNumber))
+                if (int.TryParse(match.Groups[1].Value, out var indexNumber))
                 {
-                    return seasonNumber;
+                    return indexNumber;
                 }
 
                 var number = Utils.ChineseNumberToInt(match.Groups[1].Value);
@@ -183,6 +196,18 @@ namespace Jellyfin.Plugin.MetaShark.Core
                     return number;
                 }
             }
+            else
+            {
+                match = specialIndexNumberReg.Match(fileName);
+                if (match.Success && match.Groups.Count > 1)
+                {
+                    if (int.TryParse(match.Groups[1].Value, out var indexNumber))
+                    {
+                        return indexNumber;
+                    }
+                }
+            }
+
 
             return null;
         }
@@ -196,7 +221,7 @@ namespace Jellyfin.Plugin.MetaShark.Core
             }
 
             var folder = Path.GetFileName(Path.GetDirectoryName(path)) ?? string.Empty;
-            return folder == "SPs" || folder.Contains("特典");
+            return folder == "SPs" || folder == "Specials" || folder.Contains("特典");
         }
 
 

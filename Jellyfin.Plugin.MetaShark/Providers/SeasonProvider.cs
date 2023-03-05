@@ -165,7 +165,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             if (!string.IsNullOrEmpty(seriesName) && seasonYear > 0)
             {
-                var seasonSid = await this.GuestDoubanSeasonByYearAsync(seriesName, seasonYear, cancellationToken).ConfigureAwait(false);
+                var seasonSid = await this.GuestDoubanSeasonByYearAsync(seriesName, seasonYear, seasonNumber, cancellationToken).ConfigureAwait(false);
                 if (!string.IsNullOrEmpty(seasonSid))
                 {
                     return seasonSid;
