@@ -50,7 +50,7 @@ jobs:
       - name: Install JPRM
         run: python -m pip install jprm
       - name: Run JPRM
-        run: chmod +x ./build_plugin.sh && ./build_plugin.sh ${{ env.artifact }} ${{steps.vars.outputs.VERSION}} ${GITHUB_REF#refs/*/}
+        run: chmod +x ./build.sh && ./build.sh ${{ env.artifact }} ${{steps.vars.outputs.VERSION}} ${GITHUB_REF#refs/*/}
       - name: Publish release
         uses: svenstaro/upload-release-action@v2
         with:
