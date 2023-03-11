@@ -219,88 +219,10 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             {
                 result.Item.SetProviderId(MetadataProvider.Tvdb, seasonResult.ExternalIds.TvdbId);
             }
-            foreach (var person in GetPersons(seasonResult))
-            {
-                result.AddPerson(person);
-            }
 
             return result;
         }
 
-
-        private IEnumerable<PersonInfo> GetPersons(TvSeason item)
-        {
-            // 演员
-            if (item.Credits?.Cast != null)
-            {
-                foreach (var actor in item.Credits.Cast.OrderBy(a => a.Order).Take(this.config.MaxCastMembers))
-                {
-                    var personInfo = new PersonInfo
-                    {
-                        Name = actor.Name.Trim(),
-                        Role = actor.Character,
-                        Type = PersonType.Actor,
-                        SortOrder = actor.Order,
-                    };
-
-                    if (!string.IsNullOrWhiteSpace(actor.ProfilePath))
-                    {
-                        personInfo.ImageUrl = this._tmdbApi.GetProfileUrl(actor.ProfilePath);
-                    }
-
-                    if (actor.Id > 0)
-                    {
-                        personInfo.SetProviderId(MetadataProvider.Tmdb, actor.Id.ToString(CultureInfo.InvariantCulture));
-                    }
-
-
-                    yield return personInfo;
-                }
-            }
-
-            // 导演
-            if (item.Credits?.Crew != null)
-            {
-                var keepTypes = new[]
-                {
-                    PersonType.Director,
-                    PersonType.Writer,
-                    PersonType.Producer
-                };
-
-                foreach (var person in item.Credits.Crew)
-                {
-                    // Normalize this
-                    var type = MapCrewToPersonType(person);
-
-                    if (!keepTypes.Contains(type, StringComparer.OrdinalIgnoreCase)
-                        && !keepTypes.Contains(person.Job ?? string.Empty, StringComparer.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    var personInfo = new PersonInfo
-                    {
-                        Name = person.Name.Trim(),
-                        Role = person.Job,
-                        Type = type
-                    };
-
-                    if (!string.IsNullOrWhiteSpace(person.ProfilePath))
-                    {
-                        personInfo.ImageUrl = this._tmdbApi.GetPosterUrl(person.ProfilePath);
-                    }
-
-                    if (person.Id > 0)
-                    {
-                        personInfo.SetProviderId(MetadataProvider.Tmdb, person.Id.ToString(CultureInfo.InvariantCulture));
-                    }
-
-                    yield return personInfo;
-                }
-            }
-
-        }
 
         /// <inheritdoc />
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
