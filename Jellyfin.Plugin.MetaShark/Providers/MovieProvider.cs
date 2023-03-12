@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -91,6 +92,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             this.Log($"GetMovieMetadata of [name]: {info.Name}");
             var result = new MetadataResult<Movie>();
+
+            // 处理extras影片
+            var extraResult = this.HandleExtraType(info);
+            if (extraResult != null)
+            {
+                return extraResult;
+            }
 
             // 使用刷新元数据时，providerIds会保留旧有值，只有识别/新增才会没值
             var sid = info.GetProviderId(DoubanProviderId);
@@ -242,6 +250,22 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             return result;
+        }
+
+
+        private MetadataResult<Movie>? HandleExtraType(MovieInfo info)
+        {
+            // 特典或extra视频可能和正片放在同一目录
+            // TODO：插件暂时不支持设置影片为extra类型，只能直接忽略处理（最好放extras目录）
+            var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
+            var parseResult = NameParser.Parse(fileName);
+            if (parseResult.IsExtra)
+            {
+                this.Log($"Found extra of [name]: {fileName}");
+                return new MetadataResult<Movie>();
+            }
+
+            return null;
         }
 
 

@@ -89,6 +89,8 @@ namespace AnitomySharp
               "MENU",
               // 广告 Commercial Message 电视放送广告，时长一般在 7s/15s/30s/45s/... 左右
               "CM","SPOT",
+              // 语音信息
+              "MESSAGE",
               // 宣传片/预告片 Promotion Video / Trailer 一般时长在 1~2min 命名参考原盘和 jsum
               "PV", "Teaser","TRAILER", "DRAMA",
               // 真人特典 Interview/Talk/Stage... 目前我们对于节目、采访、舞台活动、制作等三次元画面的长视频，一概怼成 IV。

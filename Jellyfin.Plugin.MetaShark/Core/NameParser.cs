@@ -25,6 +25,8 @@ namespace Jellyfin.Plugin.MetaShark.Core
 
         private static readonly Regex specialIndexNumberReg = new Regex(@"ep(\d{1,2})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        private static readonly Regex resolutionReg = new Regex(@"\d{3,4}x\d{3,4}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         public static ParseNameResult Parse(string fileName, bool isEpisode = false)
         {
             fileName = NormalizeFileName(fileName);
@@ -144,6 +146,9 @@ namespace Jellyfin.Plugin.MetaShark.Core
         // emby原始电影解析
         public static ParseNameResult ParseMovie(string fileName)
         {
+            // 默认解析器会错误把分辨率当年份，先删除
+            fileName = resolutionReg.Replace(fileName, "");
+
             var parseResult = new ParseNameResult();
             var nameOptions = new Emby.Naming.Common.NamingOptions();
             var result = Emby.Naming.Video.VideoResolver.CleanDateTime(fileName, nameOptions);

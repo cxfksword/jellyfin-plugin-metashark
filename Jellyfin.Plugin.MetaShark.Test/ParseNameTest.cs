@@ -264,6 +264,30 @@ namespace Jellyfin.Plugin.MetaShark.Test
             Assert.IsTrue(parseResult.IsExtra);
 
 
+            fileName = "Evangelion 3.0+1.11 Thrice Upon a Time - Voice Message01 In Shin Evangelion No All Night Nippo (BDRIP 1920x1080 x265 10bit ac3)";
+            parseResult = NameParser.Parse(fileName);
+            Assert.IsTrue(parseResult.IsExtra);
+
+            fileName = "Evangelion 3.0+1.11 Thrice Upon a Time - Message1 In Kinyoubi Roadshow (BDRIP 1920x1080 x265 10bit ac3)";
+            parseResult = NameParser.Parse(fileName);
+            Assert.IsTrue(parseResult.IsExtra);
+
+            // fileName = "Evangelion 3.0+1.11 Thrice Upon a Time - CM (BDRIP 1920x1080 x265 10bit ac3)";
+            // parseResult = NameParser.Parse(fileName);
+            // Assert.IsTrue(parseResult.IsExtra);
+
+            // fileName = "Evangelion 3.0+1.11 Thrice Upon a Time - Logo (BDRIP 1920x1080 x265 10bit ac3)";
+            // parseResult = NameParser.Parse(fileName);
+            // Assert.IsTrue(parseResult.IsExtra);
+
+            // fileName = "Evangelion 3.0+1.11 Thrice Upon a Time - Audio Guide (BDRIP 1920x1080 x265 10bit ac3)";
+            // parseResult = NameParser.Parse(fileName);
+            // Assert.IsTrue(parseResult.IsExtra);
+
+            // fileName = "Evangelion 3.0+1.11 Thrice Upon a Time - BD&DVD PV (BDRIP 1920x1080 x265 10bit ac3).mkv";
+            // parseResult = NameParser.Parse(fileName);
+            // Assert.IsTrue(parseResult.IsExtra);
+
         }
 
     }
