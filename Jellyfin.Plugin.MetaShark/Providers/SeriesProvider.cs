@@ -50,7 +50,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return new RemoteSearchResult
                 {
                     SearchProviderName = DoubanProviderName,
-                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, x.Sid } },
+                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, x.Sid }, { Plugin.ProviderId, MetaSource.Douban } },
                     ImageUrl = this.GetProxyImageUrl(x.Img),
                     ProductionYear = x.Year,
                     Name = x.Name,
@@ -66,7 +66,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     return new RemoteSearchResult
                     {
                         SearchProviderName = TmdbProviderName,
-                        ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), x.Id.ToString(CultureInfo.InvariantCulture) } },
+                        ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), x.Id.ToString(CultureInfo.InvariantCulture) }, { Plugin.ProviderId, MetaSource.Tmdb } },
                         Name = string.Format("[TMDB]{0}", x.Name ?? x.OriginalName),
                         ImageUrl = this._tmdbApi.GetPosterUrl(x.PosterPath),
                         Overview = x.Overview,

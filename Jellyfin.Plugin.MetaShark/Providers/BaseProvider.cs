@@ -492,67 +492,10 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         }
 
 
-        /// <summary>
-        /// Normalizes a language string for use with TMDb's include image language parameter.
-        /// </summary>
-        /// <param name="preferredLanguage">The preferred language as either a 2 letter code with or without country code.</param>
-        /// <returns>The comma separated language string.</returns>
-        public static string GetImageLanguagesParam(string preferredLanguage)
-        {
-            var languages = new List<string>();
-
-            if (!string.IsNullOrEmpty(preferredLanguage))
-            {
-                preferredLanguage = NormalizeLanguage(preferredLanguage);
-
-                languages.Add(preferredLanguage);
-
-                if (preferredLanguage.Length == 5) // like en-US
-                {
-                    // Currently, TMDB supports 2-letter language codes only
-                    // They are planning to change this in the future, thus we're
-                    // supplying both codes if we're having a 5-letter code.
-                    languages.Add(preferredLanguage.Substring(0, 2));
-                }
-            }
-
-            languages.Add("null");
-
-            if (!string.Equals(preferredLanguage, "en", StringComparison.OrdinalIgnoreCase))
-            {
-                languages.Add("en");
-            }
-
-            return string.Join(',', languages);
-        }
-
-        /// <summary>
-        /// Normalizes a language string for use with TMDb's language parameter.
-        /// </summary>
-        /// <param name="language">The language code.</param>
-        /// <returns>The normalized language code.</returns>
-        public static string NormalizeLanguage(string language)
-        {
-            if (string.IsNullOrEmpty(language))
-            {
-                return language;
-            }
-
-            // They require this to be uppercase
-            // Everything after the hyphen must be written in uppercase due to a way TMDB wrote their api.
-            // See here: https://www.themoviedb.org/talk/5119221d760ee36c642af4ad?page=3#56e372a0c3a3685a9e0019ab
-            var parts = language.Split('-');
-
-            if (parts.Length == 2)
-            {
-                language = parts[0] + "-" + parts[1].ToUpperInvariant();
-            }
-
-            return language;
-        }
 
         protected string GetOriginalFileName(ItemLookupInfo info)
         {
+            // movie放在文件夹中时，应该使用文件夹名
             switch (info)
             {
                 case SeriesInfo:

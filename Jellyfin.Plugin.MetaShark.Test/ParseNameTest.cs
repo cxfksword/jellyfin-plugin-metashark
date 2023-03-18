@@ -233,6 +233,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
             // anime特典
             fileName = "[KissSub][Steins;Gate][SP][GB_BIG5_JP][BDrip][1080P][HEVC] 边界曲面的缺失之环";
             parseResult = NameParser.Parse(fileName);
+            Assert.IsTrue(parseResult.IsSpecial);
             Assert.AreEqual(parseResult.Name, "边界曲面的缺失之环");
             Assert.AreEqual(parseResult.ParentIndexNumber, null);
             Assert.AreEqual(parseResult.IndexNumber, null);

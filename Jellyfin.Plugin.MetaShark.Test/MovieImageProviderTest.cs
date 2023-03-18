@@ -1,5 +1,6 @@
 using Jellyfin.Plugin.MetaShark.Api;
 using Jellyfin.Plugin.MetaShark.Core;
+using Jellyfin.Plugin.MetaShark.Model;
 using Jellyfin.Plugin.MetaShark.Providers;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
@@ -56,5 +57,30 @@ namespace Jellyfin.Plugin.MetaShark.Test
             }).GetAwaiter().GetResult();
         }
 
+        [TestMethod]
+        public void TestGetMovieImageFromTMDB()
+        {
+            var info = new MediaBrowser.Controller.Entities.Movies.Movie()
+            {
+                PreferredMetadataLanguage = "zh",
+                ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), "752" }, { Plugin.ProviderId, MetaSource.Tmdb } }
+            };
+            var doubanApi = new DoubanApi(loggerFactory);
+            var tmdbApi = new TmdbApi(loggerFactory);
+            var omdbApi = new OmdbApi(loggerFactory);
+            var httpClientFactory = new DefaultHttpClientFactory();
+            var libraryManagerStub = new Mock<ILibraryManager>();
+            var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
+
+            Task.Run(async () =>
+            {
+                var provider = new MovieImageProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
+                var result = await provider.GetImages(info, CancellationToken.None);
+                Assert.IsNotNull(result);
+
+                var str = result.ToJson();
+                Console.WriteLine(result.ToJson());
+            }).GetAwaiter().GetResult();
+        }
     }
 }

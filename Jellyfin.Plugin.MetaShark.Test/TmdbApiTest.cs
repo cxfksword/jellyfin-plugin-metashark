@@ -36,6 +36,26 @@ namespace Jellyfin.Plugin.MetaShark.Test
                 }));
 
 
+        [TestMethod]
+        public void TestGetMovie()
+        {
+            var api = new TmdbApi(loggerFactory);
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    var result = await api.GetMovieAsync(752, "zh", "zh", CancellationToken.None)
+               .ConfigureAwait(false);
+                    Assert.IsNotNull(result);
+                    TestContext.WriteLine(result.Images.ToJson());
+                }
+                catch (Exception ex)
+                {
+                    TestContext.WriteLine(ex.Message);
+                }
+            }).GetAwaiter().GetResult();
+        }
 
 
         [TestMethod]
@@ -47,12 +67,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
             {
                 try
                 {
-                    var result = await api.GetSeriesAsync(13372, "zh", BaseProvider.GetImageLanguagesParam("zh"), CancellationToken.None)
-               .ConfigureAwait(false);
-                    Assert.IsNotNull(result);
-                    TestContext.WriteLine(result.Images.ToJson());
-
-                    result = await api.GetSeriesAsync(13372, "zh", null, CancellationToken.None)
+                    var result = await api.GetSeriesAsync(13372, "zh", "zh", CancellationToken.None)
                .ConfigureAwait(false);
                     Assert.IsNotNull(result);
                     TestContext.WriteLine(result.Images.ToJson());
@@ -74,15 +89,10 @@ namespace Jellyfin.Plugin.MetaShark.Test
             {
                 try
                 {
-                    var result = await api.GetEpisodeAsync(13372, 1, 1, "zh", BaseProvider.GetImageLanguagesParam("zh"), CancellationToken.None)
+                    var result = await api.GetEpisodeAsync(13372, 1, 1, "zh", "zh", CancellationToken.None)
                .ConfigureAwait(false);
                     Assert.IsNotNull(result);
                     TestContext.WriteLine(result.Images.Stills.ToJson());
-
-                    result = await api.GetEpisodeAsync(13372, 1, 1, null, null, CancellationToken.None)
-               .ConfigureAwait(false);
-                    Assert.IsNotNull(result);
-                    TestContext.WriteLine(result.ToJson());
                 }
                 catch (Exception ex)
                 {

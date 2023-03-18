@@ -48,7 +48,6 @@ namespace Jellyfin.Plugin.MetaShark.Test
                 try
                 {
                     var result = await api.SearchAsync(keyword, CancellationToken.None);
-                    var str = result.ToJson();
                     TestContext.WriteLine(result.ToJson());
                 }
                 catch (Exception ex)

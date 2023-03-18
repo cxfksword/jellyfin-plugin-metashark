@@ -58,7 +58,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return new RemoteSearchResult
                 {
                     SearchProviderName = DoubanProviderName,
-                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, x.Sid } },
+                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, x.Sid }, { Plugin.ProviderId, MetaSource.Douban } },
                     ImageUrl = this.GetProxyImageUrl(x.Img),
                     ProductionYear = x.Year,
                     Name = x.Name,
@@ -75,7 +75,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     return new RemoteSearchResult
                     {
                         SearchProviderName = TmdbProviderName,
-                        ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), x.Id.ToString(CultureInfo.InvariantCulture) } },
+                        ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), x.Id.ToString(CultureInfo.InvariantCulture) }, { Plugin.ProviderId, MetaSource.Tmdb } },
                         Name = string.Format("[TMDB]{0}", x.Title ?? x.OriginalTitle),
                         ImageUrl = this._tmdbApi.GetPosterUrl(x.PosterPath),
                         Overview = x.Overview,
@@ -188,7 +188,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
 
-            if (!string.IsNullOrEmpty(tmdbId))
+            if (metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(tmdbId))
             {
                 this.Log($"GetMovieMetadata of tmdb [id]: \"{tmdbId}\"");
                 var movieResult = await _tmdbApi
@@ -260,6 +260,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
             var parseResult = NameParser.Parse(fileName);
             if (parseResult.IsExtra)
+            {
+                this.Log($"Found extra of [name]: {fileName}");
+                return new MetadataResult<Movie>();
+            }
+
+            // 动画常用特典文件夹
+            if (NameParser.IsSpecialDirectory(info.Path) || NameParser.IsExtraDirectory(info.Path))
             {
                 this.Log($"Found extra of [name]: {fileName}");
                 return new MetadataResult<Movie>();

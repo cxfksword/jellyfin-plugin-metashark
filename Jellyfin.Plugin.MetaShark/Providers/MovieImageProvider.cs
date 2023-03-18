@@ -77,7 +77,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             var tmdbId = item.GetProviderId(MetadataProvider.Tmdb);
-            if (!string.IsNullOrEmpty(tmdbId))
+            if (metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(tmdbId))
             {
                 var language = item.GetPreferredMetadataLanguage();
                 var movie = await _tmdbApi
@@ -101,6 +101,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         VoteCount = poster.VoteCount,
                         Width = poster.Width,
                         Height = poster.Height,
+                        Language = AdjustImageLanguage(poster.Iso_639_1, language),
                         ProviderName = Name,
                         Type = ImageType.Primary,
                     });

@@ -219,14 +219,23 @@ namespace Jellyfin.Plugin.MetaShark.Core
 
         public static bool IsSpecialDirectory(string path)
         {
-            var fileName = Path.GetFileNameWithoutExtension(path) ?? string.Empty;
-            if (IsAnime(fileName) && fileName.Contains("[SP]"))
-            {
-                return true;
-            }
+            var folder = Path.GetFileName(Path.GetDirectoryName(path))?.ToUpper() ?? string.Empty;
+            return folder == "SPS" || folder == "SPECIALS" || folder.Contains("特典");
+        }
 
-            var folder = Path.GetFileName(Path.GetDirectoryName(path)) ?? string.Empty;
-            return folder == "SPs" || folder == "Specials" || folder.Contains("特典");
+        public static bool IsExtraDirectory(string path)
+        {
+            var folder = Path.GetFileName(Path.GetDirectoryName(path))?.ToUpper() ?? string.Empty;
+            return folder == "EXTRA"
+            || folder == "MENU"
+            || folder == "MENUS"
+            || folder == "PV"
+            || folder == "PV&CM"
+            || folder == "CM"
+            || folder == "BONUS"
+            || folder.Contains("OPED")
+            || folder.Contains("NCED")
+            || folder.Contains("花絮");
         }
 
 

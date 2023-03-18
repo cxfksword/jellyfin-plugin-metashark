@@ -30,6 +30,12 @@ namespace Jellyfin.Plugin.MetaShark.Api
             httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
 
+        /// <summary>
+        /// 通过imdb获取信息（会返回最新的imdb id）
+        /// </summary>
+        /// <param name="id">imdb id</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task<OmdbItem?> GetByImdbID(string id, CancellationToken cancellationToken)
         {
             if (!this.IsEnable())
