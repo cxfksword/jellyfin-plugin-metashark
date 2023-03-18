@@ -42,9 +42,9 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
             Task.Run(async () =>
             {
-                var info = new MovieInfo() { Name = "南极料理人", MetadataLanguage = "zh" };
+                var info = new MovieInfo() { Name = "我", MetadataLanguage = "zh" };
                 var provider = new MovieProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
-                var result = await provider.GetMetadata(info, CancellationToken.None);
+                var result = await provider.GetSearchResults(info, CancellationToken.None);
                 Assert.IsNotNull(result);
 
                 var str = result.ToJson();

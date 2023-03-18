@@ -52,13 +52,14 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             // 从douban搜索
+            // BUG注意：ProviderIds传多个meta值，会导致识别搜索时只返回一个结果
             var res = await this._doubanApi.SearchAsync(info.Name, cancellationToken).ConfigureAwait(false);
             result.AddRange(res.Take(Configuration.PluginConfiguration.MAX_SEARCH_RESULT).Select(x =>
             {
                 return new RemoteSearchResult
                 {
                     SearchProviderName = DoubanProviderName,
-                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, x.Sid }, { Plugin.ProviderId, MetaSource.Douban } },
+                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, x.Sid } },
                     ImageUrl = this.GetProxyImageUrl(x.Img),
                     ProductionYear = x.Year,
                     Name = x.Name,
@@ -75,7 +76,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     return new RemoteSearchResult
                     {
                         SearchProviderName = TmdbProviderName,
-                        ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), x.Id.ToString(CultureInfo.InvariantCulture) }, { Plugin.ProviderId, MetaSource.Tmdb } },
+                        ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), x.Id.ToString(CultureInfo.InvariantCulture) } },
                         Name = string.Format("[TMDB]{0}", x.Title ?? x.OriginalTitle),
                         ImageUrl = this._tmdbApi.GetPosterUrl(x.PosterPath),
                         Overview = x.Overview,
@@ -97,6 +98,11 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var sid = info.GetProviderId(DoubanProviderId);
             var tmdbId = info.GetProviderId(MetadataProvider.Tmdb);
             var metaSource = info.GetProviderId(Plugin.ProviderId);
+            // 用于修正识别时指定tmdb，没法读取tmdb数据的BUG。。。两个合在一起太难了。。。
+            if (string.IsNullOrEmpty(metaSource) && info.Name.StartsWith("[TMDB]"))
+            {
+                metaSource = MetaSource.Tmdb;
+            }
             // 注意：会存在元数据有tmdbId，但metaSource没值的情况（之前由TMDB插件刮削导致）
             var hasTmdbMeta = metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(tmdbId);
             var hasDoubanMeta = metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid);
