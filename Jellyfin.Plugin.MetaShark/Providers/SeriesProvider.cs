@@ -81,7 +81,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <inheritdoc />
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
-            this.Log($"GetSeriesMetadata of [name]: {info.Name} [providerIds]: {info.ProviderIds.ToJson()}  IsAutomated: {info.IsAutomated}");
+            this.Log($"GetSeriesMetadata of [name]: {info.Name} IsAutomated: {info.IsAutomated}");
             var result = new MetadataResult<Series>();
 
             var sid = info.GetProviderId(DoubanProviderId);

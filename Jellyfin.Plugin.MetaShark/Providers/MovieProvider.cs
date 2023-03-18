@@ -90,15 +90,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <inheritdoc />
         public async Task<MetadataResult<Movie>> GetMetadata(MovieInfo info, CancellationToken cancellationToken)
         {
-            this.Log($"GetMovieMetadata of [name]: {info.Name}");
+            this.Log($"GetMovieMetadata of [name]: {info.Name} IsAutomated: {info.IsAutomated}");
             var result = new MetadataResult<Movie>();
-
-            // 处理extras影片
-            var extraResult = this.HandleExtraType(info);
-            if (extraResult != null)
-            {
-                return extraResult;
-            }
 
             // 使用刷新元数据时，providerIds会保留旧有值，只有识别/新增才会没值
             var sid = info.GetProviderId(DoubanProviderId);
@@ -109,6 +102,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var hasDoubanMeta = metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid);
             if (!hasDoubanMeta && !hasTmdbMeta)
             {
+                // 处理extras影片
+                var extraResult = this.HandleExtraType(info);
+                if (extraResult != null)
+                {
+                    return extraResult;
+                }
+
                 // 自动扫描搜索匹配元数据
                 sid = await this.GuessByDoubanAsync(info, cancellationToken).ConfigureAwait(false);
             }
