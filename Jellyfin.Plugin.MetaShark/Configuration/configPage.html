@@ -93,6 +93,14 @@
                             </label>
                             <div class="fieldDescription">勾选后，刮削会变慢，会自动创建电影系列合集（需先在媒体库配置中打开<b>自动添加到合集</b>功能）</div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label" for="EnableTmdbOfficialRating">
+                                <input id="EnableTmdbOfficialRating" name="EnableTmdbOfficialRating" type="checkbox"
+                                    is="emby-checkbox" />
+                                <span>从TheMovieDb获取影片分级信息</span>
+                            </label>
+                            <div class="fieldDescription">勾选后，刮削会变慢</div>
+                        </div>
                         <div class="inputContainer">
                             <label class="inputLabel inputLabelUnfocused" for="TmdbApiKey">Api Key</label>
                             <input id="TmdbApiKey" name="TmdbApiKey" type="text" is="emby-input" />
@@ -131,6 +139,7 @@
                         document.querySelector('#EnableTmdbSearch').checked = config.EnableTmdbSearch;
                         document.querySelector('#EnableTmdbBackdrop').checked = config.EnableTmdbBackdrop;
                         document.querySelector('#EnableTmdbCollection').checked = config.EnableTmdbCollection;
+                        document.querySelector('#EnableTmdbOfficialRating').checked = config.EnableTmdbOfficialRating;
                         document.querySelector('#TmdbApiKey').value = config.TmdbApiKey;
                         document.querySelector('#TmdbHost').value = config.TmdbHost;
 
@@ -151,6 +160,7 @@
                         config.EnableTmdbSearch = document.querySelector('#EnableTmdbSearch').checked;
                         config.EnableTmdbBackdrop = document.querySelector('#EnableTmdbBackdrop').checked;
                         config.EnableTmdbCollection = document.querySelector('#EnableTmdbCollection').checked;
+                        config.EnableTmdbOfficialRating = document.querySelector('#EnableTmdbOfficialRating').checked;
                         config.TmdbApiKey = document.querySelector('#TmdbApiKey').value;
                         config.TmdbHost = document.querySelector('#TmdbHost').value;
                         ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {

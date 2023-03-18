@@ -49,6 +49,10 @@ public class PluginConfiguration : BasePluginConfiguration
     /// 是否获取电影系列信息
     /// </summary>
     public bool EnableTmdbCollection { get; set; } = false;
+    /// <summary>
+    /// 是否获取tmdb分级信息
+    /// </summary>
+    public bool EnableTmdbOfficialRating { get; set; } = false;
 
     public string TmdbApiKey { get; set; } = string.Empty;
 

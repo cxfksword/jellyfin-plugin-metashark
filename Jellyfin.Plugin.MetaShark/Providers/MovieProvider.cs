@@ -164,10 +164,20 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 // 通过imdb获取电影系列信息
                 if (this.config.EnableTmdbCollection && !string.IsNullOrEmpty(tmdbId))
                 {
-                    var collectionName = await this.GetBelongsToCollection(info, tmdbId, cancellationToken).ConfigureAwait(false);
+                    var collectionName = await this.GetTmdbCollection(info, tmdbId, cancellationToken).ConfigureAwait(false);
                     if (!string.IsNullOrEmpty(collectionName))
                     {
                         movie.CollectionName = collectionName;
+                    }
+                }
+
+                // 通过imdb获取电影分级信息
+                if (this.config.EnableTmdbOfficialRating && !string.IsNullOrEmpty(tmdbId))
+                {
+                    var officialRating = await this.GetTmdbOfficialRating(info, tmdbId, cancellationToken).ConfigureAwait(false);
+                    if (!string.IsNullOrEmpty(officialRating))
+                    {
+                        movie.OfficialRating = officialRating;
                     }
                 }
 
@@ -203,6 +213,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 var movie = new Movie
                 {
                     Name = movieResult.Title ?? movieResult.OriginalTitle,
+                    OriginalTitle = movieResult.OriginalTitle,
                     Overview = movieResult.Overview?.Replace("\n\n", "\n", StringComparison.InvariantCulture),
                     Tagline = movieResult.Tagline,
                     ProductionLocations = movieResult.ProductionCountries.Select(pc => pc.Name).ToArray()
@@ -226,6 +237,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
 
                 movie.CommunityRating = (float)System.Math.Round(movieResult.VoteAverage, 2);
+                movie.OfficialRating = this.GetTmdbOfficialRatingByData(movieResult, info.MetadataCountryCode);
                 movie.PremiereDate = movieResult.ReleaseDate;
                 movie.ProductionYear = movieResult.ReleaseDate?.Year;
 
@@ -349,7 +361,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
         }
 
-        private async Task<String?> GetBelongsToCollection(MovieInfo info, string tmdbId, CancellationToken cancellationToken)
+        private async Task<String?> GetTmdbCollection(MovieInfo info, string tmdbId, CancellationToken cancellationToken)
         {
 
             var movieResult = await _tmdbApi
@@ -358,6 +370,50 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (movieResult != null && movieResult.BelongsToCollection != null)
             {
                 return movieResult.BelongsToCollection.Name;
+            }
+
+            return null;
+        }
+
+        private async Task<String?> GetTmdbOfficialRating(ItemLookupInfo info, string tmdbId, CancellationToken cancellationToken)
+        {
+
+            var movieResult = await _tmdbApi
+                            .GetMovieAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
+                            .ConfigureAwait(false);
+
+            return GetTmdbOfficialRatingByData(movieResult, info.MetadataCountryCode);
+        }
+
+        private String? GetTmdbOfficialRatingByData(TMDbLib.Objects.Movies.Movie? movieResult, string preferredCountryCode)
+        {
+            if (movieResult == null || movieResult.Releases?.Countries == null)
+            {
+                return null;
+            }
+
+            var releases = movieResult.Releases.Countries.Where(i => !string.IsNullOrWhiteSpace(i.Certification)).ToList();
+
+            var ourRelease = releases.FirstOrDefault(c => string.Equals(c.Iso_3166_1, preferredCountryCode, StringComparison.OrdinalIgnoreCase));
+            var usRelease = releases.FirstOrDefault(c => string.Equals(c.Iso_3166_1, "US", StringComparison.OrdinalIgnoreCase));
+            var minimumRelease = releases.FirstOrDefault();
+
+            if (ourRelease != null)
+            {
+                var ratingPrefix = string.Equals(preferredCountryCode, "us", StringComparison.OrdinalIgnoreCase) ? string.Empty : preferredCountryCode + "-";
+                var newRating = ratingPrefix + ourRelease.Certification;
+
+                newRating = newRating.Replace("de-", "FSK-", StringComparison.OrdinalIgnoreCase);
+
+                return newRating;
+            }
+            else if (usRelease != null)
+            {
+                return usRelease.Certification;
+            }
+            else if (minimumRelease != null)
+            {
+                return minimumRelease.Certification;
             }
 
             return null;

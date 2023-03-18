@@ -136,6 +136,16 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
                 }
 
+                // 通过imdb获取电影分级信息
+                if (this.config.EnableTmdbOfficialRating && !string.IsNullOrEmpty(tmdbId))
+                {
+                    var officialRating = await this.GetTmdbOfficialRating(info, tmdbId, cancellationToken).ConfigureAwait(false);
+                    if (!string.IsNullOrEmpty(officialRating))
+                    {
+                        item.OfficialRating = officialRating;
+                    }
+                }
+
 
                 result.Item = item;
                 result.QueriedById = true;
@@ -215,6 +225,42 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return null;
         }
 
+        private async Task<String?> GetTmdbOfficialRating(ItemLookupInfo info, string tmdbId, CancellationToken cancellationToken)
+        {
+
+            var tvShow = await _tmdbApi
+                            .GetSeriesAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
+                            .ConfigureAwait(false);
+            return this.GetTmdbOfficialRatingByData(tvShow, info.MetadataCountryCode);
+        }
+
+        private String GetTmdbOfficialRatingByData(TvShow? tvShow, string preferredCountryCode)
+        {
+            if (tvShow != null)
+            {
+                var contentRatings = tvShow.ContentRatings.Results ?? new List<ContentRating>();
+
+                var ourRelease = contentRatings.FirstOrDefault(c => string.Equals(c.Iso_3166_1, preferredCountryCode, StringComparison.OrdinalIgnoreCase));
+                var usRelease = contentRatings.FirstOrDefault(c => string.Equals(c.Iso_3166_1, "US", StringComparison.OrdinalIgnoreCase));
+                var minimumRelease = contentRatings.FirstOrDefault();
+
+                if (ourRelease != null)
+                {
+                    return ourRelease.Rating;
+                }
+                else if (usRelease != null)
+                {
+                    return usRelease.Rating;
+                }
+                else if (minimumRelease != null)
+                {
+                    return minimumRelease.Rating;
+                }
+            }
+
+            return null;
+        }
+
         private Series MapTvShowToSeries(TvShow seriesResult, string preferredCountryCode)
         {
             var series = new Series
@@ -281,24 +327,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
             }
             series.SetProviderId(Plugin.ProviderId, MetaSource.Tmdb);
-            var contentRatings = seriesResult.ContentRatings.Results ?? new List<ContentRating>();
+            series.OfficialRating = this.GetTmdbOfficialRatingByData(seriesResult, preferredCountryCode);
 
-            var ourRelease = contentRatings.FirstOrDefault(c => string.Equals(c.Iso_3166_1, preferredCountryCode, StringComparison.OrdinalIgnoreCase));
-            var usRelease = contentRatings.FirstOrDefault(c => string.Equals(c.Iso_3166_1, "US", StringComparison.OrdinalIgnoreCase));
-            var minimumRelease = contentRatings.FirstOrDefault();
-
-            if (ourRelease != null)
-            {
-                series.OfficialRating = ourRelease.Rating;
-            }
-            else if (usRelease != null)
-            {
-                series.OfficialRating = usRelease.Rating;
-            }
-            else if (minimumRelease != null)
-            {
-                series.OfficialRating = minimumRelease.Rating;
-            }
 
             return series;
         }
