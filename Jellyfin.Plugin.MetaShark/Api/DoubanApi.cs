@@ -204,7 +204,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var name = movieElement.GetText("div.title a") ?? string.Empty;
                 var titleStr = movieElement.GetText("div.title>h3>span") ?? string.Empty;
                 var cat = titleStr.GetMatchGroup(this.regCat);
-                var subjectStr = movieElement.GetText("div.rating-info>.subject-cast") ?? string.Empty;
+                var subjectStr = movieElement.GetText("div.rating-info>span:last-child") ?? string.Empty;
                 var year = subjectStr.GetMatchGroup(this.regYear);
                 var originalName = subjectStr.GetMatchGroup(this.regOriginalName);
                 var desc = movieElement.GetText("div.content>p") ?? string.Empty;

@@ -40,7 +40,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
         [TestMethod]
         public void TestSearch()
         {
-            var keyword = "重返少年时";
+            var keyword = "V字仇杀队";
             var api = new DoubanApi(loggerFactory);
 
             Task.Run(async () =>
