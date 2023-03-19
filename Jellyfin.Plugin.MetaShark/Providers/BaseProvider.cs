@@ -141,7 +141,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             result = await this._doubanApi.SearchAsync(searchName, cancellationToken).ConfigureAwait(false);
             var cat = info is MovieInfo ? "电影" : "电视剧";
 
-            // 优先返回对应年份的电影
+            // 存在年份时，返回对应年份的电影
             if (info.Year != null && info.Year > 0)
             {
                 item = result.Where(x => x.Category == cat && x.Year == info.Year).FirstOrDefault();
@@ -149,6 +149,11 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     this.Log($"Found douban [id]: {item.Name}({item.Sid})");
                     return item.Sid;
+                }
+                else
+                {
+                    // 有年份找不到，直接返回（还是返回第一个好？？？？）
+                    return null;
                 }
             }
 

@@ -81,7 +81,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             {
                 var language = item.GetPreferredMetadataLanguage();
                 var movie = await _tmdbApi
-                .GetMovieAsync(tmdbId.ToInt(), language, language, cancellationToken)
+                .GetMovieAsync(tmdbId.ToInt(), null, null, cancellationToken)
                 .ConfigureAwait(false);
 
                 if (movie?.Images == null)
@@ -126,7 +126,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return remoteImages.OrderByLanguageDescending(language);
             }
 
-            this.Log($"Got images failed because the sid of \"{item.Name}\" is empty!");
+            this.Log($"Got images failed because the images of \"{item.Name}\" is empty!");
             return new List<RemoteImageInfo>();
         }
 

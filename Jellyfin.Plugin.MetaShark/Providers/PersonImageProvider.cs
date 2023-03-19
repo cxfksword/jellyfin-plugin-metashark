@@ -70,7 +70,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
             }
 
-            this.Log($"Got images failed because the sid of \"{item.Name}\" is empty!");
+            this.Log($"Got images failed because the images of \"{item.Name}\" is empty!");
             return new List<RemoteImageInfo>();
         }
 

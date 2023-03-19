@@ -128,7 +128,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             // series使用TMDB元数据来源
             // tmdb季级没有对应id，只通过indexNumber区分
-            return await this.GetMetadataByTmdb(info, seriesTmdbId, seasonNumber, cancellationToken).ConfigureAwait(false);
+            if (metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(seriesTmdbId))
+            {
+                return await this.GetMetadataByTmdb(info, seriesTmdbId, seasonNumber, cancellationToken).ConfigureAwait(false);
+            }
+
+            return result;
         }
 
 

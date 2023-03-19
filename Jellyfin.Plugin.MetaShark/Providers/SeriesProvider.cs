@@ -49,7 +49,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             {
                 return new RemoteSearchResult
                 {
-                    SearchProviderName = DoubanProviderName,
                     ProviderIds = new Dictionary<string, string> { { DoubanProviderId, x.Sid } },
                     ImageUrl = this.GetProxyImageUrl(x.Img),
                     ProductionYear = x.Year,
@@ -65,7 +64,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     return new RemoteSearchResult
                     {
-                        SearchProviderName = TmdbProviderName,
                         ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), x.Id.ToString(CultureInfo.InvariantCulture) } },
                         Name = string.Format("[TMDB]{0}", x.Name ?? x.OriginalName),
                         ImageUrl = this._tmdbApi.GetPosterUrl(x.PosterPath),
@@ -167,8 +165,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return result;
             }
 
+            if (metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(tmdbId))
+            {
+                return await this.GetMetadataByTmdb(tmdbId, info, cancellationToken).ConfigureAwait(false);
+            }
 
-            return await this.GetMetadataByTmdb(tmdbId, info, cancellationToken).ConfigureAwait(false);
+            return result;
         }
 
         private async Task<MetadataResult<Series>> GetMetadataByTmdb(string? tmdbId, ItemLookupInfo info, CancellationToken cancellationToken)

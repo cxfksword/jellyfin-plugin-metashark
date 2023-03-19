@@ -87,9 +87,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             var language = item.GetPreferredMetadataLanguage();
-
             var seasonResult = await this._tmdbApi
-                .GetSeasonAsync(seriesTmdbId, season.IndexNumber.Value, language, language, cancellationToken)
+                .GetSeasonAsync(seriesTmdbId, season.IndexNumber.Value, null, null, cancellationToken)
                 .ConfigureAwait(false);
             var posters = seasonResult?.Images?.Posters;
             if (posters == null)
@@ -108,6 +107,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     VoteCount = image.VoteCount,
                     Width = image.Width,
                     Height = image.Height,
+                    Language = AdjustImageLanguage(image.Iso_639_1, language),
                     ProviderName = Name,
                     Type = ImageType.Primary,
                 };

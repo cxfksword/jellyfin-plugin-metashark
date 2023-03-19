@@ -79,7 +79,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             // 利用season缓存取剧集信息会更快
             var seasonResult = await this._tmdbApi
-                .GetSeasonAsync(seriesTmdbId, seasonNumber.Value, language, language, cancellationToken)
+                .GetSeasonAsync(seriesTmdbId, seasonNumber.Value, null, null, cancellationToken)
                 .ConfigureAwait(false);
             if (seasonResult == null || seasonResult.Episodes.Count < episodeNumber.Value)
             {

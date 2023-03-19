@@ -650,6 +650,11 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
         public string GetImageLanguagesParam(string preferredLanguage)
         {
+            if (string.IsNullOrEmpty(preferredLanguage))
+            {
+                return null;
+            }
+
             var languages = new List<string>();
 
             if (!string.IsNullOrEmpty(preferredLanguage))
