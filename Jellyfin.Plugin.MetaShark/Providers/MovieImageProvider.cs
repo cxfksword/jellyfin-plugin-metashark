@@ -193,13 +193,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
                 }
             }
-            if (list.Count > 0)
-            {
-                return list;
-            }
 
-            // 从TheMovieDb获取背景图
-            if (config.EnableTmdbBackdrop && !string.IsNullOrEmpty(tmdbId))
+            // 背景图缺失，从TheMovieDb补充背景图
+            if (list.Count == 0 && config.EnableTmdbBackdrop && !string.IsNullOrEmpty(tmdbId))
             {
                 var language = item.GetPreferredMetadataLanguage();
                 var movie = await _tmdbApi
