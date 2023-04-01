@@ -114,7 +114,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     ProviderIds = new Dictionary<string, string> { { DoubanProviderId, subject.Sid }, { Plugin.ProviderId, MetaSource.Douban } },
                     Name = seriesName,
-                    OriginalTitle = subject.OriginalName,
+                    OriginalTitle = RemoveSeasonSubfix(subject.OriginalName),
                     CommunityRating = subject.Rating,
                     Overview = subject.Intro,
                     ProductionYear = subject.Year,

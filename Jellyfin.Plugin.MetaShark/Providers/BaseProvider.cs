@@ -51,7 +51,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         protected readonly IHttpContextAccessor _httpContextAccessor;
 
         protected Regex regMetaSourcePrefix = new Regex(@"^\[.+\]", RegexOptions.Compiled);
-        protected Regex regSeasonNameSuffix = new Regex(@"\s第[0-9一二三四五六七八九十]+?季$|(?<![0-9a-zA-Z])\d$", RegexOptions.Compiled);
+        protected Regex regSeasonNameSuffix = new Regex(@"\s第[0-9一二三四五六七八九十]+?季$|\sSeason\s\d+?$|(?<![0-9a-zA-Z])\d$", RegexOptions.Compiled);
 
         protected PluginConfiguration config
         {
