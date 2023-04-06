@@ -1,4 +1,4 @@
-name: Close inactive
+name: "🚫 Close Inactive"
 
 on:
   schedule:
