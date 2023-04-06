@@ -81,7 +81,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         {
                             ProviderIds = new Dictionary<string, string> { { DoubanProviderId, subject.Sid } },
                             Name = subject.Name,
-                            OriginalTitle = subject.OriginalName,
                             CommunityRating = subject.Rating,
                             Overview = subject.Intro,
                             ProductionYear = subject.Year,
@@ -111,7 +110,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
 
                 // 豆瓣找不到季数据，尝试获取tmdb的季数据
-                if (string.IsNullOrEmpty(seasonSid) && !string.IsNullOrWhiteSpace(seriesTmdbId) && (seasonNumber.HasValue && seasonNumber > 0))
+                if (string.IsNullOrEmpty(seasonSid) && !string.IsNullOrWhiteSpace(seriesTmdbId) && seasonNumber.HasValue && seasonNumber >= 0)
                 {
                     var tmdbResult = await this.GetMetadataByTmdb(info, seriesTmdbId, seasonNumber.Value, cancellationToken).ConfigureAwait(false);
                     if (tmdbResult != null)

@@ -510,8 +510,11 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         return directoryName;
                     }
                     return Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
-                default:
+                case EpisodeInfo:
                     return Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
+                default:
+                    // series和season文件名没扩展名
+                    return Path.GetFileName(info.Path) ?? info.Name;
             }
         }
 
