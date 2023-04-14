@@ -226,13 +226,22 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 list.Add(movie);
             }
 
-            if (list.Count <= 0)
+            if (list.Count > 0)
             {
-                this._logger.LogWarning("douban搜索不到内容，这消息大量出现时，可能触发了爬虫风控。。。keyword: {0}", keyword);
+                _memoryCache.Set<List<DoubanSubject>>(cacheKey, list, expiredOption);
+            }
+            else
+            {
+                if (body.Contains("sec.douban.com"))
+                {
+                    this._logger.LogWarning("douban触发风控，可能ip被封，请到插件配置中打开防封禁功能。。。keyword: {0}", keyword);
+                }
+                else
+                {
+                    this._logger.LogWarning("douban搜索不到内容，这消息大量出现时，可能触发了爬虫风控。。。keyword: {0}", keyword);
+                }
             }
 
-
-            _memoryCache.Set<List<DoubanSubject>>(cacheKey, list, expiredOption);
             return list;
         }
 

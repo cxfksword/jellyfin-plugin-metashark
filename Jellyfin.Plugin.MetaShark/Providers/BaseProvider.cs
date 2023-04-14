@@ -505,7 +505,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     // 当movie放在文件夹中并只有一部影片时, info.name是根据文件夹名解析的，但info.Path是影片的路径名
                     // 当movie放在文件夹中并有多部影片时，info.Name和info.Path都是具体的影片
                     var directoryName = Path.GetFileName(Path.GetDirectoryName(info.Path));
-                    if (directoryName != null && directoryName.Contains(info.Name))
+                    if (!string.IsNullOrEmpty(directoryName) && directoryName.Contains(info.Name))
                     {
                         return directoryName;
                     }
@@ -513,7 +513,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 case EpisodeInfo:
                     return Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
                 default:
-                    // series和season文件名没扩展名
+                    // series和season的info.Path是文件夹路径
                     return Path.GetFileName(info.Path) ?? info.Name;
             }
         }
