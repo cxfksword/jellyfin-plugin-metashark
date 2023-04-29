@@ -1,11 +1,9 @@
 ﻿using Jellyfin.Plugin.MetaShark.Api;
 using Jellyfin.Plugin.MetaShark.Model;
-using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
-using StringMetric;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -13,7 +11,6 @@ using System.Globalization;
 using System.Linq;
 using System.IO;
 using System.Net.Http;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -102,6 +99,25 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             this._logger = logger;
             this._httpClientFactory = httpClientFactory;
             this._httpContextAccessor = httpContextAccessor;
+        }
+
+        /// <inheritdoc />
+        public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
+        {
+            this.Log("GetImageResponse url: {0}", url);
+            if (url.Contains("doubanio.com"))
+            {
+                // 豆瓣图，带referer下载
+                using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, url))
+                {
+                    requestMessage.Headers.Add("Referer", "https://www.douban.com/");
+                    return await this._httpClientFactory.CreateClient().SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                return await this._httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
+            }
         }
 
         protected async Task<string?> GuessByDoubanAsync(ItemLookupInfo info, CancellationToken cancellationToken)

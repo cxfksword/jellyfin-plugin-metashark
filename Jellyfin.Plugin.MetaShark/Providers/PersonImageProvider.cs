@@ -1,25 +1,16 @@
 using Jellyfin.Plugin.MetaShark.Api;
-using Jellyfin.Plugin.MetaShark.Core;
-using Jellyfin.Plugin.MetaShark.Model;
 using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Entities.Movies;
-using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
-using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Extensions;
 using MediaBrowser.Model.Providers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TMDbLib.Objects.Languages;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -72,13 +63,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             this.Log($"Got images failed because the images of \"{item.Name}\" is empty!");
             return new List<RemoteImageInfo>();
-        }
-
-        /// <inheritdoc />
-        public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        {
-            this.Log("GetImageResponse url: {0}", url);
-            return await this._httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>

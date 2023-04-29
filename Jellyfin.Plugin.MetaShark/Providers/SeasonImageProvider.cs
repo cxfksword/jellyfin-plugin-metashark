@@ -1,12 +1,9 @@
 ﻿using Jellyfin.Plugin.MetaShark.Api;
-using Jellyfin.Plugin.MetaShark.Core;
 using Jellyfin.Plugin.MetaShark.Model;
 using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
-using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Extensions;
 using MediaBrowser.Model.Providers;
@@ -17,10 +14,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TMDbLib.Objects.Languages;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -114,13 +109,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             return remoteImages.OrderByLanguageDescending(language);
-        }
-
-        /// <inheritdoc />
-        public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        {
-            this.Log("[GetSeasonImages] GetImageResponse url: {0}", url);
-            return await this._httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
         }
 
     }
