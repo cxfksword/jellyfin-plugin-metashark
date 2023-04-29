@@ -1,15 +1,9 @@
 ﻿using Jellyfin.Plugin.MetaShark.Api;
-using Jellyfin.Plugin.MetaShark.Core;
-using Jellyfin.Plugin.MetaShark.Model;
-using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
-using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Extensions;
 using MediaBrowser.Model.Providers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -18,11 +12,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TMDbLib.Objects.Languages;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -102,15 +93,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
             return result;
         }
-
-        /// <inheritdoc />
-        public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        {
-            this.Log("[GetEpisodeImages] GetImageResponse url: {0}", url);
-            return this._httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken);
-        }
-
-
 
     }
 }

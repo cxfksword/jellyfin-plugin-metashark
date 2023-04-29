@@ -1,8 +1,5 @@
-﻿using System.Net.Mime;
-using System.Xml.Schema;
-using Jellyfin.Plugin.MetaShark.Api;
+﻿using Jellyfin.Plugin.MetaShark.Api;
 using Jellyfin.Plugin.MetaShark.Core;
-using Jellyfin.Plugin.MetaShark.Model;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
@@ -14,7 +11,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TMDbLib.Objects.Find;
@@ -166,11 +162,5 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return result;
         }
 
-        /// <inheritdoc />
-        public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        {
-            this.Log("Person GetImageResponse url: {0}", url);
-            return this._httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken);
-        }
     }
 }

@@ -4,12 +4,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using AngleSharp.Text;
 using Jellyfin.Plugin.MetaShark.Api;
 using Jellyfin.Plugin.MetaShark.Core;
@@ -22,12 +18,6 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
-using StringMetric;
-using TMDbLib.Client;
-using TMDbLib.Objects.Find;
-using TMDbLib.Objects.Languages;
-using TMDbLib.Objects.TvShows;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -137,9 +127,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     ProductionYear = subject.Year,
                     HomePageUrl = "https://www.douban.com",
                     Genres = subject.Genres,
-                    // ProductionLocations = [x?.Country],
                     PremiereDate = subject.ScreenTime,
-                    Tagline = string.Empty,
                 };
                 if (!string.IsNullOrEmpty(subject.Imdb))
                 {
@@ -204,65 +192,71 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             if (metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(tmdbId))
             {
-                this.Log($"GetMovieMetadata of tmdb [id]: \"{tmdbId}\"");
-                var movieResult = await _tmdbApi
+                return await this.GetMetadataByTmdb(tmdbId, info, cancellationToken).ConfigureAwait(false);
+            }
+
+            return result;
+        }
+
+        private async Task<MetadataResult<Movie>> GetMetadataByTmdb(string tmdbId, MovieInfo info, CancellationToken cancellationToken)
+        {
+            this.Log($"GetMovieMetadata of tmdb [id]: \"{tmdbId}\"");
+            var result = new MetadataResult<Movie>();
+            var movieResult = await _tmdbApi
                             .GetMovieAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
                             .ConfigureAwait(false);
 
-                if (movieResult == null)
-                {
-                    return result;
-                }
-
-                var movie = new Movie
-                {
-                    Name = movieResult.Title ?? movieResult.OriginalTitle,
-                    OriginalTitle = movieResult.OriginalTitle,
-                    Overview = movieResult.Overview?.Replace("\n\n", "\n", StringComparison.InvariantCulture),
-                    Tagline = movieResult.Tagline,
-                    ProductionLocations = movieResult.ProductionCountries.Select(pc => pc.Name).ToArray()
-                };
-                result = new MetadataResult<Movie>
-                {
-                    QueriedById = true,
-                    HasMetadata = true,
-                    ResultLanguage = info.MetadataLanguage,
-                    Item = movie
-                };
-
-                movie.SetProviderId(MetadataProvider.Tmdb, tmdbId);
-                movie.SetProviderId(MetadataProvider.Imdb, movieResult.ImdbId);
-                movie.SetProviderId(Plugin.ProviderId, MetaSource.Tmdb);
-
-                // 获取电影系列信息
-                if (this.config.EnableTmdbCollection && movieResult.BelongsToCollection != null)
-                {
-                    movie.CollectionName = movieResult.BelongsToCollection.Name;
-                }
-
-                movie.CommunityRating = (float)System.Math.Round(movieResult.VoteAverage, 2);
-                movie.OfficialRating = this.GetTmdbOfficialRatingByData(movieResult, info.MetadataCountryCode);
-                movie.PremiereDate = movieResult.ReleaseDate;
-                movie.ProductionYear = movieResult.ReleaseDate?.Year;
-
-                if (movieResult.ProductionCompanies != null)
-                {
-                    movie.SetStudios(movieResult.ProductionCompanies.Select(c => c.Name));
-                }
-
-                var genres = movieResult.Genres;
-
-                foreach (var genre in genres.Select(g => g.Name))
-                {
-                    movie.AddGenre(genre);
-                }
-
-                foreach (var person in GetPersons(movieResult))
-                {
-                    result.AddPerson(person);
-                }
-
+            if (movieResult == null)
+            {
                 return result;
+            }
+
+            var movie = new Movie
+            {
+                Name = movieResult.Title ?? movieResult.OriginalTitle,
+                OriginalTitle = movieResult.OriginalTitle,
+                Overview = movieResult.Overview?.Replace("\n\n", "\n", StringComparison.InvariantCulture),
+                Tagline = movieResult.Tagline,
+                ProductionLocations = movieResult.ProductionCountries.Select(pc => pc.Name).ToArray()
+            };
+            result = new MetadataResult<Movie>
+            {
+                QueriedById = true,
+                HasMetadata = true,
+                ResultLanguage = info.MetadataLanguage,
+                Item = movie
+            };
+
+            movie.SetProviderId(MetadataProvider.Tmdb, tmdbId);
+            movie.SetProviderId(MetadataProvider.Imdb, movieResult.ImdbId);
+            movie.SetProviderId(Plugin.ProviderId, MetaSource.Tmdb);
+
+            // 获取电影系列信息
+            if (this.config.EnableTmdbCollection && movieResult.BelongsToCollection != null)
+            {
+                movie.CollectionName = movieResult.BelongsToCollection.Name;
+            }
+
+            movie.CommunityRating = (float)System.Math.Round(movieResult.VoteAverage, 2);
+            movie.OfficialRating = this.GetTmdbOfficialRatingByData(movieResult, info.MetadataCountryCode);
+            movie.PremiereDate = movieResult.ReleaseDate;
+            movie.ProductionYear = movieResult.ReleaseDate?.Year;
+
+            if (movieResult.ProductionCompanies != null)
+            {
+                movie.SetStudios(movieResult.ProductionCompanies.Select(c => c.Name));
+            }
+
+            var genres = movieResult.Genres;
+
+            foreach (var genre in genres.Select(g => g.Name))
+            {
+                movie.AddGenre(genre);
+            }
+
+            foreach (var person in GetPersons(movieResult))
+            {
+                result.AddPerson(person);
             }
 
             return result;
@@ -421,15 +415,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             return null;
-        }
-
-
-
-        /// <inheritdoc />
-        public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        {
-            this.Log("GetImageResponse url: {0}", url);
-            return await this._httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
         }
 
     }

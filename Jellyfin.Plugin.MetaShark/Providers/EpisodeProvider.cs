@@ -1,8 +1,5 @@
 ﻿using Jellyfin.Plugin.MetaShark.Api;
 using Jellyfin.Plugin.MetaShark.Core;
-using Jellyfin.Plugin.MetaShark.Model;
-using MediaBrowser.Common.Net;
-using MediaBrowser.Common.Plugins;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
@@ -15,11 +12,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Controller.Entities;
 using Microsoft.AspNetCore.Http;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
@@ -295,13 +289,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var expiredOption = new MemoryCacheEntryOptions() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1) };
             this._memoryCache.Set<int>(cacheKey, videoFilesCount, expiredOption);
             return videoFilesCount;
-        }
-
-        /// <inheritdoc />
-        public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        {
-            this.Log("GetImageResponse url: {0}", url);
-            return _httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken);
         }
 
 

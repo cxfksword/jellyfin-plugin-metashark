@@ -8,18 +8,11 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TMDbLib.Objects.Find;
-using TMDbLib.Objects.TvShows;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
@@ -227,17 +220,5 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return result;
         }
 
-
-        /// <inheritdoc />
-        public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        {
-            this.Log("GetImageResponse url: {0}", url);
-            return await this._httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
-        }
-
-        private void Log(string? message, params object?[] args)
-        {
-            this._logger.LogInformation($"[MetaShark] {message}", args);
-        }
     }
 }
