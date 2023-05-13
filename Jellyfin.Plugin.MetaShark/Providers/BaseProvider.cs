@@ -317,13 +317,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return null;
             }
 
-            // 豆瓣的imdb id可能是旧的，需要先从omdb接口获取最新的imdb id
-            var omdbItem = await this._omdbApi.GetByImdbID(imdb, cancellationToken).ConfigureAwait(false);
-            if (!string.IsNullOrEmpty(omdbItem?.ImdbID))
-            {
-                imdb = omdbItem.ImdbID;
-            }
-
             // 通过imdb获取tmdbId
             var findResult = await this._tmdbApi.FindByExternalIdAsync(imdb, TMDbLib.Objects.Find.FindExternalSource.Imdb, language, cancellationToken).ConfigureAwait(false);
             if (findResult?.MovieResults != null && findResult.MovieResults.Count > 0)
@@ -341,6 +334,25 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// 豆瓣的imdb id可能是旧的，需要先从omdb接口获取最新的imdb id
+        /// </summary>
+        protected async Task<string> CheckNewImdbID(string imdb, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(imdb))
+            {
+                return imdb;
+            }
+
+            var omdbItem = await this._omdbApi.GetByImdbID(imdb, cancellationToken).ConfigureAwait(false);
+            if (!string.IsNullOrEmpty(omdbItem?.ImdbID))
+            {
+                imdb = omdbItem.ImdbID;
+            }
+
+            return imdb;
         }
 
 

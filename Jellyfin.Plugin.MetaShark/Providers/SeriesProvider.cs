@@ -117,7 +117,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     ProductionYear = subject.Year,
                     HomePageUrl = "https://www.douban.com",
                     Genres = subject.Genres,
-                    // ProductionLocations = [x?.Country],
                     PremiereDate = subject.ScreenTime,
                     Tagline = string.Empty,
                 };
@@ -125,7 +124,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 // 设置imdb元数据
                 if (!string.IsNullOrEmpty(subject.Imdb))
                 {
-                    item.SetProviderId(MetadataProvider.Imdb, subject.Imdb);
+                    var newImdbId = await this.CheckNewImdbID(subject.Imdb, cancellationToken).ConfigureAwait(false);
+                    subject.Imdb = newImdbId;
+                    item.SetProviderId(MetadataProvider.Imdb, newImdbId);
                 }
 
                 // 搜索匹配tmdbId
