@@ -71,7 +71,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
         Regex regGender = new Regex(@"性别: \n(.+?)\n", RegexOptions.Compiled);
         Regex regConstellation = new Regex(@"星座: \n(.+?)\n", RegexOptions.Compiled);
         Regex regBirthdate = new Regex(@"出生日期: \n(.+?)\n", RegexOptions.Compiled);
-        Regex regLifedate = new Regex(@"生卒日期: \n(.+?) 至", RegexOptions.Compiled);
+        Regex regLifedate = new Regex(@"生卒日期: \n(.+?) 至 (.+)", RegexOptions.Compiled);
         Regex regBirthplace = new Regex(@"出生地: \n(.+?)\n", RegexOptions.Compiled);
         Regex regCelebrityRole = new Regex(@"职业: \n(.+?)\n", RegexOptions.Compiled);
         Regex regNickname = new Regex(@"更多外文名: \n(.+?)\n", RegexOptions.Compiled);
@@ -523,10 +523,14 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var gender = info.GetMatchGroup(this.regGender);
                 var constellation = info.GetMatchGroup(this.regConstellation);
                 var birthdate = info.GetMatchGroup(this.regBirthdate);
-                var lifedate = info.GetMatchGroup(this.regLifedate);
-                if (string.IsNullOrEmpty(birthdate))
+
+                // 生卒日期
+                var enddate = string.Empty;
+                var match = this.regLifedate.Match(info);
+                if (match.Success && match.Groups.Count > 2)
                 {
-                    birthdate = lifedate;
+                    birthdate = match.Groups[1].Value.Trim();
+                    enddate = match.Groups[2].Value.Trim();
                 }
 
                 var birthplace = info.GetMatchGroup(this.regBirthplace);
@@ -538,6 +542,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 celebrity.Img = img;
                 celebrity.Gender = gender;
                 celebrity.Birthdate = birthdate;
+                celebrity.Enddate = enddate;
                 celebrity.Nickname = nickname;
                 celebrity.Imdb = imdb;
                 celebrity.Birthplace = birthplace;

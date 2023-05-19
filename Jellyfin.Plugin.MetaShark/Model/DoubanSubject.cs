@@ -120,6 +120,7 @@ namespace Jellyfin.Plugin.MetaShark.Model
         public string Gender { get; set; }
         public string Constellation { get; set; }
         public string Birthdate { get; set; }
+        public string Enddate { get; set; }
         public string Birthplace { get; set; }
         public string Nickname { get; set; }
         public string Imdb { get; set; }
