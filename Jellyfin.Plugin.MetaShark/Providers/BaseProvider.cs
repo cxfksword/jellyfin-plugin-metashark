@@ -286,14 +286,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             {
                 case MovieInfo:
                     var movieResults = await this._tmdbApi.SearchMovieAsync(name, year ?? 0, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-                    // 结果可能多个，优先取名称完全相同的，可能综艺会有纯享版等非标准版本
+                    // 结果可能多个，优先取名称完全相同的
                     var movieItem = movieResults.Where(x => x.Title == name || x.OriginalTitle == name).FirstOrDefault();
                     if (movieItem != null)
                     {
                         this.Log($"Found tmdb [id]: {movieItem.Title}({movieItem.Id})");
                         return movieItem.Id.ToString(CultureInfo.InvariantCulture);
                     }
-
                     movieItem = movieResults.FirstOrDefault();
                     if (movieItem != null)
                     {
@@ -304,6 +303,10 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     break;
                 case SeriesInfo:
                     var seriesResults = await this._tmdbApi.SearchSeriesAsync(name, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
+                    if (year > 0)
+                    {
+                        seriesResults = seriesResults.Where(x => x.FirstAirDate?.Year == year).ToList();
+                    }
                     // 结果可能多个，优先取名称完全相同的，可能综艺会有纯享版等非标准版本
                     var seriesItem = seriesResults.Where(x => x.Name == name || x.OriginalName == name).FirstOrDefault();
                     if (seriesItem != null)
