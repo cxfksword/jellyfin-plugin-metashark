@@ -303,12 +303,23 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     break;
                 case SeriesInfo:
                     var seriesResults = await this._tmdbApi.SearchSeriesAsync(name, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-                    if (year > 0)
+                    // 年份在豆瓣可能匹配到第三季，但tmdb年份都是第一季的，可能匹配不上（例如：脱口秀大会）
+                    // 优先年份和名称同时匹配
+                    var seriesItem = seriesResults.Where(x => (x.Name == name || x.OriginalName == name) && x.FirstAirDate?.Year == year).FirstOrDefault();
+                    if (seriesItem != null)
                     {
-                        seriesResults = seriesResults.Where(x => x.FirstAirDate?.Year == year).ToList();
+                        this.Log($"Found tmdb [id]: -> {seriesItem.Name}({seriesItem.Id})");
+                        return seriesItem.Id.ToString(CultureInfo.InvariantCulture);
                     }
-                    // 结果可能多个，优先取名称完全相同的，可能综艺会有纯享版等非标准版本
-                    var seriesItem = seriesResults.Where(x => x.Name == name || x.OriginalName == name).FirstOrDefault();
+                    // 年份匹配
+                    seriesItem = seriesResults.Where(x => x.FirstAirDate?.Year == year).FirstOrDefault();
+                    if (seriesItem != null)
+                    {
+                        this.Log($"Found tmdb [id]: -> {seriesItem.Name}({seriesItem.Id})");
+                        return seriesItem.Id.ToString(CultureInfo.InvariantCulture);
+                    }
+                    // 取名称完全相同的，可能综艺会有纯享版等非标准版本(例如：一年一度喜剧大赛)
+                    seriesItem = seriesResults.Where(x => x.Name == name || x.OriginalName == name).FirstOrDefault();
                     if (seriesItem != null)
                     {
                         this.Log($"Found tmdb [id]: -> {seriesItem.Name}({seriesItem.Id})");
