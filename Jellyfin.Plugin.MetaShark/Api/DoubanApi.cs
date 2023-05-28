@@ -66,7 +66,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
         Regex regImdb = new Regex(@"IMDb: (tt\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         Regex regSite = new Regex(@"官方网站: (.+?)\n", RegexOptions.Compiled);
         Regex regNameMath = new Regex(@"(.+第\w季|[\w\uff1a\uff01\uff0c\u00b7]+)\s*(.*)", RegexOptions.Compiled);
-        Regex regRole = new Regex(@"\([饰|配] (.+?)\)", RegexOptions.Compiled);
+        Regex regRole = new Regex(@"\([饰|配]?\s*?(.+?)\)", RegexOptions.Compiled);
         Regex regBackgroundImage = new Regex(@"url\(([^)]+?)\)$", RegexOptions.Compiled);
         Regex regGender = new Regex(@"性别: \n(.+?)\n", RegexOptions.Compiled);
         Regex regConstellation = new Regex(@"星座: \n(.+?)\n", RegexOptions.Compiled);
@@ -436,46 +436,50 @@ namespace Jellyfin.Plugin.MetaShark.Api
             var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var context = BrowsingContext.New();
             var doc = await context.OpenAsync(req => req.Content(body), cancellationToken).ConfigureAwait(false);
-            var celebrityElements = doc.QuerySelectorAll("#content ul.celebrities-list li.celebrity");
 
-            foreach (var node in celebrityElements)
+            var celebritiesElements = doc.QuerySelectorAll("div#celebrities>.list-wrapper");
+            foreach (var celebritiesNode in celebritiesElements)
             {
-
-                var celebrityIdStr = node.GetAttr("div.info a.name", "href") ?? string.Empty;
-                var celebrityId = celebrityIdStr.GetMatchGroup(this.regId);
-                var celebrityImgStr = node.GetAttr("div.avatar", "style") ?? string.Empty;
-                var celebrityImg = celebrityImgStr.GetMatchGroup(this.regBackgroundImage);
-                var celebrityNameStr = node.GetText("div.info a.name") ?? string.Empty;
-                var arr = celebrityNameStr.Split(" ");
-                var celebrityName = arr.Length > 1 ? arr[0].Trim() : celebrityNameStr;
-                // 有时存在演员信息缺少名字的
-                if (string.IsNullOrEmpty(celebrityName))
-                {
-                    continue;
-                }
-                var celebrityRoleStr = node.GetText("div.info span.role") ?? string.Empty;
-                var celebrityRole = celebrityRoleStr.GetMatchGroup(this.regRole);
-                var arrRole = celebrityRoleStr.Split(" ");
-                var celebrityRoleType = arrRole.Length > 1 ? arrRole[0] : string.Empty;
-                if (string.IsNullOrEmpty(celebrityRole))
-                {
-                    celebrityRole = celebrityRoleType;
-                }
-
-                // 自己/嘉宾一般用于综艺
-                if (celebrityRoleType != "导演" && celebrityRoleType != "配音" && celebrityRoleType != "演员" && celebrityRoleType != "自己" && celebrityRoleType != "嘉宾")
+                var celebritiesTitle = celebritiesNode.GetText("h2") ?? string.Empty;
+                if (!celebritiesTitle.Contains("导演") && !celebritiesTitle.Contains("演员"))
                 {
                     continue;
                 }
 
-                var celebrity = new DoubanCelebrity();
-                celebrity.Id = celebrityId;
-                celebrity.Name = celebrityName;
-                celebrity.Role = celebrityRole;
-                celebrity.RoleType = celebrityRoleType;
-                celebrity.Img = celebrityImg;
+                var celebrityElements = celebritiesNode.QuerySelectorAll("ul.celebrities-list li.celebrity");
+                foreach (var node in celebrityElements)
+                {
 
-                list.Add(celebrity);
+                    var celebrityIdStr = node.GetAttr("div.info a.name", "href") ?? string.Empty;
+                    var celebrityId = celebrityIdStr.GetMatchGroup(this.regId);
+                    var celebrityImgStr = node.GetAttr("div.avatar", "style") ?? string.Empty;
+                    var celebrityImg = celebrityImgStr.GetMatchGroup(this.regBackgroundImage);
+                    var celebrityNameStr = node.GetText("div.info a.name") ?? string.Empty;
+                    var arr = celebrityNameStr.Split(" ");
+                    var celebrityName = arr.Length > 1 ? arr[0].Trim() : celebrityNameStr;
+                    // 有时存在演员信息缺少名字的
+                    if (string.IsNullOrEmpty(celebrityName))
+                    {
+                        continue;
+                    }
+                    var celebrityRoleStr = node.GetText("div.info span.role") ?? string.Empty;
+                    var celebrityRole = celebrityRoleStr.GetMatchGroup(this.regRole);
+                    var arrRole = celebrityRoleStr.Split(" ");
+                    var celebrityRoleType = arrRole.Length > 1 ? arrRole[0] : string.Empty;
+                    if (string.IsNullOrEmpty(celebrityRole))
+                    {
+                        celebrityRole = celebrityRoleType;
+                    }
+
+                    var celebrity = new DoubanCelebrity();
+                    celebrity.Id = celebrityId;
+                    celebrity.Name = celebrityName;
+                    celebrity.Role = celebrityRole;
+                    celebrity.RoleType = celebrityRoleType;
+                    celebrity.Img = celebrityImg;
+
+                    list.Add(celebrity);
+                }
             }
 
             _memoryCache.Set<List<DoubanCelebrity>>(cacheKey, list, expiredOption);
