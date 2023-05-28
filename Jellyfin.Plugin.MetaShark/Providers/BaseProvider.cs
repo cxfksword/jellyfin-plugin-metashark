@@ -286,7 +286,15 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             {
                 case MovieInfo:
                     var movieResults = await this._tmdbApi.SearchMovieAsync(name, year ?? 0, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-                    var movieItem = movieResults.FirstOrDefault();
+                    // 结果可能多个，优先取名称完全相同的，可能综艺会有纯享版等非标准版本
+                    var movieItem = movieResults.Where(x => x.Title == name || x.OriginalTitle == name).FirstOrDefault();
+                    if (movieItem != null)
+                    {
+                        this.Log($"Found tmdb [id]: {movieItem.Title}({movieItem.Id})");
+                        return movieItem.Id.ToString(CultureInfo.InvariantCulture);
+                    }
+
+                    movieItem = movieResults.FirstOrDefault();
                     if (movieItem != null)
                     {
                         // bt种子都是英文名，但电影是中日韩泰印法地区时，都不适用相似匹配，去掉限制
@@ -296,7 +304,14 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     break;
                 case SeriesInfo:
                     var seriesResults = await this._tmdbApi.SearchSeriesAsync(name, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
-                    var seriesItem = seriesResults.FirstOrDefault();
+                    // 结果可能多个，优先取名称完全相同的，可能综艺会有纯享版等非标准版本
+                    var seriesItem = seriesResults.Where(x => x.Name == name || x.OriginalName == name).FirstOrDefault();
+                    if (seriesItem != null)
+                    {
+                        this.Log($"Found tmdb [id]: -> {seriesItem.Name}({seriesItem.Id})");
+                        return seriesItem.Id.ToString(CultureInfo.InvariantCulture);
+                    }
+                    seriesItem = seriesResults.FirstOrDefault();
                     if (seriesItem != null)
                     {
                         // bt种子都是英文名，但电影是中日韩泰印法地区时，都不适用相似匹配，去掉限制
@@ -310,7 +325,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         }
 
 
-        protected async Task<string?> GetTmdbIdByImdbAsync(string imdb, string language, CancellationToken cancellationToken)
+        protected async Task<string?> GetTmdbIdByImdbAsync(string imdb, string language, ItemLookupInfo info, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(imdb))
             {
@@ -319,18 +334,27 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             // 通过imdb获取tmdbId
             var findResult = await this._tmdbApi.FindByExternalIdAsync(imdb, TMDbLib.Objects.Find.FindExternalSource.Imdb, language, cancellationToken).ConfigureAwait(false);
-            if (findResult?.MovieResults != null && findResult.MovieResults.Count > 0)
-            {
-                var tmdbId = findResult.MovieResults[0].Id;
-                this.Log($"Found tmdb [id]: {tmdbId} by imdb id: {imdb}");
-                return $"{tmdbId}";
-            }
 
-            if (findResult?.TvResults != null && findResult.TvResults.Count > 0)
+            switch (info)
             {
-                var tmdbId = findResult.TvResults[0].Id;
-                this.Log($"Found tmdb [id]: {tmdbId} by imdb id: {imdb}");
-                return $"{tmdbId}";
+                case MovieInfo:
+                    if (findResult?.MovieResults != null && findResult.MovieResults.Count > 0)
+                    {
+                        var tmdbId = findResult.MovieResults[0].Id;
+                        this.Log($"Found tmdb [id]: {tmdbId} by imdb id: {imdb}");
+                        return $"{tmdbId}";
+                    }
+                    break;
+                case SeriesInfo:
+                    if (findResult?.TvResults != null && findResult.TvResults.Count > 0)
+                    {
+                        var tmdbId = findResult.TvResults[0].Id;
+                        this.Log($"Found tmdb [id]: {tmdbId} by imdb id: {imdb}");
+                        return $"{tmdbId}";
+                    }
+                    break;
+                default:
+                    break;
             }
 
             return null;

@@ -31,7 +31,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
         [TestMethod]
         public void TestGetMetadata()
         {
-            var info = new SeriesInfo() { Name = "奔跑吧兄弟" };
+            var info = new SeriesInfo() { Name = "一年一度喜剧大赛" };
             var doubanApi = new DoubanApi(loggerFactory);
             var tmdbApi = new TmdbApi(loggerFactory);
             var omdbApi = new OmdbApi(loggerFactory);

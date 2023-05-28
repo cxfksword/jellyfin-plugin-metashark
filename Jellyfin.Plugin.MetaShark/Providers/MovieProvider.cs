@@ -136,7 +136,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     movie.SetProviderId(MetadataProvider.Imdb, newImdbId);
 
                     // 通过imdb获取TMDB id
-                    var newTmdbId = await this.GetTmdbIdByImdbAsync(subject.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
+                    var newTmdbId = await this.GetTmdbIdByImdbAsync(subject.Imdb, info.MetadataLanguage, info, cancellationToken).ConfigureAwait(false);
                     if (!string.IsNullOrEmpty(newTmdbId))
                     {
                         tmdbId = newTmdbId;

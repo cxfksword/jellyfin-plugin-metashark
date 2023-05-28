@@ -210,10 +210,14 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 通过imdb获取TMDB id
             if (!string.IsNullOrEmpty(imdb))
             {
-                var tmdbId = await this.GetTmdbIdByImdbAsync(imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
+                var tmdbId = await this.GetTmdbIdByImdbAsync(imdb, info.MetadataLanguage, info, cancellationToken).ConfigureAwait(false);
                 if (!string.IsNullOrEmpty(tmdbId))
                 {
                     return tmdbId;
+                }
+                else
+                {
+                    this.Log($"Can not found tmdb [id] by imdb id: \"{imdb}\"");
                 }
             }
 
