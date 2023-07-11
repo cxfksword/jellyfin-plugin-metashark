@@ -82,5 +82,26 @@ namespace Jellyfin.Plugin.MetaShark.Test
                 Console.WriteLine(result.ToJson());
             }).GetAwaiter().GetResult();
         }
+
+        [TestMethod]
+        public void TestGetImageResponse()
+        {
+            var doubanApi = new DoubanApi(loggerFactory);
+            var tmdbApi = new TmdbApi(loggerFactory);
+            var omdbApi = new OmdbApi(loggerFactory);
+            var httpClientFactory = new DefaultHttpClientFactory();
+            var libraryManagerStub = new Mock<ILibraryManager>();
+            var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
+
+            Task.Run(async () =>
+            {
+                var provider = new MovieImageProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
+                var result = await provider.GetImageResponse("https://img1.doubanio.com/view/photo/m/public/p2893270877.jpg", CancellationToken.None);
+                Assert.IsNotNull(result);
+
+                var str = result.ToJson();
+                Console.WriteLine(result.ToJson());
+            }).GetAwaiter().GetResult();
+        }
     }
 }

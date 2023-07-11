@@ -21,12 +21,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 {
     public class SeasonImageProvider : BaseProvider, IRemoteImageProvider
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SeasonImageProvider"/> class.
-        /// </summary>
-        /// <param name="httpClientFactory">Instance of the <see cref="IHttpClientFactory"/> interface.</param>
-        /// <param name="logger">Instance of the <see cref="ILogger{OddbImageProvider}"/> interface.</param>
-        /// <param name="doubanApi">Instance of <see cref="DoubanApi"/>.</param>
         public SeasonImageProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
             : base(httpClientFactory, loggerFactory.CreateLogger<SeasonImageProvider>(), libraryManager, httpContextAccessor, doubanApi, tmdbApi, omdbApi)
         {
@@ -66,9 +60,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     new RemoteImageInfo
                     {
                         ProviderName = primary.Name,
-                        Url = primary.ImgMiddle,
-                        Type = ImageType.Primary
-                    }
+                        Url = this.GetProxyImageUrl(primary.ImgMiddle),
+                        Type = ImageType.Primary,
+                    },
                 };
                 return res;
             }

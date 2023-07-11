@@ -1,24 +1,11 @@
 using System.Threading;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.IO;
 using System.Threading.Tasks;
 using MediaBrowser.Common.Extensions;
-using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller;
-using MediaBrowser.Model.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using MediaBrowser.Model.IO;
-using MediaBrowser.Controller.Providers;
-using Jellyfin.Plugin.MetaShark.Providers;
-using System.Runtime.InteropServices;
-using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Common.Net;
 using Jellyfin.Plugin.MetaShark.Api;
 using Jellyfin.Plugin.MetaShark.Model;
@@ -61,7 +48,8 @@ namespace Jellyfin.Plugin.MetaShark.Controllers
             var httpClient = GetHttpClient();
             using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, url))
             {
-                requestMessage.Headers.Add("Referer", "https://www.douban.com/");
+                requestMessage.Headers.Add("User-Agent", DoubanApi.HTTP_USER_AGENT);
+                requestMessage.Headers.Add("Referer", DoubanApi.HTTP_REFERER);
 
                 response = await httpClient.SendAsync(requestMessage);
             }

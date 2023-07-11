@@ -23,12 +23,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
     /// </summary>
     public class PersonProvider : BaseProvider, IRemoteMetadataProvider<Person, PersonLookupInfo>
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MovieImageProvider"/> class.
-        /// </summary>
-        /// <param name="httpClientFactory">Instance of the <see cref="IHttpClientFactory"/> interface.</param>
-        /// <param name="logger">Instance of the <see cref="ILogger{OddbImageProvider}"/> interface.</param>
-        /// <param name="doubanApi">Instance of <see cref="DoubanApi"/>.</param>
         public PersonProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
             : base(httpClientFactory, loggerFactory.CreateLogger<PersonProvider>(), libraryManager, httpContextAccessor, doubanApi, tmdbApi, omdbApi)
         {

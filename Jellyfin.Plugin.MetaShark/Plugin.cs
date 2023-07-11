@@ -4,6 +4,7 @@ using System.Globalization;
 using Jellyfin.Plugin.MetaShark.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
+using MediaBrowser.Controller;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using Microsoft.AspNetCore.Http;
@@ -26,14 +27,17 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public const string ProviderId = "MetaSharkID";
 
 
+    private readonly IServerApplicationHost _appHost;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="Plugin"/> class.
     /// </summary>
     /// <param name="applicationPaths">Instance of the <see cref="IApplicationPaths"/> interface.</param>
     /// <param name="xmlSerializer">Instance of the <see cref="IXmlSerializer"/> interface.</param>
-    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer)
+    public Plugin(IServerApplicationHost appHost, IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer)
         : base(applicationPaths, xmlSerializer)
     {
+        this._appHost = appHost;
         Plugin.Instance = this;
     }
 
@@ -56,8 +60,26 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             new PluginPageInfo
             {
                 Name = this.Name,
-                EmbeddedResourcePath = string.Format(CultureInfo.InvariantCulture, "{0}.Configuration.configPage.html", GetType().Namespace)
-            }
+                EmbeddedResourcePath = string.Format(CultureInfo.InvariantCulture, "{0}.Configuration.configPage.html", GetType().Namespace),
+            },
         };
+    }
+
+    public string GetLocalApiBaseUrl(string hostname = "127.0.0.1")
+    {
+        return this._appHost.GetSmartApiUrl(hostname);
+    }
+
+    public string GetApiBaseUrl(HttpRequest request)
+    {
+        int? requestPort = request.Host.Port;
+        if (requestPort == null
+            || (requestPort == 80 && string.Equals(request.Scheme, "http", StringComparison.OrdinalIgnoreCase))
+            || (requestPort == 443 && string.Equals(request.Scheme, "https", StringComparison.OrdinalIgnoreCase)))
+        {
+            requestPort = -1;
+        }
+
+        return this._appHost.GetLocalApiUrl(request.Host.Host, request.Scheme, requestPort);
     }
 }

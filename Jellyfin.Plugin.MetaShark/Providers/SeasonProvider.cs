@@ -89,7 +89,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                             Name = c.Name,
                             Type = c.RoleType,
                             Role = c.Role,
-                            ImageUrl = c.Img,
+                            ImageUrl = this.GetLocalProxyImageUrl(c.Img),
                             ProviderIds = new Dictionary<string, string> { { DoubanProviderId, c.Id } },
                         }));
 

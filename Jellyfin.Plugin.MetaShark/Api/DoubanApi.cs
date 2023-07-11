@@ -2,35 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Jellyfin.Extensions.Json;
-using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller;
 using Microsoft.Extensions.Logging;
 using Jellyfin.Plugin.MetaShark.Model;
 using System.Threading;
-using MediaBrowser.Controller.Entities.Movies;
-using MediaBrowser.Common.Net;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using System.Net;
 using Jellyfin.Plugin.MetaShark.Api.Http;
 using System.Web;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using Microsoft.Extensions.Caching.Memory;
-using Jellyfin.Plugin.MetaShark.Providers;
 using AngleSharp;
-using System.Net.WebSockets;
-using Jellyfin.Data.Entities.Libraries;
 using AngleSharp.Dom;
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.MetaShark.Core;
-using System.Data;
-using TMDbLib.Objects.Movies;
-using System.Xml.Linq;
 using RateLimiter;
 using ComposableAsync;
 
@@ -38,7 +24,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
 {
     public class DoubanApi : IDisposable
     {
-        const string HTTP_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36 Edg/93.0.961.44";
+        public const string HTTP_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36 Edg/93.0.961.44";
+        public const string HTTP_REFERER = "https://www.douban.com/";
         private readonly ILogger<DoubanApi> _logger;
         private HttpClient httpClient;
         private CookieContainer _cookieContainer;

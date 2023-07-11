@@ -19,12 +19,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 {
     public class EpisodeImageProvider : BaseProvider, IRemoteImageProvider
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="EpisodeImageProvider"/> class.
-        /// </summary>
-        /// <param name="httpClientFactory">Instance of the <see cref="IHttpClientFactory"/> interface.</param>
-        /// <param name="logger">Instance of the <see cref="ILogger{OddbImageProvider}"/> interface.</param>
-        /// <param name="doubanApi">Instance of <see cref="DoubanApi"/>.</param>
         public EpisodeImageProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
             : base(httpClientFactory, loggerFactory.CreateLogger<EpisodeImageProvider>(), libraryManager, httpContextAccessor, doubanApi, tmdbApi, omdbApi)
         {

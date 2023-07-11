@@ -34,6 +34,13 @@
                                 class="emby-input" placeholder="_vwo_uuid_v2=1; __utmv=2; ..."></textarea>
                             <div class="fieldDescription">可为空，填写可搜索到需登录访问的影片，使用(www.douban.com)分号“;”分隔格式cookie.</div>
                         </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="DoubanImageProxyBaseUrl">豆瓣图片代理地址</label>
+                            <input id="DoubanImageProxyBaseUrl" name="DoubanImageProxyBaseUrl" type="text"
+                                is="emby-input" placeholder="http://jellyfin.xxx.com" />
+                            <div class="fieldDescription">可为空，填写jellyfin访问域名，只有使用了nginx代理或docker，且豆瓣图片没法显示时，才需要填写
+                            </div>
+                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label" for="EnableDoubanAvoidRiskControl">
                                 <input id="EnableDoubanAvoidRiskControl" name="EnableDoubanAvoidRiskControl"
@@ -133,8 +140,10 @@
                         $('#current_version').text("v" + config.Version);
 
                         document.querySelector('#DoubanCookies').value = config.DoubanCookies;
+                        document.querySelector('#DoubanImageProxyBaseUrl').value = config.DoubanImageProxyBaseUrl;
                         document.querySelector('#EnableDoubanAvoidRiskControl').checked = config.EnableDoubanAvoidRiskControl;
                         document.querySelector('#EnableDoubanBackdropRaw').checked = config.EnableDoubanBackdropRaw;
+
                         document.querySelector('#EnableTmdb').checked = config.EnableTmdb;
                         document.querySelector('#EnableTmdbSearch').checked = config.EnableTmdbSearch;
                         document.querySelector('#EnableTmdbBackdrop').checked = config.EnableTmdbBackdrop;
@@ -154,8 +163,10 @@
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
                         config.DoubanCookies = document.querySelector('#DoubanCookies').value;
+                        config.DoubanImageProxyBaseUrl = document.querySelector('#DoubanImageProxyBaseUrl').value;
                         config.EnableDoubanAvoidRiskControl = document.querySelector('#EnableDoubanAvoidRiskControl').checked;
                         config.EnableDoubanBackdropRaw = document.querySelector('#EnableDoubanBackdropRaw').checked;
+
                         config.EnableTmdb = document.querySelector('#EnableTmdb').checked;
                         config.EnableTmdbSearch = document.querySelector('#EnableTmdbSearch').checked;
                         config.EnableTmdbBackdrop = document.querySelector('#EnableTmdbBackdrop').checked;

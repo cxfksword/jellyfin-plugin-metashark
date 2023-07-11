@@ -1,24 +1,8 @@
 using MediaBrowser.Model.Plugins;
-using System.Net;
 using System.Reflection;
 
 namespace Jellyfin.Plugin.MetaShark.Configuration;
 
-/// <summary>
-/// The configuration options.
-/// </summary>
-public enum SomeOptions
-{
-    /// <summary>
-    /// Option one.
-    /// </summary>
-    OneOption,
-
-    /// <summary>
-    /// Second option.
-    /// </summary>
-    AnotherOption
-}
 
 /// <summary>
 /// Plugin configuration.
@@ -32,13 +16,17 @@ public class PluginConfiguration : BasePluginConfiguration
 
     public string DoubanCookies { get; set; } = string.Empty;
     /// <summary>
-    /// 开启防封禁
+    /// 豆瓣开启防封禁
     /// </summary>
     public bool EnableDoubanAvoidRiskControl { get; set; } = false;
     /// <summary>
-    /// 背景图使用原图
+    /// 豆瓣背景图使用原图
     /// </summary>
     public bool EnableDoubanBackdropRaw { get; set; } = false;
+    /// <summary>
+    /// 豆瓣图片代理地址
+    /// </summary>
+    public string DoubanImageProxyBaseUrl { get; set; } = string.Empty;
 
     public bool EnableTmdb { get; set; } = true;
 

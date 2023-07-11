@@ -104,18 +104,32 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// <inheritdoc />
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            this.Log("GetImageResponse url: {0}", url);
             if (url.Contains("doubanio.com"))
             {
+                // 相对链接补全
+                if (!url.StartsWith("http") && Plugin.Instance != null)
+                {
+                    url = Plugin.Instance.GetLocalApiBaseUrl().TrimEnd('/') + url;
+                }
+                // 包含了代理地址的话，从url解析出原始豆瓣图片地址
+                if (url.Contains("/proxy/image"))
+                {
+                    var uri = new UriBuilder(url);
+                    url = HttpUtility.ParseQueryString(uri.Query).Get("url");
+                }
+
+                this.Log("GetImageResponse url: {0}", url);
                 // 豆瓣图，带referer下载
                 using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, url))
                 {
-                    requestMessage.Headers.Add("Referer", "https://www.douban.com/");
+                    requestMessage.Headers.Add("User-Agent", DoubanApi.HTTP_USER_AGENT);
+                    requestMessage.Headers.Add("Referer", DoubanApi.HTTP_REFERER);
                     return await this._httpClientFactory.CreateClient().SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
                 }
             }
             else
             {
+                this.Log("GetImageResponse url: {0}", url);
                 return await this._httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
             }
         }
@@ -478,35 +492,63 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return null;
         }
 
-
-        /// <summary>
-        /// 浏览器来源请求，返回代理地址（no-referer对于background-image不生效），其他客户端请求，返回原始图片地址
-        /// </summary>
         protected string GetProxyImageUrl(string url)
         {
-            var fromWeb = false;
-            if (_httpContextAccessor.HttpContext != null)
-            {
-                var userAgent = _httpContextAccessor.HttpContext.Request.Headers.UserAgent.ToString();
-                fromWeb = userAgent.Contains("Chrome") || userAgent.Contains("Safari");
-            }
-
-            if (fromWeb)
-            {
-                var encodedUrl = HttpUtility.UrlEncode(url);
-                return $"/plugin/metashark/proxy/image/?url={encodedUrl}";
-            }
-            else
-            {
-                return url;
-            }
+            var baseUrl = this.GetBaseUrl();
+            var encodedUrl = HttpUtility.UrlEncode(url);
+            return $"{baseUrl}/plugin/metashark/proxy/image/?url={encodedUrl}";
         }
 
-
-        protected string GetAbsoluteProxyImageUrl(string url)
+        protected string GetLocalProxyImageUrl(string url)
         {
-            var encodedUrl = HttpUtility.UrlEncode(url);
-            return $"{this.RequestDomain}/plugin/metashark/proxy/image/?url={encodedUrl}";
+            var baseUrl = Plugin.Instance?.GetLocalApiBaseUrl("127.0.0.1");
+            if (!string.IsNullOrEmpty(config.DoubanImageProxyBaseUrl))
+            {
+                baseUrl = config.DoubanImageProxyBaseUrl.TrimEnd('/');
+            }
+            if (!string.IsNullOrEmpty(baseUrl))
+            {
+                var encodedUrl = HttpUtility.UrlEncode(url);
+                return $"{baseUrl}/plugin/metashark/proxy/image/?url={encodedUrl}";
+            }
+
+            return this.GetProxyImageUrl(url);
+        }
+
+        private string GetBaseUrl()
+        {
+            // 配置优先
+            if (!string.IsNullOrEmpty(this.config.DoubanImageProxyBaseUrl))
+            {
+                return this.config.DoubanImageProxyBaseUrl.TrimEnd('/');
+            }
+
+            // http请求时，获取请求的host (nginx代理/docker中部署时，没配置透传host时，本方式会有问题)
+            if (Plugin.Instance != null && this._httpContextAccessor.HttpContext != null)
+            {
+                // 特殊处理下搜索请求，直接使用相对链接，可以减少使用nginx代理但不透传host的问题
+                var userAgent = this._httpContextAccessor.HttpContext.Request.Headers.UserAgent.ToString();
+                var fromWeb = userAgent.Contains("Chrome") || userAgent.Contains("Safari");
+                var fromItemSearch = this._httpContextAccessor.HttpContext.Request.Path.ToString().Contains("/RemoteSearch");
+                if (fromWeb && fromItemSearch)
+                {
+                    // 处理通过nginx反向代理后，url加了subpath访问的情况
+                    var subpath = string.Empty;
+                    var baseUrl = Plugin.Instance.GetApiBaseUrl(this._httpContextAccessor.HttpContext.Request);
+                    var uri = new UriBuilder(baseUrl);
+                    if (!string.IsNullOrEmpty(uri.Path) && uri.Path != "/")
+                    {
+                        subpath = "/" + uri.Path.Trim('/');
+                    }
+
+                    return subpath;
+                }
+
+                return Plugin.Instance.GetApiBaseUrl(this._httpContextAccessor.HttpContext.Request);
+            }
+
+            // 自动扫描刷新时，直接使用本地地址
+            return Plugin.Instance?.GetLocalApiBaseUrl("127.0.0.1") ?? string.Empty;
         }
 
         protected void Log(string? message, params object?[] args)

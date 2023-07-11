@@ -16,12 +16,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 {
     public class PersonImageProvider : BaseProvider, IRemoteImageProvider
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MovieImageProvider"/> class.
-        /// </summary>
-        /// <param name="httpClientFactory">Instance of the <see cref="IHttpClientFactory"/> interface.</param>
-        /// <param name="logger">Instance of the <see cref="ILogger{OddbImageProvider}"/> interface.</param>
-        /// <param name="doubanApi">Instance of <see cref="DoubanApi"/>.</param>
         public PersonImageProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
             : base(httpClientFactory, loggerFactory.CreateLogger<PersonImageProvider>(), libraryManager, httpContextAccessor, doubanApi, tmdbApi, omdbApi)
         {
@@ -54,7 +48,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         new RemoteImageInfo
                         {
                             ProviderName = celebrity.Name,
-                            Url = celebrity.Img,
+                            Url = this.GetProxyImageUrl(celebrity.Img),
                             Type = ImageType.Primary
                         }
                     };
@@ -63,33 +57,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             this.Log($"Got images failed because the images of \"{item.Name}\" is empty!");
             return new List<RemoteImageInfo>();
-        }
-
-        /// <summary>
-        /// Query for a background photo
-        /// </summary>
-        /// <param name="sid">a subject/movie id</param>
-        /// <param name="cancellationToken">Instance of the <see cref="CancellationToken"/> interface.</param>
-        private async Task<IEnumerable<RemoteImageInfo>> GetBackdrop(string sid, CancellationToken cancellationToken)
-        {
-            this.Log("GetBackdrop of sid: {0}", sid);
-            var photo = await this._doubanApi.GetWallpaperBySidAsync(sid, cancellationToken);
-            var list = new List<RemoteImageInfo>();
-
-            if (photo == null)
-            {
-                return list;
-            }
-
-            return photo.Where(x => x.Width > x.Height * 1.3).Select(x =>
-            {
-                return new RemoteImageInfo
-                {
-                    ProviderName = Name,
-                    Url = x.Large,
-                    Type = ImageType.Backdrop,
-                };
-            });
         }
 
     }
