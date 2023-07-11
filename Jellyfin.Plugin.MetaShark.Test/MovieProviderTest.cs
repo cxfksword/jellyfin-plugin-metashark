@@ -1,5 +1,6 @@
 using Jellyfin.Plugin.MetaShark.Api;
 using Jellyfin.Plugin.MetaShark.Core;
+using Jellyfin.Plugin.MetaShark.Model;
 using Jellyfin.Plugin.MetaShark.Providers;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
@@ -77,7 +78,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
         [TestMethod]
         public void TestGetMetadataByTMDB()
         {
-            var info = new MovieInfo() { Name = "人生大事", MetadataLanguage = "zh", ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), "945664" } } };
+            var info = new MovieInfo() { Name = "人生大事", MetadataLanguage = "zh", ProviderIds = new Dictionary<string, string> { { Plugin.ProviderId, MetaSource.Tmdb }, { MetadataProvider.Tmdb.ToString(), "945664" } } };
             var doubanApi = new DoubanApi(loggerFactory);
             var tmdbApi = new TmdbApi(loggerFactory);
             var omdbApi = new OmdbApi(loggerFactory);
