@@ -15,7 +15,7 @@ jobs:
           actions: "close-issues"
           token: ${{ secrets.GITHUB_TOKEN }}
           inactive-day: 30
-          exclude-labels: "enhancement,bug"
+          exclude-labels: "enhancement,bug,FAQ"
           close-reason: "not_planned"
           body: |
             This issue was closed due to inactive more than 30 days. You can reopen it if you think it should continue.
