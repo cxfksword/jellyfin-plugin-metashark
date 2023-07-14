@@ -8,7 +8,7 @@ using Jellyfin.Plugin.MetaShark.Core;
 using Jellyfin.Plugin.MetaShark.Model;
 using Jellyfin.Plugin.MetaShark.Providers;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+
 
 namespace Jellyfin.Plugin.MetaShark.Test
 {
