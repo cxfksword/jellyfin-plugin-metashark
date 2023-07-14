@@ -34,6 +34,10 @@ namespace Jellyfin.Plugin.MetaShark
             {
                 return new OmdbApi(ctx.GetRequiredService<ILoggerFactory>());
             });
+            serviceCollection.AddSingleton<ImdbApi>((ctx) =>
+            {
+                return new ImdbApi(ctx.GetRequiredService<ILoggerFactory>());
+            });
         }
     }
 }

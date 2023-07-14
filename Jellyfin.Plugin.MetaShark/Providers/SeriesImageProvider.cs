@@ -21,8 +21,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 {
     public class SeriesImageProvider : BaseProvider, IRemoteImageProvider
     {
-        public SeriesImageProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
-            : base(httpClientFactory, loggerFactory.CreateLogger<SeriesImageProvider>(), libraryManager, httpContextAccessor, doubanApi, tmdbApi, omdbApi)
+        public SeriesImageProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi, ImdbApi imdbApi)
+            : base(httpClientFactory, loggerFactory.CreateLogger<SeriesImageProvider>(), libraryManager, httpContextAccessor, doubanApi, tmdbApi, omdbApi, imdbApi)
         {
         }
 
@@ -57,7 +57,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 var res = new List<RemoteImageInfo> {
                     new RemoteImageInfo
                     {
-                        ProviderName = primary.Name,
+                        ProviderName = this.Name,
                         Url = this.GetProxyImageUrl(primary.ImgMiddle),
                         Type = ImageType.Primary,
                     },

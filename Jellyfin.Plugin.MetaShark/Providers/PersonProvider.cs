@@ -23,8 +23,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
     /// </summary>
     public class PersonProvider : BaseProvider, IRemoteMetadataProvider<Person, PersonLookupInfo>
     {
-        public PersonProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
-            : base(httpClientFactory, loggerFactory.CreateLogger<PersonProvider>(), libraryManager, httpContextAccessor, doubanApi, tmdbApi, omdbApi)
+        public PersonProvider(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi, ImdbApi imdbApi)
+            : base(httpClientFactory, loggerFactory.CreateLogger<PersonProvider>(), libraryManager, httpContextAccessor, doubanApi, tmdbApi, omdbApi, imdbApi)
         {
         }
 
@@ -89,6 +89,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     var item = new Person
                     {
                         // Name = c.Name.Trim(),  // 名称需保持和info.Name一致，不然会导致关联不到影片，自动被删除
+                        OriginalTitle = c.DisplayOriginalName,  // 外国人显示英文名
                         HomePageUrl = c.Site,
                         Overview = c.Intro,
                     };
@@ -109,6 +110,11 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     item.SetProviderId(DoubanProviderId, cid);
                     if (!string.IsNullOrEmpty(c.Imdb))
                     {
+                        var newImdbId = await this._imdbApi.CheckPersonNewIDAsync(c.Imdb, cancellationToken).ConfigureAwait(false);
+                        if (!string.IsNullOrEmpty(newImdbId))
+                        {
+                            c.Imdb = newImdbId;
+                        }
                         item.SetProviderId(MetadataProvider.Imdb, c.Imdb);
                         // 通过imdb获取TMDB id
                         var findResult = await this._tmdbApi.FindByExternalIdAsync(c.Imdb, FindExternalSource.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);

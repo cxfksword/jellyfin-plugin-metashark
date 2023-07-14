@@ -29,7 +29,6 @@ namespace Jellyfin.Plugin.MetaShark.Test
                 }));
 
 
-
         [TestMethod]
         public void TestGetMovieImage()
         {
@@ -39,16 +38,17 @@ namespace Jellyfin.Plugin.MetaShark.Test
                 PreferredMetadataLanguage = "zh",
                 ProviderIds = new Dictionary<string, string> { { BaseProvider.DoubanProviderId, "2043546" }, { MetadataProvider.Tmdb.ToString(), "38142" } }
             };
-            var doubanApi = new DoubanApi(loggerFactory);
-            var tmdbApi = new TmdbApi(loggerFactory);
-            var omdbApi = new OmdbApi(loggerFactory);
             var httpClientFactory = new DefaultHttpClientFactory();
             var libraryManagerStub = new Mock<ILibraryManager>();
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
+            var doubanApi = new DoubanApi(loggerFactory);
+            var tmdbApi = new TmdbApi(loggerFactory);
+            var omdbApi = new OmdbApi(loggerFactory);
+            var imdbApi = new ImdbApi(loggerFactory);
 
             Task.Run(async () =>
             {
-                var provider = new MovieImageProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
+                var provider = new MovieImageProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetImages(info, CancellationToken.None);
                 Assert.IsNotNull(result);
 
@@ -65,16 +65,17 @@ namespace Jellyfin.Plugin.MetaShark.Test
                 PreferredMetadataLanguage = "zh",
                 ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), "752" }, { Plugin.ProviderId, MetaSource.Tmdb } }
             };
-            var doubanApi = new DoubanApi(loggerFactory);
-            var tmdbApi = new TmdbApi(loggerFactory);
-            var omdbApi = new OmdbApi(loggerFactory);
             var httpClientFactory = new DefaultHttpClientFactory();
             var libraryManagerStub = new Mock<ILibraryManager>();
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
+            var doubanApi = new DoubanApi(loggerFactory);
+            var tmdbApi = new TmdbApi(loggerFactory);
+            var omdbApi = new OmdbApi(loggerFactory);
+            var imdbApi = new ImdbApi(loggerFactory);
 
             Task.Run(async () =>
             {
-                var provider = new MovieImageProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
+                var provider = new MovieImageProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetImages(info, CancellationToken.None);
                 Assert.IsNotNull(result);
 
@@ -86,16 +87,17 @@ namespace Jellyfin.Plugin.MetaShark.Test
         [TestMethod]
         public void TestGetImageResponse()
         {
-            var doubanApi = new DoubanApi(loggerFactory);
-            var tmdbApi = new TmdbApi(loggerFactory);
-            var omdbApi = new OmdbApi(loggerFactory);
             var httpClientFactory = new DefaultHttpClientFactory();
             var libraryManagerStub = new Mock<ILibraryManager>();
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
+            var doubanApi = new DoubanApi(loggerFactory);
+            var tmdbApi = new TmdbApi(loggerFactory);
+            var omdbApi = new OmdbApi(loggerFactory);
+            var imdbApi = new ImdbApi(loggerFactory);
 
             Task.Run(async () =>
             {
-                var provider = new MovieImageProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
+                var provider = new MovieImageProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetImageResponse("https://img1.doubanio.com/view/photo/m/public/p2893270877.jpg", CancellationToken.None);
                 Assert.IsNotNull(result);
 

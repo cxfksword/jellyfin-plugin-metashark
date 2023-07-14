@@ -44,6 +44,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         protected readonly DoubanApi _doubanApi;
         protected readonly TmdbApi _tmdbApi;
         protected readonly OmdbApi _omdbApi;
+        protected readonly ImdbApi _imdbApi;
         protected readonly ILibraryManager _libraryManager;
         protected readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -58,43 +59,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
         }
 
-        protected string RequestDomain
-        {
-            get
-            {
-                if (_httpContextAccessor.HttpContext != null)
-                {
-                    return _httpContextAccessor.HttpContext.Request.Scheme + System.Uri.SchemeDelimiter + _httpContextAccessor.HttpContext.Request.Host;
-                }
-                else
-                {
-                    return string.Empty;
-                }
-
-            }
-        }
-
-        protected string RequestPath
-        {
-            get
-            {
-                if (_httpContextAccessor.HttpContext != null)
-                {
-                    return _httpContextAccessor.HttpContext.Request.Path.ToString();
-                }
-                else
-                {
-                    return string.Empty;
-                }
-
-            }
-        }
-
-        protected BaseProvider(IHttpClientFactory httpClientFactory, ILogger logger, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi)
+        protected BaseProvider(IHttpClientFactory httpClientFactory, ILogger logger, ILibraryManager libraryManager, IHttpContextAccessor httpContextAccessor, DoubanApi doubanApi, TmdbApi tmdbApi, OmdbApi omdbApi, ImdbApi imdbApi)
         {
             this._doubanApi = doubanApi;
             this._tmdbApi = tmdbApi;
             this._omdbApi = omdbApi;
+            this._imdbApi = imdbApi;
             this._libraryManager = libraryManager;
             this._logger = logger;
             this._httpClientFactory = httpClientFactory;

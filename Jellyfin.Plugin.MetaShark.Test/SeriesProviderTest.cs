@@ -27,21 +27,21 @@ namespace Jellyfin.Plugin.MetaShark.Test
                 }));
 
 
-
         [TestMethod]
         public void TestGetMetadata()
         {
             var info = new SeriesInfo() { Name = "一年一度喜剧大赛" };
-            var doubanApi = new DoubanApi(loggerFactory);
-            var tmdbApi = new TmdbApi(loggerFactory);
-            var omdbApi = new OmdbApi(loggerFactory);
             var httpClientFactory = new DefaultHttpClientFactory();
             var libraryManagerStub = new Mock<ILibraryManager>();
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
+            var doubanApi = new DoubanApi(loggerFactory);
+            var tmdbApi = new TmdbApi(loggerFactory);
+            var omdbApi = new OmdbApi(loggerFactory);
+            var imdbApi = new ImdbApi(loggerFactory);
 
             Task.Run(async () =>
             {
-                var provider = new SeriesProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
+                var provider = new SeriesProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetMetadata(info, CancellationToken.None);
                 Assert.IsNotNull(result);
 
@@ -54,16 +54,17 @@ namespace Jellyfin.Plugin.MetaShark.Test
         public void TestGetAnimeMetadata()
         {
             var info = new SeriesInfo() { Name = "命运-冠位嘉年华" };
-            var doubanApi = new DoubanApi(loggerFactory);
-            var tmdbApi = new TmdbApi(loggerFactory);
-            var omdbApi = new OmdbApi(loggerFactory);
             var httpClientFactory = new DefaultHttpClientFactory();
             var libraryManagerStub = new Mock<ILibraryManager>();
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
+            var doubanApi = new DoubanApi(loggerFactory);
+            var tmdbApi = new TmdbApi(loggerFactory);
+            var omdbApi = new OmdbApi(loggerFactory);
+            var imdbApi = new ImdbApi(loggerFactory);
 
             Task.Run(async () =>
             {
-                var provider = new SeriesProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi);
+                var provider = new SeriesProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetMetadata(info, CancellationToken.None);
                 Assert.AreEqual(result.Item.Name, "命运/冠位指定嘉年华 公元2020奥林匹亚英灵限界大祭");
                 Assert.AreEqual(result.Item.OriginalTitle, "Fate/Grand Carnival");

@@ -1,3 +1,4 @@
+using System.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -147,7 +148,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
         [TestMethod]
         public void TestGetCelebritiesByCidAsync()
         {
-            var sid = "1340364";
+            var cid = "1340364";
 
             var api = new DoubanApi(loggerFactory);
 
@@ -155,7 +156,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
             {
                 try
                 {
-                    var result = await api.GetCelebrityAsync(sid, CancellationToken.None);
+                    var result = await api.GetCelebrityAsync(cid, CancellationToken.None);
                     TestContext.WriteLine(result.ToJson());
                 }
                 catch (Exception ex)
@@ -163,6 +164,54 @@ namespace Jellyfin.Plugin.MetaShark.Test
                     Console.WriteLine(ex.Message);
                 }
             }).GetAwaiter().GetResult();
+        }
+
+        [TestMethod]
+        public void TestGetCelebrityPhotosAsync()
+        {
+            var cid = "1322205";
+
+            var api = new DoubanApi(loggerFactory);
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    var result = await api.GetCelebrityPhotosAsync(cid, CancellationToken.None);
+                    TestContext.WriteLine(result.ToJson());
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }).GetAwaiter().GetResult();
+        }
+
+
+
+        [TestMethod]
+        public void TestParseCelebrityName()
+        {
+
+            var api = new DoubanApi(loggerFactory);
+
+
+            var name = "佩吉·陆 Peggy Lu";
+            var result = api.ParseCelebrityName(name);
+            Assert.AreEqual<string>(result, "佩吉·陆");
+
+            name = "Antony Coleman Antony Coleman";
+            result = api.ParseCelebrityName(name);
+            Assert.AreEqual<string>(result, "Antony Coleman");
+
+            name = "Dick Cook";
+            result = api.ParseCelebrityName(name);
+            Assert.AreEqual<string>(result, "Dick Cook");
+
+            name = "李凡秀";
+            result = api.ParseCelebrityName(name);
+            Assert.AreEqual<string>(result, "李凡秀");
+
         }
     }
 }

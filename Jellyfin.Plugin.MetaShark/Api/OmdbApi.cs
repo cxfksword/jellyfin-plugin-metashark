@@ -1,15 +1,9 @@
-﻿using Jellyfin.Extensions.Json;
-using Jellyfin.Plugin.MetaShark.Api.Http;
-using Jellyfin.Plugin.MetaShark.Model;
+﻿using Jellyfin.Plugin.MetaShark.Model;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -45,8 +39,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
             var cacheKey = $"GetByImdbID_{id}";
             var expiredOption = new MemoryCacheEntryOptions() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30) };
-            OmdbItem? item;
-            if (this._memoryCache.TryGetValue(cacheKey, out item))
+            if (this._memoryCache.TryGetValue<OmdbItem?>(cacheKey, out var item))
             {
                 return item;
             }

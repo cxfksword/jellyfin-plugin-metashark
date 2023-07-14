@@ -67,6 +67,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
         Regex regImgHost = new Regex(@"\/\/(img\d+?)\.", RegexOptions.Compiled);
         // 匹配除了换行符之外所有空白
         Regex regOverviewSpace = new Regex(@"\n[^\S\n]+", RegexOptions.Compiled);
+        Regex regPhotoId = new Regex(@"/photo/(\d+?)/", RegexOptions.Compiled);
 
         // 默认200毫秒请求1次
         private TimeLimiter _defaultTimeConstraint = TimeLimiter.GetFromMaxCountByInterval(1, TimeSpan.FromMilliseconds(200));
@@ -442,8 +443,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                     var celebrityImgStr = node.GetAttr("div.avatar", "style") ?? string.Empty;
                     var celebrityImg = celebrityImgStr.GetMatchGroup(this.regBackgroundImage);
                     var celebrityNameStr = node.GetText("div.info a.name") ?? string.Empty;
-                    var arr = celebrityNameStr.Split(" ");
-                    var celebrityName = arr.Length > 1 ? arr[0].Trim() : celebrityNameStr;
+                    var celebrityName = this.ParseCelebrityName(celebrityNameStr);
                     // 有时存在演员信息缺少名字的
                     if (string.IsNullOrEmpty(celebrityName))
                     {
@@ -502,8 +502,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
             {
                 var img = contentNode.GetAttr("#headline .nbg img", "src") ?? string.Empty;
                 var nameStr = contentNode.GetText("h1") ?? string.Empty;
-                var arr = nameStr.Split(" ");
-                var name = arr.Length > 1 ? arr[0] : nameStr;
+                var name = this.ParseCelebrityName(nameStr);
+                var englishName = nameStr.Replace(name, "").Trim();
 
                 var intro = contentNode.GetText("#intro span.all") ?? string.Empty;
                 if (string.IsNullOrEmpty(intro))
@@ -534,7 +534,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 celebrity.Gender = gender;
                 celebrity.Birthdate = birthdate;
                 celebrity.Enddate = enddate;
-                celebrity.Nickname = nickname;
+                celebrity.NickName = nickname;
+                celebrity.EnglishName = englishName;
                 celebrity.Imdb = imdb;
                 celebrity.Birthplace = birthplace;
                 celebrity.Name = name;
@@ -551,6 +552,106 @@ namespace Jellyfin.Plugin.MetaShark.Api
         }
 
 
+        public async Task<List<DoubanPhoto>> GetCelebrityPhotosAsync(string cid, CancellationToken cancellationToken)
+        {
+            var list = new List<DoubanPhoto>();
+            if (string.IsNullOrEmpty(cid))
+            {
+                return list;
+            }
+
+            var cacheKey = $"celebrity_photo_{cid}";
+            var expiredOption = new MemoryCacheEntryOptions() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30) };
+            if (_memoryCache.TryGetValue<List<DoubanPhoto>>(cacheKey, out var photos))
+            {
+                return photos;
+            }
+
+            await LimitRequestFrequently();
+
+            try
+            {
+                var url = $"https://movie.douban.com/celebrity/{cid}/photos/";
+                var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return list;
+                }
+
+                var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                var context = BrowsingContext.New();
+                var doc = await context.OpenAsync(req => req.Content(body), cancellationToken).ConfigureAwait(false);
+                var elements = doc.QuerySelectorAll(".poster-col3>li");
+
+                foreach (var node in elements)
+                {
+
+                    var href = node.QuerySelector("a")?.GetAttribute("href") ?? string.Empty;
+                    var id = href.GetMatchGroup(this.regPhotoId);
+                    var raw = node.QuerySelector("img")?.GetAttribute("src") ?? string.Empty;
+                    var size = node.GetText("div.prop") ?? string.Empty;
+
+                    var photo = new DoubanPhoto();
+                    photo.Id = id;
+                    photo.Size = size;
+                    photo.Raw = raw;
+                    if (!string.IsNullOrEmpty(size))
+                    {
+                        var arr = size.Split('x');
+                        if (arr.Length == 2)
+                        {
+                            photo.Width = arr[0].ToInt();
+                            photo.Height = arr[1].ToInt();
+                        }
+                    }
+
+                    list.Add(photo);
+                }
+
+                _memoryCache.Set<List<DoubanPhoto>>(cacheKey, list, expiredOption);
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "GetCelebrityPhotosAsync error. cid: {0}", cid);
+            }
+
+            return list;
+        }
+
+        public string ParseCelebrityName(string nameString)
+        {
+            if (string.IsNullOrEmpty(nameString))
+            {
+                return string.Empty;
+            }
+
+            // 只有中文名情况
+            var idx = nameString.IndexOf(" ", StringComparison.OrdinalIgnoreCase);
+            if (idx < 0)
+            {
+                return nameString.Trim();
+            }
+
+            // 中英名混合情况
+            var firstName = nameString.Substring(0, idx);
+            if (firstName.HasChinese())
+            {
+                return firstName.Trim();
+            }
+
+            // 英文名重复两次的情况
+            var nextIndex = nameString[idx..].IndexOf(firstName, StringComparison.OrdinalIgnoreCase);
+            if (nextIndex >= 0)
+            {
+                nextIndex = idx + nextIndex;
+                return nameString[..nextIndex].Trim();
+            }
+
+            // 只有英文名情况
+            return nameString.Trim();
+        }
+
+
         public async Task<List<DoubanCelebrity>> SearchCelebrityAsync(string keyword, CancellationToken cancellationToken)
         {
             var list = new List<DoubanCelebrity>();
@@ -561,8 +662,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
             var cacheKey = $"search_celebrity_{keyword}";
             var expiredOption = new MemoryCacheEntryOptions() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30) };
-            List<DoubanCelebrity> searchResult;
-            if (_memoryCache.TryGetValue<List<DoubanCelebrity>>(cacheKey, out searchResult))
+            if (_memoryCache.TryGetValue<List<DoubanCelebrity>>(cacheKey, out var searchResult))
             {
                 return searchResult;
             }
@@ -613,8 +713,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
             var cacheKey = $"photo_{sid}";
             var expiredOption = new MemoryCacheEntryOptions() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30) };
-            List<DoubanPhoto> photos;
-            if (_memoryCache.TryGetValue<List<DoubanPhoto>>(cacheKey, out photos))
+            if (_memoryCache.TryGetValue<List<DoubanPhoto>>(cacheKey, out var photos))
             {
                 return photos;
             }

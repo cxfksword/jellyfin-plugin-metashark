@@ -122,7 +122,8 @@ namespace Jellyfin.Plugin.MetaShark.Model
         public string Birthdate { get; set; }
         public string Enddate { get; set; }
         public string Birthplace { get; set; }
-        public string Nickname { get; set; }
+        public string NickName { get; set; }
+        public string EnglishName { get; set; }
         public string Imdb { get; set; }
         public string Site { get; set; }
 
@@ -141,6 +142,20 @@ namespace Jellyfin.Plugin.MetaShark.Model
             set
             {
                 _roleType = value;
+            }
+        }
+
+        public string? DisplayOriginalName
+        {
+            get
+            {
+                // 外国人才显示英文名
+                if (Name.Contains("·") && Birthplace != null && !Birthplace.Contains("中国"))
+                {
+                    return EnglishName;
+                }
+
+                return null;
             }
         }
     }
