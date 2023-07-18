@@ -471,7 +471,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
         protected string GetLocalProxyImageUrl(string url)
         {
-            var baseUrl = Plugin.Instance?.GetLocalApiBaseUrl("127.0.0.1");
+            var baseUrl = Plugin.Instance?.GetLocalApiBaseUrl();
             if (!string.IsNullOrEmpty(config.DoubanImageProxyBaseUrl))
             {
                 baseUrl = config.DoubanImageProxyBaseUrl.TrimEnd('/');
@@ -518,7 +518,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             // 自动扫描刷新时，直接使用本地地址
-            return Plugin.Instance?.GetLocalApiBaseUrl("127.0.0.1") ?? string.Empty;
+            return Plugin.Instance?.GetLocalApiBaseUrl() ?? string.Empty;
         }
 
         protected void Log(string? message, params object?[] args)

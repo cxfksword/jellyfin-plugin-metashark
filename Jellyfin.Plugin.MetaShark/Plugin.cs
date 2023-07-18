@@ -65,9 +65,9 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         };
     }
 
-    public string GetLocalApiBaseUrl(string hostname = "127.0.0.1")
+    public string GetLocalApiBaseUrl()
     {
-        return this._appHost.GetSmartApiUrl(hostname);
+        return this._appHost.GetLocalApiUrl("127.0.0.1", "http");
     }
 
     public string GetApiBaseUrl(HttpRequest request)
