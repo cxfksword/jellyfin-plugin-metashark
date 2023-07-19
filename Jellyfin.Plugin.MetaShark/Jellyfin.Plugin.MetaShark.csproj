@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Jellyfin.Plugin.MetaShark</RootNamespace>
@@ -6,6 +6,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
@@ -14,11 +15,15 @@
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Vendor\TMDbLib\**" />
+    <EmbeddedResource Remove="Vendor\TMDbLib\**" />
+    <None Remove="Vendor\TMDbLib\**" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="AngleSharp" Version="1.0.1" />
-    <PackageReference Include="ILRepack.Lib.MSBuild" Version="2.1.18" />
+    <PackageReference Include="ILRepack.Lib.MSBuild.Minor" Version="2.1.19-alpha.2" />
     <PackageReference Include="Jellyfin.Controller" Version="10.8.0" />
     <PackageReference Include="Jellyfin.Model" Version="10.8.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="RateLimiter" Version="2.2.0" />
     <PackageReference Include="TMDbLib" Version="2.0.0" />
   </ItemGroup>
@@ -32,6 +37,6 @@
     <EmbeddedResource Include="Configuration\configPage.html" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Vendor\TMDbLib\TMDbLib.csproj" />
+    <ProjectReference Include="..\AnitomySharp\AnitomySharp.csproj" />
   </ItemGroup>
 </Project>

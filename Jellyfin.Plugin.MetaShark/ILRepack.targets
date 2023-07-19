@@ -7,11 +7,11 @@
 
     <ItemGroup>
       <InputAssemblies Include="$(OutputPath)$(AssemblyName).dll" />
-      <InputAssemblies Include="$(OutputPath)publish/RateLimiter.dll" />
-      <InputAssemblies Include="$(OutputPath)publish/ComposableAsync.Core.dll" />
-      <InputAssemblies Include="$(OutputPath)publish/TMDbLib.dll" />
-      <InputAssemblies Include="$(OutputPath)publish/Newtonsoft.Json.dll" />
-      <InputAssemblies Include="$(OutputPath)publish/AngleSharp.dll" />
+      <InputAssemblies Include="$(OutputPath)RateLimiter.dll" />
+      <InputAssemblies Include="$(OutputPath)ComposableAsync.Core.dll" />
+      <InputAssemblies Include="$(OutputPath)TMDbLib.dll" />
+      <InputAssemblies Include="$(OutputPath)Newtonsoft.Json.dll" />
+      <InputAssemblies Include="$(OutputPath)AngleSharp.dll" />
     </ItemGroup>
 
     <ILRepack

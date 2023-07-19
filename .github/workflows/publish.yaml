@@ -33,9 +33,10 @@ jobs:
       - name: Install dependencies
         run: dotnet restore ${{ env.project }} --no-cache
       - name: Build
-        run: dotnet publish --nologo --no-restore --configuration=Release --framework=net6.0 --output=artifacts -p:Version=${{steps.vars.outputs.VERSION}} ${{ env.project }}
-      - name: Clean publish dll
-        run: cd artifacts && rm -rf MediaBrowser*.dll Microsoft*.dll Newtonsoft*.dll System*.dll Emby*.dll Jellyfin.Data*.dll Jellyfin.Extensions*.dll *.json *.pdb
+        run: |
+          dotnet publish --nologo --no-restore --configuration=Release --framework=net6.0 --output=tmp -p:Version=${{steps.vars.outputs.VERSION}} ${{ env.project }}
+          mkdir -p artifacts
+          cp ./tmp/Jellyfin.Plugin.MetaShark.dll ./artifacts/
       - name: Compress build files
         uses: thedoctor0/zip-release@main
         with:
