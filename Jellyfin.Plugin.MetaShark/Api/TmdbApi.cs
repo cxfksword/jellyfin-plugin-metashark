@@ -40,7 +40,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
             var apiKey = string.IsNullOrEmpty(config?.TmdbApiKey) ? DEFAULT_API_KEY : config.TmdbApiKey;
             var host = string.IsNullOrEmpty(config?.TmdbHost) ? DEFAULT_API_HOST : config.TmdbHost;
             _tmDbClient = new TMDbClient(apiKey, true, host);
-            _tmDbClient.RequestTimeout = TimeSpan.FromSeconds(10);
+            _tmDbClient.Timeout = TimeSpan.FromSeconds(10);
             // Not really interested in NotFoundException
             _tmDbClient.ThrowApiExceptions = false;
         }

@@ -1,15 +1,6 @@
-using System.Reflection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Jellyfin.Plugin.MetaShark.Api;
 using Jellyfin.Plugin.MetaShark.Core;
-using Jellyfin.Plugin.MetaShark.Model;
-using Jellyfin.Plugin.MetaShark.Providers;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace Jellyfin.Plugin.MetaShark.Test
 {

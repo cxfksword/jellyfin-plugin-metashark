@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="ILRepacker" AfterTargets="Build" Condition="'$(Configuration)'=='Release' or '$(Configuration)'=='Debug'">
+    <PropertyGroup>
+      <DoILRepack>false</DoILRepack>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <InputAssemblies Include="$(OutputPath)$(AssemblyName).dll" />
+      <InputAssemblies Include="$(OutputPath)RateLimiter.dll" />
+      <InputAssemblies Include="$(OutputPath)ComposableAsync.Core.dll" />
+      <InputAssemblies Include="$(OutputPath)TMDbLib.dll" />
+      <InputAssemblies Include="$(OutputPath)Newtonsoft.Json.dll" />
+      <InputAssemblies Include="$(OutputPath)AngleSharp.dll" />
+    </ItemGroup>
+
+    <ILRepack
+      Parallel="false"
+      Internalize="true"
+      DebugInfo="true"
+      InputAssemblies="@(InputAssemblies)"
+      LibraryPath="$(OutputPath)"
+      TargetKind="Dll"
+      OutputFile="$(OutputPath)$(AssemblyName).dll"
+    />
+  </Target>
+</Project>
