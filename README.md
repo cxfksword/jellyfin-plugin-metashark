@@ -52,7 +52,7 @@ dotnet publish Jellyfin.Plugin.MetaShark/Jellyfin.Plugin.MetaShark.csproj
 
 1. Build the plugin
 
-2. Create a folder, like `metashark` and copy  `./bin/Debug/net6.0/Jellyfin.Plugin.MetaShark.dll` into it
+2. Create a folder, like `metashark` and copy  `./Jellyfin.Plugin.MetaShark/bin/Debug/net6.0/Jellyfin.Plugin.MetaShark.dll` into it
 
 3. Move folder `metashark` to jellyfin `data/plugins` folder
 
