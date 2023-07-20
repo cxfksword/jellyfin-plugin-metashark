@@ -1,0 +1,44 @@
+name: "🚀 Beta"
+
+on:
+  workflow_dispatch:
+
+env:
+  dotnet-version: 6.0.x
+  python-version: 3.8
+  project: Jellyfin.Plugin.MetaShark/Jellyfin.Plugin.MetaShark.csproj
+  artifact: metashark
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build & Release
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get tags (For CHANGELOG)
+        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.dotnet-version }}
+      - name: Initialize workflow variables
+        id: vars
+        run: |
+          VERSION=$(echo "${GITHUB_REF#refs/*/}" | sed s/^v//)
+          VERSION="$VERSION.0"
+          echo ::set-output name=VERSION::${VERSION}
+          echo ::set-output name=APP_NAME::$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')
+      - name: Install dependencies
+        run: dotnet restore ${{ env.project }} --no-cache
+      - name: Build
+        run: |
+          dotnet publish --nologo --no-restore --configuration=Release --framework=net6.0 --output=tmp -p:Version=${{steps.vars.outputs.VERSION}} ${{ env.project }}
+          mkdir -p artifacts
+          cp ./tmp/Jellyfin.Plugin.MetaShark.dll ./artifacts/
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{steps.vars.outputs.APP_NAME}}
+          path: artifacts
+          retention-days: 7
