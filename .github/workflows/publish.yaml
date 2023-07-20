@@ -33,9 +33,9 @@ jobs:
       - name: Build
         run: |
           dotnet restore ${{ env.project }} --no-cache
-          dotnet publish --nologo --no-restore --configuration=Release --framework=net6.0 --output=tmp -p:Version=${{steps.vars.outputs.VERSION}} ${{ env.project }}
+          dotnet publish --nologo --no-restore --configuration=Release --framework=net6.0 -p:Version=${{steps.vars.outputs.VERSION}} ${{ env.project }}
           mkdir -p artifacts
-          cp ./tmp/Jellyfin.Plugin.MetaShark.dll ./artifacts/
+          cp ./Jellyfin.Plugin.MetaShark/bin/Release/net6.0/Jellyfin.Plugin.MetaShark.dll ./artifacts/
       - name: Compress build files
         uses: thedoctor0/zip-release@main
         with:

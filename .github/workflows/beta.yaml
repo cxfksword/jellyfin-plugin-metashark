@@ -34,7 +34,7 @@ jobs:
           dotnet restore ${{ env.project }} --no-cache
           dotnet publish --nologo --no-restore --configuration=Release --framework=net6.0 ${{ env.project }}
           mkdir -p artifacts
-          cp ./bin/Release/net6.0/Jellyfin.Plugin.MetaShark.dll ./artifacts/
+          cp ./Jellyfin.Plugin.MetaShark/bin/Release/net6.0/Jellyfin.Plugin.MetaShark.dll ./artifacts/
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
