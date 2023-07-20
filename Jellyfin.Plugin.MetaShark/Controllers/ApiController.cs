@@ -15,16 +15,16 @@ namespace Jellyfin.Plugin.MetaShark.Controllers
     [ApiController]
     [AllowAnonymous]
     [Route("/plugin/metashark")]
-    public class MetaSharkController : ControllerBase
+    public class ApiController : ControllerBase
     {
         private readonly DoubanApi _doubanApi;
         private readonly IHttpClientFactory _httpClientFactory;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MetaSharkController"/> class.
+        /// Initializes a new instance of the <see cref="ApiController"/> class.
         /// </summary>
         /// <param name="httpClientFactory">The <see cref="IHttpClientFactory"/>.</param>
-        public MetaSharkController(IHttpClientFactory httpClientFactory, DoubanApi doubanApi)
+        public ApiController(IHttpClientFactory httpClientFactory, DoubanApi doubanApi)
         {
             this._httpClientFactory = httpClientFactory;
             this._doubanApi = doubanApi;
