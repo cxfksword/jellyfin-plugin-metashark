@@ -33,7 +33,7 @@ jobs:
         run: dotnet restore ${{ env.project }} --no-cache
       - name: Build
         run: |
-          dotnet publish --nologo --no-restore --configuration=Release --framework=net6.0 --output=tmp -p:Version=${{steps.vars.outputs.VERSION}} ${{ env.project }}
+          dotnet publish --nologo --no-restore --configuration=Release --framework=net6.0 --output=tmp ${{ env.project }}
           mkdir -p artifacts
           cp ./tmp/Jellyfin.Plugin.MetaShark.dll ./artifacts/
       - name: Upload artifact
