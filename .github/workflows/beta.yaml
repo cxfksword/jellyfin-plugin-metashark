@@ -29,13 +29,12 @@ jobs:
           VERSION="$VERSION.0"
           echo ::set-output name=VERSION::${VERSION}
           echo ::set-output name=APP_NAME::$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')
-      - name: Install dependencies
-        run: dotnet restore ${{ env.project }} --no-cache
       - name: Build
         run: |
-          dotnet publish --nologo --no-restore --configuration=Release --framework=net6.0 --output=tmp ${{ env.project }}
+          dotnet restore ${{ env.project }} --no-cache
+          dotnet publish --nologo --no-restore --configuration=Release --framework=net6.0 ${{ env.project }}
           mkdir -p artifacts
-          cp ./tmp/Jellyfin.Plugin.MetaShark.dll ./artifacts/
+          cp ./bin/Release/net6.0/Jellyfin.Plugin.MetaShark.dll ./artifacts/
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
