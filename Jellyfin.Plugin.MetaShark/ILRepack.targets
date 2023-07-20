@@ -12,6 +12,7 @@
       <InputAssemblies Include="$(OutputPath)TMDbLib.dll" />
       <InputAssemblies Include="$(OutputPath)Newtonsoft.Json.dll" />
       <InputAssemblies Include="$(OutputPath)AngleSharp.dll" />
+      <InputAssemblies Include="$(OutputPath)AnitomySharp.dll" />
     </ItemGroup>
 
     <ILRepack
