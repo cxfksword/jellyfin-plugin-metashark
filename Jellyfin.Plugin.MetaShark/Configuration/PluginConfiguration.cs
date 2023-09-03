@@ -32,26 +32,17 @@ public class PluginConfiguration : BasePluginConfiguration
 
     public bool EnableTmdbSearch { get; set; } = false;
 
-    public bool EnableTmdbBackdrop { get; set; } = false;
+    public bool EnableTmdbBackdrop { get; set; } = true;
     /// <summary>
     /// 是否获取电影系列信息
     /// </summary>
-    public bool EnableTmdbCollection { get; set; } = false;
+    public bool EnableTmdbCollection { get; set; } = true;
     /// <summary>
     /// 是否获取tmdb分级信息
     /// </summary>
-    public bool EnableTmdbOfficialRating { get; set; } = false;
+    public bool EnableTmdbOfficialRating { get; set; } = true;
 
     public string TmdbApiKey { get; set; } = string.Empty;
 
     public string TmdbHost { get; set; } = string.Empty;
-
-
-
-    public int MaxCastMembers { get; set; } = 15;
-
-    public int MaxSearchResult { get; set; } = 5;
-
-
-
 }
