@@ -84,7 +84,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
                         result.Item = movie;
                         result.HasMetadata = true;
-                        subject.LimitDirectorCelebrities.Take(this.config.MaxCastMembers).ToList().ForEach(c => result.AddPerson(new PersonInfo
+                        subject.LimitDirectorCelebrities.Take(Configuration.PluginConfiguration.MAX_CAST_MEMBERS).ToList().ForEach(c => result.AddPerson(new PersonInfo
                         {
                             Name = c.Name,
                             Type = c.RoleType,

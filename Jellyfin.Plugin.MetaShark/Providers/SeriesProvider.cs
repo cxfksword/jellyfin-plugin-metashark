@@ -151,7 +151,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 result.Item = item;
                 result.QueriedById = true;
                 result.HasMetadata = true;
-                subject.LimitDirectorCelebrities.Take(this.config.MaxCastMembers).ToList().ForEach(c => result.AddPerson(new PersonInfo
+                subject.LimitDirectorCelebrities.Take(Configuration.PluginConfiguration.MAX_CAST_MEMBERS).ToList().ForEach(c => result.AddPerson(new PersonInfo
                 {
                     Name = c.Name,
                     Type = c.RoleType,
@@ -348,7 +348,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 演员
             if (seriesResult.Credits?.Cast != null)
             {
-                foreach (var actor in seriesResult.Credits.Cast.OrderBy(a => a.Order).Take(this.config.MaxCastMembers))
+                foreach (var actor in seriesResult.Credits.Cast.OrderBy(a => a.Order).Take(Configuration.PluginConfiguration.MAX_CAST_MEMBERS))
                 {
                     var personInfo = new PersonInfo
                     {
