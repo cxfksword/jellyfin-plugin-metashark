@@ -13,7 +13,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MediaBrowser.Controller.Persistence;
 using System.Net.Http;
-using System.Net;
 
 namespace Jellyfin.Plugin.MetaShark
 {
@@ -39,22 +38,6 @@ namespace Jellyfin.Plugin.MetaShark
             {
                 return new ImdbApi(ctx.GetRequiredService<ILoggerFactory>());
             });
-
-            // douban httpclient 忽略 ssl 证书校验
-            serviceCollection.AddHttpClient("douban", client =>
-            {
-                client.DefaultRequestHeaders.Add("User-Agent", DoubanApi.HTTP_USER_AGENT);
-                client.DefaultRequestHeaders.Add("Referer", DoubanApi.HTTP_REFERER);
-            }).ConfigurePrimaryHttpMessageHandler(() =>
-            {
-                var handler = new HttpClientHandler
-                {
-                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-                    ServerCertificateCustomValidationCallback = (message, certificate2, arg3, arg4) => true
-                };
-                return handler;
-            });
-
         }
     }
 }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MediaBrowser.Common.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MediaBrowser.Common.Net;
 using Jellyfin.Plugin.MetaShark.Api;
 using Jellyfin.Plugin.MetaShark.Model;
 
@@ -44,9 +45,12 @@ namespace Jellyfin.Plugin.MetaShark.Controllers
             }
 
             HttpResponseMessage response;
-            var httpClient = this._httpClientFactory.CreateClient("douban");
+            var httpClient = GetHttpClient();
             using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, url))
             {
+                requestMessage.Headers.Add("User-Agent", DoubanApi.HTTP_USER_AGENT);
+                requestMessage.Headers.Add("Referer", DoubanApi.HTTP_REFERER);
+
                 response = await httpClient.SendAsync(requestMessage);
             }
             var stream = await response.Content.ReadAsStreamAsync();
@@ -75,6 +79,12 @@ namespace Jellyfin.Plugin.MetaShark.Controllers
         {
             var isLogin = await _doubanApi.CheckLoginAsync(CancellationToken.None);
             return new ApiResult(isLogin ? 1 : 0, isLogin ? "logined" : "not login");
+        }
+
+        private HttpClient GetHttpClient()
+        {
+            var client = _httpClientFactory.CreateClient(NamedClient.Default);
+            return client;
         }
     }
 }
