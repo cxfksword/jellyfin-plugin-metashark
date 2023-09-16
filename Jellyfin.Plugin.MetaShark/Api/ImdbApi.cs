@@ -29,7 +29,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 AllowAutoRedirect = false
             };
             httpClient = new HttpClient(handler);
-            httpClient.Timeout = TimeSpan.FromSeconds(5);
+            httpClient.Timeout = TimeSpan.FromSeconds(10);
         }
 
         /// <summary>

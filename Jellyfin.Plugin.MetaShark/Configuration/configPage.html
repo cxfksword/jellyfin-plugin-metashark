@@ -119,6 +119,29 @@
                             <div class="fieldDescription">
                                 填写Api域名，可选api.tmdb.org/api.themoviedb.org，默认api.tmdb.org.(需重启才能生效)</div>
                         </div>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="TmdbProxyType">Api代理服务器：</label>
+                            <select is="emby-select" id="TmdbProxyType" name="TmdbProxyType"
+                                class="TmdbProxyType emby-select-withcolor emby-select">
+                                <option value="">禁用</option>
+                                <option value="http">HTTP</option>
+                                <option value="https">HTTPS</option>
+                                <option value="socks5">Socks5</option>
+                            </select>
+                            <div class="fieldDescription">
+                                选择Api代理服务器方式.(需重启才能生效)</div>
+                        </div>
+                        <div class="inputContainer tmdb-proxy-wapper">
+                            <label class="inputLabel inputLabel-float inputLabelUnfocused"
+                                for="TmdbProxyHost">Api代理服务器Host:</label>
+                            <input is="emby-input" id="TmdbProxyHost" name="TmdbProxyHost" class="emby-input">
+                        </div>
+                        <div class="inputContainer tmdb-proxy-wapper">
+                            <label class="inputLabel inputLabel-float inputLabelUnfocused"
+                                for="TmdbProxyPort">Api代理服务器端口:</label>
+                            <input is="emby-input" type="number" id="TmdbProxyPort" name="TmdbProxyPort"
+                                pattern="[0-9]*" min="1" max="65535" class="emby-input">
+                        </div>
                     </fieldset>
                     <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                         <span>Save</span>
@@ -134,6 +157,7 @@
 
             document.querySelector('#TemplateConfigPage')
                 .addEventListener('pageshow', function () {
+                    console.log('metashark pageshow');
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
                         $('#current_version').text("v" + config.Version);
@@ -151,6 +175,11 @@
                         document.querySelector('#TmdbApiKey').value = config.TmdbApiKey;
                         document.querySelector('#TmdbHost').value = config.TmdbHost;
 
+                        document.querySelector('#TmdbProxyType').value = config.TmdbProxyType;
+                        document.querySelector('#TmdbProxyHost').value = config.TmdbProxyHost;
+                        document.querySelector('#TmdbProxyPort').value = config.TmdbProxyPort;
+
+                        changeProxyDisplay();
                         checkDoubanLogin();
 
                         Dashboard.hideLoadingMsg();
@@ -173,6 +202,9 @@
                         config.EnableTmdbOfficialRating = document.querySelector('#EnableTmdbOfficialRating').checked;
                         config.TmdbApiKey = document.querySelector('#TmdbApiKey').value;
                         config.TmdbHost = document.querySelector('#TmdbHost').value;
+                        config.TmdbProxyType = document.querySelector('#TmdbProxyType').value;
+                        config.TmdbProxyHost = document.querySelector('#TmdbProxyHost').value;
+                        config.TmdbProxyPort = document.querySelector('#TmdbProxyPort').value;
                         ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
 
@@ -183,6 +215,20 @@
                     e.preventDefault();
                     return false;
                 });
+
+            document.querySelector('#TmdbProxyType')
+                .addEventListener('change', function (e) {
+                    changeProxyDisplay();
+                });
+
+            function changeProxyDisplay() {
+                let proxyType = document.querySelector('#TmdbProxyType').value;
+                if (proxyType) {
+                    $('.tmdb-proxy-wapper').show()
+                } else {
+                    $('.tmdb-proxy-wapper').hide()
+                }
+            }
 
             function checkDoubanLogin() {
                 let cookie = document.querySelector('#DoubanCookies').value
