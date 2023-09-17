@@ -21,7 +21,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="1.0.1" />
-    <PackageReference Include="ILRepack.Lib.MSBuild.Minor" Version="2.1.19-alpha.2" />
     <PackageReference Include="Jellyfin.Controller" Version="10.8.0" />
     <PackageReference Include="Jellyfin.Model" Version="10.8.0" />
     <PackageReference Include="RateLimiter" Version="2.2.0" />
