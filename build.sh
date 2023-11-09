@@ -38,6 +38,6 @@ sed -i "s@/${ARTIFACT}/@/$TAG/@" "$JELLYFIN_MANIFEST"
 
 # 国内加速
 cp -f "$JELLYFIN_MANIFEST" "$JELLYFIN_MANIFEST_CN"
-sed -i "s@github.com@ghproxy.com/https://github.com@g" "$JELLYFIN_MANIFEST_CN"
+sed -i "s@github.com@gh-proxy.com/https://github.com@g" "$JELLYFIN_MANIFEST_CN"
 
 exit $?
