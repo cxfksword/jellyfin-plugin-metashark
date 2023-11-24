@@ -3,6 +3,7 @@
   <Target Name="ILRepacker" AfterTargets="Build" Condition="'$(Configuration)'=='Release' or '$(Configuration)'=='Debug'">
     <PropertyGroup>
       <DoILRepack>false</DoILRepack>
+      <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
     </PropertyGroup>
 
     <ItemGroup>
