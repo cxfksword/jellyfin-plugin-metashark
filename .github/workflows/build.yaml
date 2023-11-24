@@ -17,6 +17,6 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build --no-restore --framework=net6.0
       # - name: Test
       #   run: dotnet test --no-restore --verbosity normal
