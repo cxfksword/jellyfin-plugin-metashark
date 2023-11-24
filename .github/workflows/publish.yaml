@@ -12,7 +12,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: Build & Release
 
     steps:
@@ -21,8 +21,12 @@ jobs:
         run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
       - name: Setup dotnet
         uses: actions/setup-dotnet@v3
+        id: dotnet
         with:
           dotnet-version: ${{ env.dotnet-version }}
+      - name: Change default dotnet version
+        run: |
+          echo '{"sdk":{"version": "${{ steps.dotnet.outputs.dotnet-version }}"}}' > ./global.json
       - name: Setup python
         uses: actions/setup-python@v2
         with:

@@ -15,11 +15,9 @@ jobs:
         id: dotnet
         with:
           dotnet-version: 6.0.x
-      - name: force dotnet version
+      - name: Change default dotnet version
         run: |
           echo '{"sdk":{"version": "${{ steps.dotnet.outputs.dotnet-version }}"}}' > ./global.json
-      - name: print
-        run: dotnet --list-sdks && dotnet --info
       - name: Install dependencies
         run: dotnet restore
       - name: Build
