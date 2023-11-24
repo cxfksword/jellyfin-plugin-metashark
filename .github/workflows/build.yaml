@@ -12,8 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-dotnet@v3
+        id: dotnet
         with:
           dotnet-version: 6.0.x
+      - name: force dotnet version
+        run: echo '{"sdk":{"version": "${{ steps.dotnet.outputs.dotnet-version }}"}}' > ./global.json
       - name: print
         run: dotnet --list-sdks && dotnet --info
       - name: Install dependencies
