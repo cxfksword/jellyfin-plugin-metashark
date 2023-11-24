@@ -28,9 +28,9 @@ jobs:
         run: |
           echo '{"sdk":{"version": "${{ steps.dotnet.outputs.dotnet-version }}"}}' > ./global.json
       - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: ${{ env.python-version }}
+          python-version: "${{ env.python-version }}"
       - name: Initialize workflow variables
         id: vars
         run: |
