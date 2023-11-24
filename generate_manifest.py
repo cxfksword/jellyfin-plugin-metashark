@@ -46,7 +46,7 @@ def main():
 
     # 解析旧 manifest
     try:
-        with urlopen('https://github.com/cxfksword/jellyfin-plugin-metashark/releases/download/manifest/maniest.json') as f:
+        with urlopen('https://raw.githubusercontent.com/cxfksword/jellyfin-release/master/metashark/manifest.json') as f:
             manifest = json.load(f)
     except HTTPError as err:
         if err.code == 404:
@@ -63,7 +63,8 @@ def main():
     # 国内加速
     with open('manifest_cn.json', 'w') as f:
         manifest_cn = json.dumps(manifest, indent=2)
-        manifest_cn = re.sub("github.com", "gh-proxy.com/https://github.com", manifest_cn)
+        manifest_cn = re.sub('https://github.com/cxfksword/jellyfin-plugin-metashark/raw/main/doc/logo.png', "https://jellyfin-plugin-release.pages.dev/metashark/logo.png", manifest_cn)
+        manifest_cn = re.sub('https://github.com/cxfksword/jellyfin-plugin-metashark/releases/download/v[0-9.]+', "https://jellyfin-plugin-release.pages.dev/metashark", manifest_cn)
         f.write(manifest_cn)
 
 

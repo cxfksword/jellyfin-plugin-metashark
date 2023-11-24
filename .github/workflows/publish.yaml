@@ -43,14 +43,7 @@ jobs:
           dotnet restore ${{ env.project }} --no-cache
           dotnet publish --nologo --no-restore --configuration=Release --framework=net6.0 -p:Version=${{steps.vars.outputs.VERSION}} ${{ env.project }}
           mkdir -p artifacts
-          cp ./Jellyfin.Plugin.MetaShark/bin/Release/net6.0/Jellyfin.Plugin.MetaShark.dll ./artifacts/
-      - name: Compress build files
-        uses: thedoctor0/zip-release@main
-        with:
-          type: "zip"
-          directory: "artifacts"
-          filename: "${{ env.artifact }}_${{steps.vars.outputs.VERSION}}.zip"
-          exclusions: "*.json *.pdb"
+          zip -j ./artifacts/${{ env.artifact }}_${{steps.vars.outputs.VERSION}}.zip ./Jellyfin.Plugin.MetaShark/bin/Release/net6.0/Jellyfin.Plugin.MetaShark.dll
       - name: Generate manifest
         run: cd artifacts && python3 ../generate_manifest.py ${{ env.artifact }}_${{steps.vars.outputs.VERSION}}.zip ${GITHUB_REF#refs/*/}
       - name: Deploy to jellyfin release repo
@@ -61,13 +54,13 @@ jobs:
           destination_dir: ${{ env.artifact }}
           publish_branch: master
           publish_dir: ./artifacts
-      - name: Publish release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./artifacts/${{ env.artifact }}_*.zip
-          tag: ${{ github.ref }}
-          file_glob: true
+      # - name: Publish release
+      #   uses: svenstaro/upload-release-action@v2
+      #   with:
+      #     repo_token: ${{ secrets.GITHUB_TOKEN }}
+      #     file: ./artifacts/${{ env.artifact }}_*.zip
+      #     tag: ${{ github.ref }}
+      #     file_glob: true
       # - name: Publish manifest
       #   uses: svenstaro/upload-release-action@v2
       #   with:
