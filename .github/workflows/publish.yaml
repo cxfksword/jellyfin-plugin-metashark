@@ -56,7 +56,7 @@ jobs:
       - name: Deploy to jellyfin release repo
         uses: peaceiris/actions-gh-pages@v3
         with:
-          deploy_key: ${{ secrets.PAT }}
+          personal_token: ${{ secrets.PAT }}
           external_repository: cxfksword/jellyfin-release
           destination_dir: ${{ env.artifact }}
           publish_branch: master
