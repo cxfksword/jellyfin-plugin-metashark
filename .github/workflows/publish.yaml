@@ -6,7 +6,7 @@ on:
 
 env:
   dotnet-version: 6.0.x
-  python-version: 3.8
+  python-version: 3.10
   project: Jellyfin.Plugin.MetaShark/Jellyfin.Plugin.MetaShark.csproj
   artifact: metashark
 
@@ -23,6 +23,10 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ env.dotnet-version }}
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
       - name: Initialize workflow variables
         id: vars
         run: |
@@ -41,28 +45,30 @@ jobs:
         with:
           type: "zip"
           directory: "artifacts"
-          filename: "artifacts.zip"
+          filename: "${{ env.artifact }}_${{steps.vars.outputs.VERSION}}.zip"
           exclusions: "*.json *.pdb"
-      - name: Setup python
-        uses: actions/setup-python@v2
+      - name: Generate manifest
+        run: cd artifacts && python3 ../generate_manifest.py ${{ env.artifact }}_${{steps.vars.outputs.VERSION}}.zip ${GITHUB_REF#refs/*/}
+      - name: Deploy to jellyfin release repo
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          python-version: ${{ env.python-version }}
-      - name: Install JPRM
-        run: python -m pip install jprm
-      - name: Run JPRM
-        run: chmod +x ./build.sh && ./build.sh ${{ env.artifact }} ${{steps.vars.outputs.VERSION}} ${GITHUB_REF#refs/*/}
+          deploy_key: ${{ secrets.PAT }}
+          external_repository: cxfksword/jellyfin-release
+          destination_dir: ${{ env.artifact }}
+          publish_branch: master
+          publish_dir: ./artifacts
       - name: Publish release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./${{ env.artifact }}/${{ env.artifact }}_*.zip
+          file: ./artifacts/${{ env.artifact }}_*.zip
           tag: ${{ github.ref }}
           file_glob: true
-      - name: Publish manifest
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./manifest*.json
-          tag: "manifest"
-          overwrite: true
-          file_glob: true
+      # - name: Publish manifest
+      #   uses: svenstaro/upload-release-action@v2
+      #   with:
+      #     repo_token: ${{ secrets.GITHUB_TOKEN }}
+      #     file: ./artifacts/manifest*.json
+      #     tag: "manifest"
+      #     overwrite: true
+      #     file_glob: true
