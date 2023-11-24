@@ -8,14 +8,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 6.0.x
       - name: print
-        run: dotnet --info
+        run: dotnet --list-sdks && dotnet --info
       - name: Install dependencies
         run: dotnet restore
       - name: Build
