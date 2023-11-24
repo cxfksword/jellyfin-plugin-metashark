@@ -5,7 +5,7 @@ on:
 
 env:
   dotnet-version: 6.0.x
-  python-version: 3.8
+  python-version: 3.9
   project: Jellyfin.Plugin.MetaShark/Jellyfin.Plugin.MetaShark.csproj
   artifact: metashark
 
