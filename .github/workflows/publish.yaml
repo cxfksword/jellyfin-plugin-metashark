@@ -46,7 +46,7 @@ jobs:
           zip -j ./artifacts/${{ env.artifact }}_${{steps.vars.outputs.VERSION}}.zip ./Jellyfin.Plugin.MetaShark/bin/Release/net6.0/Jellyfin.Plugin.MetaShark.dll
           cp ./doc/logo.png ./artifacts/logo.png
       - name: Generate manifest
-        run: cd artifacts && python3 ../generate_manifest.py ${{ env.artifact }}_${{steps.vars.outputs.VERSION}}.zip ${GITHUB_REF#refs/*/}
+        run: cd artifacts && python3 ../scripts/generate_manifest.py ${{ env.artifact }}_${{steps.vars.outputs.VERSION}}.zip ${GITHUB_REF#refs/*/}
       - name: Deploy to jellyfin release repo
         uses: peaceiris/actions-gh-pages@v3
         with:
