@@ -5,6 +5,5 @@ obj/
 artifacts
 **/.DS_Store
 metashark/
-manifest_cn.json
-manifest.json
+*.json
 .vscode

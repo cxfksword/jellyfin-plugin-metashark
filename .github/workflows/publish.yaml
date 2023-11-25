@@ -55,13 +55,13 @@ jobs:
           destination_dir: ${{ env.artifact }}
           publish_branch: master
           publish_dir: ./artifacts
-      # - name: Publish release
-      #   uses: svenstaro/upload-release-action@v2
-      #   with:
-      #     repo_token: ${{ secrets.GITHUB_TOKEN }}
-      #     file: ./artifacts/${{ env.artifact }}_*.zip
-      #     tag: ${{ github.ref }}
-      #     file_glob: true
+      - name: Publish release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./artifacts/${{ env.artifact }}_*.zip
+          tag: ${{ github.ref }}
+          file_glob: true
       # - name: Publish manifest
       #   uses: svenstaro/upload-release-action@v2
       #   with:
