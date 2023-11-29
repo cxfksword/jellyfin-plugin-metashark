@@ -230,6 +230,10 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     return tmdbId;
                 }
+                else
+                {
+                    this.Log($"Can not found tmdb [id] by name: \"{name}\" and year: \"{year}\"");
+                }
             }
 
             return null;

@@ -185,6 +185,12 @@ namespace Jellyfin.Plugin.MetaShark.Api
             foreach (var movieElement in movieElements)
             {
 
+                var ratingStr = movieElement.GetText("div.rating-info") ?? string.Empty;
+                if (ratingStr.Contains("尚未播出"))
+                {
+                    continue;
+                }
+
                 var rating = movieElement.GetText("div.rating-info>.rating_nums") ?? "0";
                 var img = movieElement.GetAttr("a.nbg>img", "src") ?? string.Empty;
                 var oncick = movieElement.GetAttr("div.title a", "onclick") ?? string.Empty;
