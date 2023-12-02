@@ -32,7 +32,7 @@ jobs:
           VERSION=$(echo "${GITHUB_REF#refs/*/}" | sed s/^v//)
           VERSION="$VERSION.0"
           echo ::set-output name=VERSION::${VERSION}
-          echo ::set-output name=APP_NAME::$(echo '${{ env.artifact }}_${{VERSION}}')
+          echo ::set-output name=APP_NAME::$(echo '${{ env.artifact }}_${VERSION}')
       - name: Build
         run: |
           dotnet restore ${{ env.project }}/${{ env.project }}.csproj --no-cache
