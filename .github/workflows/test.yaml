@@ -29,7 +29,7 @@ jobs:
       - name: Initialize workflow variables
         id: vars
         run: |
-          VERSION=$(echo "${GITHUB_REF#refs/*/}" | sed s/^v//)
+          VERSION=$(echo "v1.7.3" | sed s/^v//)
           VERSION="$VERSION.0"
           echo ::set-output name=VERSION::${VERSION}
           echo ::set-output name=APP_NAME::$(echo '${{ env.artifact }}_${VERSION}')
@@ -41,7 +41,7 @@ jobs:
           zip -j ./artifacts/${{steps.vars.outputs.APP_NAME}}.zip ./${{ env.project }}/bin/Release/net6.0/${{ env.project }}.dll
           cp ./doc/logo.png ./artifacts/logo.png
       - name: Generate manifest
-        run: cd artifacts && python3 ../scripts/generate_manifest.py ${{steps.vars.outputs.APP_NAME}}.zip ${GITHUB_REF#refs/*/}
+        run: cd artifacts && python3 ../scripts/generate_manifest.py ${{steps.vars.outputs.APP_NAME}}.zip v1.7.3
       - name: Deploy to jellyfin release repo
         uses: peaceiris/actions-gh-pages@v3
         with:
