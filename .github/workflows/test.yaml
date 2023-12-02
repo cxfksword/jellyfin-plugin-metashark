@@ -38,10 +38,10 @@ jobs:
           dotnet restore ${{ env.project }}/${{ env.project }}.csproj --no-cache
           dotnet publish --nologo --no-restore --configuration=Release --framework=net6.0 -p:Version=${{steps.vars.outputs.VERSION}} ${{ env.project }}
           mkdir -p artifacts
-          zip -j ./artifacts/${{APP_NAME}}.zip ./${{ env.project }}/bin/Release/net6.0/${{ env.project }}.dll
+          zip -j ./artifacts/${{steps.vars.outputs.APP_NAME}}.zip ./${{ env.project }}/bin/Release/net6.0/${{ env.project }}.dll
           cp ./doc/logo.png ./artifacts/logo.png
       - name: Generate manifest
-        run: cd artifacts && python3 ../scripts/generate_manifest.py ${{APP_NAME}}.zip ${GITHUB_REF#refs/*/}
+        run: cd artifacts && python3 ../scripts/generate_manifest.py ${{steps.vars.outputs.APP_NAME}}.zip ${GITHUB_REF#refs/*/}
       - name: Deploy to jellyfin release repo
         uses: peaceiris/actions-gh-pages@v3
         with:
