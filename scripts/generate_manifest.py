@@ -56,7 +56,7 @@ def main():
             raise
 
     # 追加新版本/覆盖旧版本
-    manifest[0]['versions'] = list(filter(lambda x: x['version'] != version, manifest[0]['versions']))
+    manifest[0]['versions'] = list(filter(lambda x: x['version'] != f"{version}.0", manifest[0]['versions']))
     manifest[0]['versions'].insert(0, generate_version(filepath, version, changelog))
 
     with open('manifest.json', 'w') as f:
