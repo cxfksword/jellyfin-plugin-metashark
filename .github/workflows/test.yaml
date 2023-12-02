@@ -1,7 +1,7 @@
 name: "Test"
 
 on:
-  workflow_dispatch:
+  push:
 
 env:
   dotnet-version: 6.0.x
