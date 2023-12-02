@@ -36,8 +36,8 @@ jobs:
         run: |
           VERSION=$(echo "${GITHUB_REF#refs/*/}" | sed s/^v//)
           VERSION="$VERSION.0"
-          echo ::set-output name=VERSION::${VERSION}
-          echo ::set-output name=APP_NAME::$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "APP_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_OUTPUT
       - name: Build
         run: |
           dotnet restore ${{ env.project }} --no-cache
@@ -55,6 +55,7 @@ jobs:
           destination_dir: ${{ env.artifact }}
           publish_branch: master
           publish_dir: ./artifacts
+          keep_files: true
       - name: Publish release
         uses: svenstaro/upload-release-action@v2
         with:
