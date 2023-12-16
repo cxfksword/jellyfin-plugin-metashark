@@ -22,7 +22,7 @@ jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TheMov
 
 国外访问：https://github.com/cxfksword/jellyfin-plugin-metashark/releases/download/manifest/manifest.json
 
-> 如果无法访问，可以直接从 [Release](https://github.com/cxfksword/jellyfin-plugin-metashark/releases) 页面下载，并解压到 jellyfin 插件中目录使用
+> 如果无法访问，可以直接从 [Release](https://github.com/cxfksword/jellyfin-plugin-metashark/releases) 页面下载，并解压到 jellyfin 插件目录中使用
 
 ## 如何使用
 
