@@ -64,7 +64,7 @@ def main():
 
     # # 国内加速
     cn_domain = 'https://mirror.ghproxy.com/'
-    if 'CN_DOMAIN' in os.environ:
+    if 'CN_DOMAIN' in os.environ and os.environ["CN_DOMAIN"]:
         cn_domain = os.environ["CN_DOMAIN"]
     cn_domain = cn_domain.rstrip('/')
     with open('manifest_cn.json', 'w') as f:
