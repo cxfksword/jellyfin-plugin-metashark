@@ -18,7 +18,7 @@ def generate_manifest():
         "overview": "jellyfin电影元数据插件",
         "owner": "cxfksword",
         "category": "Metadata",
-        "imageUrl": "https://jellyfin-plugin-release.pages.dev/metashark/logo.png",
+        "imageUrl": "https://github.com/cxfksword/jellyfin-plugin-metashark/raw/main/doc/logo.png",
         "versions": []
     }]
 
@@ -27,7 +27,7 @@ def generate_version(filepath, version, changelog):
         'version': f"{version}.0",
         'changelog': changelog,
         'targetAbi': '10.8.0.0',
-        'sourceUrl': f'https://jellyfin-plugin-release.pages.dev/metashark/metashark_{version}.0.zip',
+        'sourceUrl': f'https://github.com/cxfksword/jellyfin-plugin-metashark/releases/download/v{version}/metashark_{version}.0.zip',
         'checksum': md5sum(filepath),
         'timestamp': datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
     }
@@ -47,7 +47,7 @@ def main():
 
     # 解析旧 manifest
     try:
-        with urlopen('https://raw.githubusercontent.com/cxfksword/jellyfin-release/master/metashark/manifest.json') as f:
+        with urlopen('https://github.com/cxfksword/jellyfin-plugin-metashark/releases/download/manifest/manifest.json') as f:
             manifest = json.load(f)
     except HTTPError as err:
         if err.code == 404:
@@ -63,11 +63,14 @@ def main():
         json.dump(manifest, f, indent=2)
 
     # # 国内加速
-    # with open('manifest_cn.json', 'w') as f:
-    #     manifest_cn = json.dumps(manifest, indent=2)
-    #     manifest_cn = re.sub('https://github.com/cxfksword/jellyfin-plugin-metashark/raw/main/doc/logo.png', "https://jellyfin-plugin-release.pages.dev/metashark/logo.png", manifest_cn)
-    #     manifest_cn = re.sub('https://github.com/cxfksword/jellyfin-plugin-metashark/releases/download/v[0-9.]+', "https://jellyfin-plugin-release.pages.dev/metashark", manifest_cn)
-    #     f.write(manifest_cn)
+    cn_domain = 'https://mirror.ghproxy.com/'
+    if 'CN_DOMAIN' in os.environ:
+        cn_domain = os.environ["CN_DOMAIN"]
+    cn_domain = cn_domain.rstrip('/')
+    with open('manifest_cn.json', 'w') as f:
+        manifest_cn = json.dumps(manifest, indent=2)
+        manifest_cn = re.sub('https://github.com', f'{cn_domain}/https://github.com', manifest_cn)
+        f.write(manifest_cn)
 
 
 if __name__ == '__main__':
