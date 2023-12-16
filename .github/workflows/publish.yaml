@@ -55,6 +55,7 @@ jobs:
           file: ./artifacts/${{ env.artifact }}_*.zip
           tag: ${{ github.ref }}
           file_glob: true
+          overwrite: true
       - name: Publish manifest
         uses: svenstaro/upload-release-action@v2
         with:
