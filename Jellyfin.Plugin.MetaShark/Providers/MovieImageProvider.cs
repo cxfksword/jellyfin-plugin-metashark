@@ -48,7 +48,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
                 var primary = await this._doubanApi.GetMovieAsync(sid, cancellationToken);
-                if (primary == null || string.IsNullOrEmpty(primary.ImgMiddle))
+                if (primary == null || string.IsNullOrEmpty(primary.Img))
                 {
                     return Enumerable.Empty<RemoteImageInfo>();
                 }
@@ -58,7 +58,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     new RemoteImageInfo
                     {
                         ProviderName = this.Name,
-                        Url = this.GetProxyImageUrl(primary.ImgMiddle),
+                        Url = this.GetDoubanPoster(primary),
                         Type = ImageType.Primary,
                     },
                 };

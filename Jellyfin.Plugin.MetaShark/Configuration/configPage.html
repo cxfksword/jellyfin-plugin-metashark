@@ -55,6 +55,13 @@
                             </div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label" for="EnableDoubanLargePoster">
+                                <input id="EnableDoubanLargePoster" name="EnableDoubanLargePoster" type="checkbox"
+                                    is="emby-checkbox" />
+                                <span>海报使用大图</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label" for="EnableDoubanBackdropRaw">
                                 <input id="EnableDoubanBackdropRaw" name="EnableDoubanBackdropRaw" type="checkbox"
                                     is="emby-checkbox" />
@@ -165,6 +172,7 @@
                         document.querySelector('#DoubanCookies').value = config.DoubanCookies;
                         document.querySelector('#DoubanImageProxyBaseUrl').value = config.DoubanImageProxyBaseUrl;
                         document.querySelector('#EnableDoubanAvoidRiskControl').checked = config.EnableDoubanAvoidRiskControl;
+                        document.querySelector('#EnableDoubanLargePoster').checked = config.EnableDoubanLargePoster;
                         document.querySelector('#EnableDoubanBackdropRaw').checked = config.EnableDoubanBackdropRaw;
 
                         document.querySelector('#EnableTmdb').checked = config.EnableTmdb;
@@ -193,6 +201,7 @@
                         config.DoubanCookies = document.querySelector('#DoubanCookies').value;
                         config.DoubanImageProxyBaseUrl = document.querySelector('#DoubanImageProxyBaseUrl').value;
                         config.EnableDoubanAvoidRiskControl = document.querySelector('#EnableDoubanAvoidRiskControl').checked;
+                        config.EnableDoubanLargePoster = document.querySelector('#EnableDoubanLargePoster').checked;
                         config.EnableDoubanBackdropRaw = document.querySelector('#EnableDoubanBackdropRaw').checked;
 
                         config.EnableTmdb = document.querySelector('#EnableTmdb').checked;
@@ -220,6 +229,7 @@
                 .addEventListener('change', function (e) {
                     changeProxyDisplay();
                 });
+
 
             function changeProxyDisplay() {
                 let proxyType = document.querySelector('#TmdbProxyType').value;

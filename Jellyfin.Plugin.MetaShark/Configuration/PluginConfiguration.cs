@@ -24,6 +24,10 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public bool EnableDoubanAvoidRiskControl { get; set; } = false;
     /// <summary>
+    /// 豆瓣海报使用大图
+    /// </summary>
+    public bool EnableDoubanLargePoster { get; set; } = false;
+    /// <summary>
     /// 豆瓣背景图使用原图
     /// </summary>
     public bool EnableDoubanBackdropRaw { get; set; } = false;

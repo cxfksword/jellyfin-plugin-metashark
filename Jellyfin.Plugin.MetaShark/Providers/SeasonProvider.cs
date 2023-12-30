@@ -93,6 +93,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                             ProviderIds = new Dictionary<string, string> { { DoubanProviderId, c.Id } },
                         }));
 
+                        this.Log($"GetSeasonMetaData of douban [sid]: {seasonSid}");
                         return result;
                     }
                 }

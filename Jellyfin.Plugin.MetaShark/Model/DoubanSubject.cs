@@ -94,6 +94,15 @@ namespace Jellyfin.Plugin.MetaShark.Model
         }
 
         [JsonIgnore]
+        public string ImgLarge
+        {
+            get
+            {
+                return this.Img.Replace("s_ratio_poster", "l");
+            }
+        }
+
+        [JsonIgnore]
         public string[] Genres
         {
             get
@@ -155,6 +164,16 @@ namespace Jellyfin.Plugin.MetaShark.Model
                 return null;
             }
         }
+
+        [JsonIgnore]
+        public string ImgMiddle
+        {
+            get
+            {
+                return this.Img.Replace("/raw/", "/m/").Replace("/s_ratio_poster/", "/m/");
+            }
+        }
+
     }
 
     public class DoubanPhoto

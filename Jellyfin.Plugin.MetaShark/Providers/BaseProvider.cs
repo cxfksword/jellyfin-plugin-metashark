@@ -471,53 +471,32 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
         protected string GetLocalProxyImageUrl(string url)
         {
-            var baseUrl = Plugin.Instance?.GetLocalApiBaseUrl();
-            if (!string.IsNullOrEmpty(config.DoubanImageProxyBaseUrl))
+            var baseUrl = Plugin.Instance?.GetLocalApiBaseUrl() ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(config.DoubanImageProxyBaseUrl))
             {
                 baseUrl = config.DoubanImageProxyBaseUrl.TrimEnd('/');
             }
-            if (!string.IsNullOrEmpty(baseUrl))
-            {
-                var encodedUrl = HttpUtility.UrlEncode(url);
-                return $"{baseUrl}/plugin/metashark/proxy/image/?url={encodedUrl}";
-            }
 
-            return this.GetProxyImageUrl(url);
+            var encodedUrl = HttpUtility.UrlEncode(url);
+            return $"{baseUrl}/plugin/metashark/proxy/image/?url={encodedUrl}";
         }
 
         private string GetBaseUrl()
         {
             // 配置优先
-            if (!string.IsNullOrEmpty(this.config.DoubanImageProxyBaseUrl))
+            if (!string.IsNullOrWhiteSpace(config.DoubanImageProxyBaseUrl))
             {
                 return this.config.DoubanImageProxyBaseUrl.TrimEnd('/');
             }
 
-            // http请求时，获取请求的host (nginx代理/docker中部署时，没配置透传host时，本方式会有问题)
+            // TODO：http请求时，获取请求的host (nginx代理/docker中部署时，没配置透传host时，本方式会有问题)
+            // 除自动扫描之外都会执行这里，修改图片功能图片是直接下载，不走插件图片代理处理函数，host拿不到就下载不了
             if (Plugin.Instance != null && this._httpContextAccessor.HttpContext != null)
             {
-                // 特殊处理下搜索请求，直接使用相对链接，可以减少使用nginx代理但不透传host的问题
-                var userAgent = this._httpContextAccessor.HttpContext.Request.Headers.UserAgent.ToString();
-                var fromWeb = userAgent.Contains("Chrome") || userAgent.Contains("Safari");
-                var fromItemSearch = this._httpContextAccessor.HttpContext.Request.Path.ToString().Contains("/RemoteSearch");
-                if (fromWeb && fromItemSearch)
-                {
-                    // 处理通过nginx反向代理后，url加了subpath访问的情况
-                    var subpath = string.Empty;
-                    var baseUrl = Plugin.Instance.GetApiBaseUrl(this._httpContextAccessor.HttpContext.Request);
-                    var uri = new UriBuilder(baseUrl);
-                    if (!string.IsNullOrEmpty(uri.Path) && uri.Path != "/")
-                    {
-                        subpath = "/" + uri.Path.Trim('/');
-                    }
-
-                    return subpath;
-                }
-
                 return Plugin.Instance.GetApiBaseUrl(this._httpContextAccessor.HttpContext.Request);
             }
 
-            // 自动扫描刷新时，直接使用本地地址
+            // 自动扫描刷新时，直接使用本地地址(127.0.0.1)
             return Plugin.Instance?.GetLocalApiBaseUrl() ?? string.Empty;
         }
 
@@ -573,7 +552,17 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             return string.Empty;
         }
+        
 
+        protected string GetDoubanPoster(DoubanSubject subject)
+        {
+            if (string.IsNullOrEmpty(subject.Img)) {
+                return string.Empty;
+            }
+
+            var url = config.EnableDoubanLargePoster ? subject.ImgLarge : subject.ImgMiddle;
+            return this.GetProxyImageUrl(url);
+        }
 
         protected string GetOriginalFileName(ItemLookupInfo info)
         {

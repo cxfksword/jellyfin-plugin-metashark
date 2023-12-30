@@ -60,7 +60,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     new RemoteImageInfo
                     {
                         ProviderName = primary.Name,
-                        Url = this.GetProxyImageUrl(primary.ImgMiddle),
+                        Url = this.GetDoubanPoster(primary),
                         Type = ImageType.Primary,
                     },
                 };
