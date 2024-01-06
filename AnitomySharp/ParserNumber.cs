@@ -371,7 +371,7 @@ namespace AnitomySharp
         /// <returns>true if the token matched</returns>
         private bool MatchSeasonAndEpisodePattern(string word, Token token)
         {
-            const string regexPattern = RegexMatchOnlyStart + @"S?(\d{1,2})(?:-S?(\d{1,2}))?(?:x|[ ._-x]?E)(\d{1,4})(?:-E?(\d{1,4}))?(?:[vV](\d{1,2}))?" + RegexMatchOnlyEnd;
+            const string regexPattern = RegexMatchOnlyStart + @"S?(\d{1,2})(?:-S?(\d{1,2}))?(?:x|[ ._-x]?EP?)(\d{1,4})(?:-E?P?(\d{1,4}))?(?:[vV](\d{1,2}))?" + RegexMatchOnlyEnd;
             var match = Regex.Match(word, regexPattern);
             if (!match.Success) return false;
 
