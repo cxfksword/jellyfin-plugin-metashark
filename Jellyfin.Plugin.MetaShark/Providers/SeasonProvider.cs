@@ -40,12 +40,14 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             var result = new MetadataResult<Season>();
 
+            // 使用刷新元数据时，之前识别的seasonNumber会保留，不会被覆盖
             info.SeriesProviderIds.TryGetValue(MetadataProvider.Tmdb.ToString(), out var seriesTmdbId);
             info.SeriesProviderIds.TryGetValue(Plugin.ProviderId, out var metaSource);
             info.SeriesProviderIds.TryGetValue(DoubanProviderId, out var sid);
             var seasonNumber = info.IndexNumber; // S00/Season 00特典目录会为0
             var seasonSid = info.GetProviderId(DoubanProviderId);
-            this.Log($"GetSeasonMetaData of [name]: {info.Name}  number: {info.IndexNumber} seriesTmdbId: {seriesTmdbId} sid: {sid} metaSource: {metaSource} IsAutomated: {info.IsAutomated}");
+            var fileName = this.GetOriginalFileName(info);
+            this.Log($"GetSeasonMetaData of [name]: {info.Name} [fileName]: {fileName} number: {info.IndexNumber} seriesTmdbId: {seriesTmdbId} sid: {sid} metaSource: {metaSource} IsAutomated: {info.IsAutomated}");
 
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {

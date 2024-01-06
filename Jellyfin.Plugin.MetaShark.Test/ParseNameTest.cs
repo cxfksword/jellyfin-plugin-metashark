@@ -169,12 +169,19 @@ namespace Jellyfin.Plugin.MetaShark.Test
             Assert.AreEqual(parseResult.Name, "New World");
             Assert.AreEqual(parseResult.Year, 2013);
 
-            // 只英文
+            // 只英文S01E01
             fileName = "She-Hulk.Attorney.At.Law.S01E01.1080p.WEBRip.x265-RARBG";
             parseResult = NameParser.Parse(fileName);
             Assert.AreEqual(parseResult.Name, "She-Hulk Attorney At Law");
             Assert.AreEqual(parseResult.ParentIndexNumber, 1);
             Assert.AreEqual(parseResult.IndexNumber, 1);
+
+             // 只英文S01EP01
+            fileName = "Detective.Dee.S01EP18.2004.1080p.WEB-DL.x264.AAC-HQCS";
+            parseResult = NameParser.Parse(fileName);
+            Assert.AreEqual(parseResult.Name, "Detective Dee");
+            Assert.AreEqual(parseResult.ParentIndexNumber, 1);
+            Assert.AreEqual(parseResult.IndexNumber, 18);
 
 
             // 日文
