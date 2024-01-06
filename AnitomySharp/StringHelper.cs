@@ -120,6 +120,17 @@ namespace AnitomySharp
         {
             return str.All(char.IsDigit);
         }
+        /// <summary>
+        /// Returns whether or not the <c>str</c> is a alpha string.
+        /// 
+        /// 判断字符串是否全字母
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static bool IsAlphaString(string str)
+        {
+            return str.All(char.IsLetter);
+        }
 
         /// <summary>
         /// Returns the int value of the <c>str</c>; 0 otherwise.

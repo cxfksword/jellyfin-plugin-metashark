@@ -24,13 +24,13 @@ namespace AnitomySharp
     public static class KeywordManager
     {
         /// <summary>
-        /// 包含所有关键词（大写）的内部关键词元素词典
+        /// 包含所有关键词的内部关键词元素词典，比较器忽略大小写
         /// </summary>
-        private static readonly Dictionary<string, Keyword> Keys = new Dictionary<string, Keyword>();
+        private static readonly Dictionary<string, Keyword> Keys = new Dictionary<string, Keyword>(StringComparer.OrdinalIgnoreCase);
         /// <summary>
-        /// 文件扩展名，无值
+        /// 文件扩展名，无值，比较器忽略大小写
         /// </summary>
-        private static readonly Dictionary<string, Keyword> Extensions = new Dictionary<string, Keyword>();
+        private static readonly Dictionary<string, Keyword> Extensions = new Dictionary<string, Keyword>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// ~~一眼真~~
@@ -64,18 +64,19 @@ namespace AnitomySharp
               "GEKIJOUBAN", "MOVIE",
               "OAD", "OAV", "ONA", "OVA",
               "TV",
-              "番外編", "總集編","映像特典","特典","特典アニメ",
+              "番外編", "總集編","DRAMA",
+              "映像特典","特典","特典アニメ",
               // 特典 Special 剩下的各种类型可以全部命名成 SP，对于较特殊意义的特典也可以自定义命名
-              "SPECIAL", "SPECIALS", "SP",  
+              "SPECIAL", "SPECIALS", "SP", "SPs",  
               // 真人特典 Interview/Talk/Stage... 目前我们对于节目、采访、舞台活动、制作等三次元画面的长视频，一概怼成 IV。
               "IV",
               // 音乐视频 Music Video
               "MV"});
 
-            //       add "SP" to ElementAnimeType with optionsUnidentifiable
-            //       Add(Element.ElementCategory.ElementAnimeType,
-            //         optionsUnidentifiableUnsearchable,
-            //         new List<string> {"SP"}); // e.g. "Yumeiro Patissiere SP Professional"
+            // add "SP" to ElementAnimeType with optionsUnidentifiable
+            // Add(Element.ElementCategory.ElementAnimeType,
+            //   optionsUnidentifiableUnsearchable,
+            //   new List<string> { "SP" }); // e.g. "Yumeiro Patissiere SP Professional", but it is widely used to represent special
 
             Add(Element.ElementCategory.ElementAnimeType,
               optionsUnidentifiableInvalid,
@@ -84,7 +85,7 @@ namespace AnitomySharp
               // 无字 OP/ED Non-Credit Opening/Ending
               "ED", "ENDING", "NCED", "NCOP", "OP", "OPENING",
               // 预告 Preview 预告下一话内容 注意编号表示其预告的是第几话的内容而不是跟在哪一话后面
-              "PREVIEW",
+              "PREVIEW", "YOKOKU",
               // 菜单 Menu BD/DVD 播放选择菜单
               "MENU",
               // 广告 Commercial Message 电视放送广告，时长一般在 7s/15s/30s/45s/... 左右
@@ -92,7 +93,7 @@ namespace AnitomySharp
               // 语音信息
               "MESSAGE",
               // 宣传片/预告片 Promotion Video / Trailer 一般时长在 1~2min 命名参考原盘和 jsum
-              "PV", "Teaser","TRAILER", "DRAMA",
+              "PV", "Teaser","TRAILER",
               // 真人特典 Interview/Talk/Stage... 目前我们对于节目、采访、舞台活动、制作等三次元画面的长视频，一概怼成 IV。
               "INTERVIEW",
               "EVENT", "TOKUTEN", "LOGO"});
@@ -150,7 +151,7 @@ namespace AnitomySharp
 
             Add(Element.ElementCategory.ElementOther,
               optionsDefault,
-              new List<string> { "REMASTER", "REMASTERED", "UNCUT", "TS", "VFR", "WIDESCREEN", "WS", "SPURSENGINE" });
+              new List<string> { "REMASTER", "REMASTERED", "UNCUT", "TS", "VFR", "WIDESCREEN", "WS", "SPURSENGINE","DISC" });
 
             Add(Element.ElementCategory.ElementReleaseGroup,
               optionsDefault,
@@ -280,6 +281,16 @@ namespace AnitomySharp
             }
 
             return false;
+        }
+        /// <summary>
+        /// 判断预处理元素列表中是否包含给定的字符串(<paramref name="keyword"/>)
+        /// </summary>
+        /// <param name="category">元素类别</param>
+        /// <param name="keyword">待判断的字符串</param>
+        /// <returns>`true`表示包含</returns>
+        public static bool ContainsInPeekEntries(Element.ElementCategory category, string keyword)
+        {
+            return PeekEntries.Any(entry => entry.Item1 == category && entry.Item2.Contains(keyword, StringComparer.OrdinalIgnoreCase));
         }
 
         /// <summary>

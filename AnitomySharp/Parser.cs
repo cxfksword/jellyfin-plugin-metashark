@@ -179,6 +179,7 @@ namespace AnitomySharp
         private void SearchForEpisodeNumber()
         {
             var tokens = new List<int>();
+            var allTokens = new List<int>();
             for (var i = 0; i < Tokens.Count; i++)
             {
                 var token = Tokens[i];
@@ -187,6 +188,7 @@ namespace AnitomySharp
                     ParserHelper.IndexOfFirstDigit(token.Content) != -1)
                 {
                     tokens.Add(i);
+                    allTokens.Add(i);
                 }
             }
 
@@ -228,6 +230,12 @@ namespace AnitomySharp
             // "e.g. "[12]", "(2006)"
             if (ParseNumber.SearchForIsolatedNumbers(tokens)) return;
 
+            // e.g. "OVA 3", "OtherToken[Hint05]", "[Web Preview 06]": maybe incorrect, so put the last
+            if (ParseNumber.SearchForSymbolWithEpisode(allTokens)) return;
+
+            // e.g. [13(341)], [13 (341)]
+            if (ParseNumber.SearchForEquivalentNumbersWithBracket(allTokens)) return;
+
             // Consider using the last number as a last resort
             ParseNumber.SearchForLastNumber(tokens);
         }
@@ -235,7 +243,7 @@ namespace AnitomySharp
         /// <summary>
         /// Search for anime title
         /// 
-        /// 搜索动画名
+        /// 搜索动画名 
         /// </summary>
         private void SearchForAnimeTitle()
         {
@@ -283,6 +291,13 @@ namespace AnitomySharp
                     {
                         tokenBegin = tokenBeginWithNoReleaseGroup;
                     }
+                    // 去除纯数字标题
+                    // skip token with only number
+                    if (Regex.Match(Tokens[tokenBegin].Content, ParserNumber.RegexMatchOnlyStart + @"^[0-9]+$" + ParserNumber.RegexMatchOnlyEnd).Success)
+                    {
+                        tokenBegin = tokenBeginWithNoReleaseGroup;
+                    }
+
                     skippedPreviousGroup = true;
                 } while (Token.InListRange(tokenBegin, Tokens));
             }
@@ -398,7 +413,7 @@ namespace AnitomySharp
             {
                 var token = Tokens[i];
                 /** 跳过括号标记类型的标记 */
-                if (token.Category == Token.TokenCategory.Bracket) continue;
+                if (token.Category != Token.TokenCategory.Unknown) continue;
                 var tokenContent = token.Content;
 
                 // e.g. "2016-17"
@@ -408,12 +423,20 @@ namespace AnitomySharp
                 {
                     tokenContent = tokenContent.Split(match.Groups[2].Value)[0];
                 }
-                // add newtype e.g. "2021 OVA"
-                if (token.Category != Token.TokenCategory.Unknown || !StringHelper.IsNumericString(tokenContent) ||
-                    !(ParseHelper.IsTokenContainAnimeType(i) ^ ParseHelper.IsTokenIsolated(i)))
+
+                if (!StringHelper.IsNumericString(tokenContent))
                 {
                     continue;
                 }
+
+                // e.g. "[2021 OVA]"
+                if(ParseHelper.IsNextTokenContainAnimeType(i)&&!ParseHelper.IsTokenIsolated(i)){}
+
+                // TODO may not be necessary
+                // if (!ParseHelper.IsTokenIsolated(i))
+                // {
+                //     continue;
+                // }
 
                 var number = StringHelper.StringToInt(tokenContent);
 
@@ -422,7 +445,7 @@ namespace AnitomySharp
                 {
                     if (Empty(Element.ElementCategory.ElementAnimeYear))
                     {
-                        Elements.Add(new Element(Element.ElementCategory.ElementAnimeYear, token.Content));
+                        Elements.Add(new Element(Element.ElementCategory.ElementAnimeYear, tokenContent));
                         token.Category = Token.TokenCategory.Identifier;
                         continue;
                     }

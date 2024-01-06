@@ -235,7 +235,7 @@ namespace AnitomySharp
         /// <summary>
         /// Returns whether or not a token at the current <c>pos</c> is isolated(surrounded by braces).
         /// 
-        /// 判断当前位置标记(token)是否孤立，即是否被括号包裹
+        /// 判断当前位置标记(token)是否孤立，是否被括号包裹
         /// </summary>
         /// <param name="pos"></param>
         /// <returns></returns>
@@ -243,6 +243,20 @@ namespace AnitomySharp
         {
             var prevToken = Token.FindPrevToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
             if (!IsTokenCategory(prevToken, Token.TokenCategory.Bracket)) return false;
+            var nextToken = Token.FindNextToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
+            return IsTokenCategory(nextToken, Token.TokenCategory.Bracket);
+        }
+        /// <summary>
+        /// Returns whether or not a token at the current <c>pos</c> is isolated(surrounded by braces, delimiter).
+        /// 
+        /// 判断当前位置标记(token)是否孤立，前面是否为分隔符，后面是否为括号包裹
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns></returns>
+        public bool IsTokenIsolatedWithDelimiterAndBracket(int pos)
+        {
+            var prevToken = Token.FindPrevToken(_parser.Tokens, pos, Token.TokenFlag.FlagNone);
+            if (!IsTokenCategory(prevToken, Token.TokenCategory.Delimiter)) return false;
             var nextToken = Token.FindNextToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
             return IsTokenCategory(nextToken, Token.TokenCategory.Bracket);
         }
@@ -254,12 +268,36 @@ namespace AnitomySharp
         /// </summary>
         /// <param name="pos"></param>
         /// <returns></returns>
-        public bool IsTokenContainAnimeType(int pos)
+        public bool IsNextTokenContainAnimeType(int pos)
         {
             var prevToken = Token.FindPrevToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
             if (!IsTokenCategory(prevToken, Token.TokenCategory.Bracket)) return false;
             var nextToken = Token.FindNextToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
             return KeywordManager.Contains(Element.ElementCategory.ElementAnimeType, _parser.Tokens[nextToken].Content);
+        }
+        /// <summary>
+        /// 判断当前标记(token)的上一个标记的类型是否为ElementAnimeType。如果是，则返回`true`
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns></returns>
+        public bool IsPrevTokenContainAnimeType(int pos)
+        {
+            var prevToken = Token.FindPrevToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
+            var nextToken = Token.FindNextToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
+            if (!IsTokenCategory(nextToken, Token.TokenCategory.Bracket)) return false;
+            return KeywordManager.Contains(Element.ElementCategory.ElementAnimeType, _parser.Tokens[prevToken].Content);
+        }
+        /// <summary>
+        /// 判断当前标记(token)的上一个标记的类型是否为ElementAnimeType（在 PeekEntries 中）。如果是，则返回`true`
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns></returns>
+        public bool IsPrevTokenContainAnimeTypeInPeekEntries(int pos)
+        {
+            var prevToken = Token.FindPrevToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
+            var nextToken = Token.FindNextToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
+            if (!IsTokenCategory(nextToken, Token.TokenCategory.Bracket)) return false;
+            return KeywordManager.ContainsInPeekEntries(Element.ElementCategory.ElementAnimeType, _parser.Tokens[prevToken].Content);
         }
 
         /// <summary>
