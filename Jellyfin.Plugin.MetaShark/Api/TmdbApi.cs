@@ -39,7 +39,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
             var config = Plugin.Instance?.Configuration;
             var apiKey = string.IsNullOrEmpty(config?.TmdbApiKey) ? DEFAULT_API_KEY : config.TmdbApiKey;
             var host = string.IsNullOrEmpty(config?.TmdbHost) ? DEFAULT_API_HOST : config.TmdbHost;
-            _tmDbClient = new TMDbClient(apiKey, true, host, null, config.GetTmdbWebProxy());
+            _tmDbClient = new TMDbClient(apiKey, true, host, null, config?.GetTmdbWebProxy());
             _tmDbClient.Timeout = TimeSpan.FromSeconds(10);
             // Not really interested in NotFoundException
             _tmDbClient.ThrowApiExceptions = false;
@@ -595,6 +595,16 @@ namespace Jellyfin.Plugin.MetaShark.Api
             }
 
             return _tmDbClient.GetImageUrl(_tmDbClient.Config.Images.StillSizes[^1], filePath).ToString();
+        }
+
+        public string? GetLogoUrl(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+            {
+                return null;
+            }
+
+            return _tmDbClient.GetImageUrl(_tmDbClient.Config.Images.LogoSizes[^1], filePath).ToString();
         }
 
         /// <inheritdoc />

@@ -36,7 +36,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         public IEnumerable<ImageType> GetSupportedImages(BaseItem item) => new List<ImageType>
         {
             ImageType.Primary,
-            ImageType.Backdrop
+            ImageType.Backdrop,
+            ImageType.Logo,
         };
 
         /// <inheritdoc />
@@ -47,12 +48,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             this.Log($"GetImages for item: {item.Name} [metaSource]: {metaSource}");
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
-                var primary = await this._doubanApi.GetMovieAsync(sid, cancellationToken);
+                var primary = await this._doubanApi.GetMovieAsync(sid, cancellationToken).ConfigureAwait(false);
                 if (primary == null || string.IsNullOrEmpty(primary.Img))
                 {
                     return Enumerable.Empty<RemoteImageInfo>();
                 }
-                var backdropImgs = await GetBackdrop(item, cancellationToken);
+                var backdropImgs = await this.GetBackdrop(item, cancellationToken).ConfigureAwait(false);
+                var logoImgs = await this.GetLogos(item, cancellationToken).ConfigureAwait(false);
 
                 var res = new List<RemoteImageInfo> {
                     new RemoteImageInfo
@@ -63,6 +65,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     },
                 };
                 res.AddRange(backdropImgs);
+                res.AddRange(logoImgs);
                 return res;
             }
 
@@ -70,7 +73,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(tmdbId))
             {
                 var language = item.GetPreferredMetadataLanguage();
-                var movie = await _tmdbApi
+                // 设定language会导致图片被过滤，这里设为null，保持取全部语言图片
+                var movie = await this._tmdbApi
                 .GetMovieAsync(tmdbId.ToInt(), null, null, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -81,37 +85,41 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
                 var remoteImages = new List<RemoteImageInfo>();
 
-                for (var i = 0; i < movie.Images.Posters.Count; i++)
-                {
-                    var poster = movie.Images.Posters[i];
-                    remoteImages.Add(new RemoteImageInfo
-                    {
-                        Url = _tmdbApi.GetPosterUrl(poster.FilePath),
-                        CommunityRating = poster.VoteAverage,
-                        VoteCount = poster.VoteCount,
-                        Width = poster.Width,
-                        Height = poster.Height,
-                        Language = AdjustImageLanguage(poster.Iso_639_1, language),
-                        ProviderName = Name,
+                remoteImages.AddRange(movie.Images.Posters.Select(x => new RemoteImageInfo {
+                        ProviderName = this.Name,
+                        Url = this._tmdbApi.GetPosterUrl(x.FilePath),
                         Type = ImageType.Primary,
-                    });
-                }
+                        CommunityRating = x.VoteAverage,
+                        VoteCount = x.VoteCount,
+                        Width = x.Width,
+                        Height = x.Height,
+                        Language = this.AdjustImageLanguage(x.Iso_639_1, language),
+                        RatingType = RatingType.Score,
+                    }));
 
-                for (var i = 0; i < movie.Images.Backdrops.Count; i++)
-                {
-                    var backdrop = movie.Images.Backdrops[i];
-                    remoteImages.Add(new RemoteImageInfo
-                    {
-                        Url = _tmdbApi.GetPosterUrl(backdrop.FilePath),
-                        CommunityRating = backdrop.VoteAverage,
-                        VoteCount = backdrop.VoteCount,
-                        Width = backdrop.Width,
-                        Height = backdrop.Height,
-                        ProviderName = Name,
+                remoteImages.AddRange(movie.Images.Backdrops.Select(x => new RemoteImageInfo {
+                        ProviderName = this.Name,
+                        Url = this._tmdbApi.GetBackdropUrl(x.FilePath),
                         Type = ImageType.Backdrop,
-                        RatingType = RatingType.Score
-                    });
-                }
+                        CommunityRating = x.VoteAverage,
+                        VoteCount = x.VoteCount,
+                        Width = x.Width,
+                        Height = x.Height,
+                        Language = this.AdjustImageLanguage(x.Iso_639_1, language),
+                        RatingType = RatingType.Score,
+                    }));
+
+                remoteImages.AddRange(movie.Images.Logos.Select(x => new RemoteImageInfo {
+                        ProviderName = this.Name,
+                        Url = this._tmdbApi.GetLogoUrl(x.FilePath),
+                        Type = ImageType.Logo,
+                        CommunityRating = x.VoteAverage,
+                        VoteCount = x.VoteCount,
+                        Width = x.Width,
+                        Height = x.Height,
+                        Language = this.AdjustImageLanguage(x.Iso_639_1, language),
+                        RatingType = RatingType.Score,
+                    }));
 
                 return remoteImages.OrderByLanguageDescending(language);
             }
@@ -133,7 +141,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 从豆瓣获取背景图
             if (!string.IsNullOrEmpty(sid))
             {
-                var photo = await this._doubanApi.GetWallpaperBySidAsync(sid, cancellationToken);
+                var photo = await this._doubanApi.GetWallpaperBySidAsync(sid, cancellationToken).ConfigureAwait(false);
                 if (photo != null && photo.Count > 0)
                 {
                     this.Log("GetBackdrop from douban sid: {0}", sid);
@@ -185,6 +193,36 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             return list;
+        }
+
+        private async Task<IEnumerable<RemoteImageInfo>> GetLogos(BaseItem item, CancellationToken cancellationToken)
+        {
+            var tmdbId = item.GetProviderId(MetadataProvider.Tmdb);
+            var list = new List<RemoteImageInfo>();
+            var language = item.GetPreferredMetadataLanguage();
+            if (this.config.EnableTmdbBackdrop && !string.IsNullOrEmpty(tmdbId))
+            {
+                var movie = await this._tmdbApi
+                .GetMovieAsync(tmdbId.ToInt(), language, language, cancellationToken)
+                .ConfigureAwait(false);
+
+                if (movie != null && movie.Images != null)
+                {
+                    list.AddRange(movie.Images.Logos.Select(x => new RemoteImageInfo {
+                        ProviderName = this.Name,
+                        Url = this._tmdbApi.GetLogoUrl(x.FilePath),
+                        Type = ImageType.Logo,
+                        CommunityRating = x.VoteAverage,
+                        VoteCount = x.VoteCount,
+                        Width = x.Width,
+                        Height = x.Height,
+                        Language = this.AdjustImageLanguage(x.Iso_639_1, language),
+                        RatingType = RatingType.Score,
+                    }));
+                }
+            }
+
+            return list.OrderByLanguageDescending(language);
         }
 
     }
