@@ -50,6 +50,12 @@ public class PluginConfiguration : BasePluginConfiguration
     /// 启用tmdb获取背景图
     /// </summary>
     public bool EnableTmdbBackdrop { get; set; } = true;
+
+    /// <summary>
+    /// 启用tmdb获取商标
+    /// </summary>
+    public bool EnableTmdbLogo { get; set; } = true;
+    
     /// <summary>
     /// 是否获取电影系列信息
     /// </summary>

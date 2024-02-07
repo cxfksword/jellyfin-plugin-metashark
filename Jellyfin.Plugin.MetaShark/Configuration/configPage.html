@@ -94,9 +94,17 @@
                             <label class="emby-checkbox-label" for="EnableTmdbBackdrop">
                                 <input id="EnableTmdbBackdrop" name="EnableTmdbBackdrop" type="checkbox"
                                     is="emby-checkbox" />
-                                <span>使用TheMovieDb补全背景图和商标</span>
+                                <span>使用TheMovieDb补全背景图</span>
                             </label>
-                            <div class="fieldDescription">勾选后，当影片在豆瓣找不到背景图或商标时，改使用TheMovieDb的补全</div>
+                            <div class="fieldDescription">勾选后，当影片在豆瓣找不到背景图时，改使用TheMovieDb的补全</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label" for="EnableTmdbLogo">
+                                <input id="EnableTmdbLogo" name="EnableTmdbLogo" type="checkbox"
+                                    is="emby-checkbox" />
+                                <span>从TheMovieDb获取商标</span>
+                            </label>
+                            <div class="fieldDescription">勾选后，使用TheMovieDb的商标图片补全</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label" for="EnableTmdbCollection">
@@ -178,6 +186,7 @@
                         document.querySelector('#EnableTmdb').checked = config.EnableTmdb;
                         document.querySelector('#EnableTmdbSearch').checked = config.EnableTmdbSearch;
                         document.querySelector('#EnableTmdbBackdrop').checked = config.EnableTmdbBackdrop;
+                        document.querySelector('#EnableTmdbLogo').checked = config.EnableTmdbLogo;
                         document.querySelector('#EnableTmdbCollection').checked = config.EnableTmdbCollection;
                         document.querySelector('#EnableTmdbOfficialRating').checked = config.EnableTmdbOfficialRating;
                         document.querySelector('#TmdbApiKey').value = config.TmdbApiKey;
@@ -207,6 +216,7 @@
                         config.EnableTmdb = document.querySelector('#EnableTmdb').checked;
                         config.EnableTmdbSearch = document.querySelector('#EnableTmdbSearch').checked;
                         config.EnableTmdbBackdrop = document.querySelector('#EnableTmdbBackdrop').checked;
+                        config.EnableTmdbLogo = document.querySelector('#EnableTmdbLogo').checked;
                         config.EnableTmdbCollection = document.querySelector('#EnableTmdbCollection').checked;
                         config.EnableTmdbOfficialRating = document.querySelector('#EnableTmdbOfficialRating').checked;
                         config.TmdbApiKey = document.querySelector('#TmdbApiKey').value;

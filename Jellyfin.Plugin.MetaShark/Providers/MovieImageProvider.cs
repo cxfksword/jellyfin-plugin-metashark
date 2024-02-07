@@ -200,8 +200,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var tmdbId = item.GetProviderId(MetadataProvider.Tmdb);
             var list = new List<RemoteImageInfo>();
             var language = item.GetPreferredMetadataLanguage();
-            if (this.config.EnableTmdbBackdrop && !string.IsNullOrEmpty(tmdbId))
+            if (this.config.EnableTmdbLogo && !string.IsNullOrEmpty(tmdbId))
             {
+                this.Log("GetLogos from tmdb id: {0} lang: {1}", tmdbId, language);
                 var movie = await this._tmdbApi
                 .GetMovieAsync(tmdbId.ToInt(), language, language, cancellationToken)
                 .ConfigureAwait(false);
