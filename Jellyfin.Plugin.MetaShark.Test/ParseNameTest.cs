@@ -86,13 +86,18 @@ namespace Jellyfin.Plugin.MetaShark.Test
             Assert.AreEqual(parseResult.Name, "秒速5厘米");
             Assert.AreEqual(parseResult.Year, null);
 
-
             // 标题加年份
             fileName = "V字仇杀队 (2006)";
             parseResult = NameParser.Parse(fileName);
             Assert.AreEqual(parseResult.ChineseName, null);
             Assert.AreEqual(parseResult.Name, "V字仇杀队");
             Assert.AreEqual(parseResult.Year, 2006);
+
+            fileName = "逃学威龙2 (1992)";
+            parseResult = NameParser.Parse(fileName);
+            Assert.AreEqual(parseResult.ChineseName, null);
+            Assert.AreEqual(parseResult.Name, "逃学威龙2");
+            Assert.AreEqual(parseResult.Year, 1992);
 
 
             // anime

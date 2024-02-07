@@ -273,6 +273,7 @@ namespace AnitomySharp
             var prevToken = Token.FindPrevToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
             if (!IsTokenCategory(prevToken, Token.TokenCategory.Bracket)) return false;
             var nextToken = Token.FindNextToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
+            if (nextToken < 0) return false;
             return KeywordManager.Contains(Element.ElementCategory.ElementAnimeType, _parser.Tokens[nextToken].Content);
         }
         /// <summary>
@@ -285,6 +286,7 @@ namespace AnitomySharp
             var prevToken = Token.FindPrevToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
             var nextToken = Token.FindNextToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
             if (!IsTokenCategory(nextToken, Token.TokenCategory.Bracket)) return false;
+            if (prevToken < 0) return false;
             return KeywordManager.Contains(Element.ElementCategory.ElementAnimeType, _parser.Tokens[prevToken].Content);
         }
         /// <summary>
@@ -297,6 +299,7 @@ namespace AnitomySharp
             var prevToken = Token.FindPrevToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
             var nextToken = Token.FindNextToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
             if (!IsTokenCategory(nextToken, Token.TokenCategory.Bracket)) return false;
+            if (prevToken < 0) return false;
             return KeywordManager.ContainsInPeekEntries(Element.ElementCategory.ElementAnimeType, _parser.Tokens[prevToken].Content);
         }
 
