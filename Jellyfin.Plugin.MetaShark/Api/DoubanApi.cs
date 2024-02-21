@@ -68,6 +68,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
         // 匹配除了换行符之外所有空白
         Regex regOverviewSpace = new Regex(@"\n[^\S\n]+", RegexOptions.Compiled);
         Regex regPhotoId = new Regex(@"/photo/(\d+?)/", RegexOptions.Compiled);
+        Regex regLoginName = new Regex(@"<div[^>]*?db-usr-profile[^>]*?>[\w\W]*?<h1>([^>]*?)<", RegexOptions.Compiled);
 
         // 默认200毫秒请求1次
         private TimeLimiter _defaultTimeConstraint = TimeLimiter.GetFromMaxCountByInterval(1, TimeSpan.FromMilliseconds(200));
@@ -800,6 +801,27 @@ namespace Jellyfin.Plugin.MetaShark.Api
             }
 
             return true;
+        }
+
+        public async Task<DoubanLoginInfo> GetLoginInfoAsync(CancellationToken cancellationToken)
+        {
+            var loginInfo = new DoubanLoginInfo();
+            try
+            {
+                var url = "https://www.douban.com/mine/";
+                var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+                var requestUrl = response.RequestMessage?.RequestUri?.ToString();
+                var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                var loginName = this.Match(body, regLoginName).Trim();
+                loginInfo.Name = loginName;
+                loginInfo.IsLogined = !(requestUrl == null || requestUrl.Contains("accounts.douban.com") || requestUrl.Contains("login") || requestUrl.Contains("sec.douban.com"));
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "GetLoginInfoAsync error.");
+            }
+
+            return loginInfo;
         }
 
         protected async Task LimitRequestFrequently()

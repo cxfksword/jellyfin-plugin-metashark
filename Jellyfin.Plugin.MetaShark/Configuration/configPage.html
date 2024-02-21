@@ -28,8 +28,8 @@
                         </legend>
                         <div class="inputContainer">
                             <label class="inputLabel inputLabelUnfocused" for="DoubanCookies">豆瓣网站cookie<span
-                                    id="login_invalid"
-                                    style="color: red; margin-left: 8px; display: none;">(已失效)</span></label>
+                                id="login_msg"
+                                style="margin-left: 8px; display: none;"></span></label>
                             <textarea rows="5" is="emby-input" type="text" id="DoubanCookies" name="DoubanCookies"
                                 class="emby-input" placeholder="_vwo_uuid_v2=1; __utmv=2; ..."></textarea>
                             <div class="fieldDescription">可为空，填写可搜索到需登录访问的影片，使用(www.douban.com)分号“;”分隔格式cookie.</div>
@@ -253,16 +253,16 @@
             function checkDoubanLogin() {
                 let cookie = document.querySelector('#DoubanCookies').value
                 if (!cookie || !$.trim(cookie)) {
-                    $('#login_invalid').hide();
+                    $('#login_msg').hide();
                     return;
                 }
 
 
                 $.getJSON("/plugin/metashark/douban/checklogin", function (resp) {
                     if (resp && resp.code != 1) {
-                        $('#login_invalid').show();
+                        $('#login_msg').css("color", "red").text('(已失效)').show();
                     } else {
-                        $('#login_invalid').hide();
+                        $('#login_msg').css("color", "").text('(已生效)').show();
                     }
                 })
             }

@@ -77,9 +77,10 @@ namespace Jellyfin.Plugin.MetaShark.Controllers
         [HttpGet]
         public async Task<ApiResult> CheckDoubanLogin()
         {
-            var isLogin = await _doubanApi.CheckLoginAsync(CancellationToken.None);
-            return new ApiResult(isLogin ? 1 : 0, isLogin ? "logined" : "not login");
+            var loginInfo = await this._doubanApi.GetLoginInfoAsync(CancellationToken.None).ConfigureAwait(false);
+            return new ApiResult(loginInfo.IsLogined ? 1 : 0, loginInfo.Name);
         }
+
 
         private HttpClient GetHttpClient()
         {
