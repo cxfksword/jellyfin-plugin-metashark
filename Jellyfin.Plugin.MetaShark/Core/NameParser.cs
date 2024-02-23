@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Emby.Naming.TV;
 using Jellyfin.Plugin.MetaShark.Model;
 
 namespace Jellyfin.Plugin.MetaShark.Core
@@ -110,7 +111,7 @@ namespace Jellyfin.Plugin.MetaShark.Core
             // 假如Anitomy解析不到year，尝试使用jellyfin默认parser，看能不能解析成功
             if (parseResult.Year == null && !isAnime)
             {
-                var nativeParseResult = ParseMovie(fileName);
+                var nativeParseResult = ParseMovieByDefault(fileName);
                 if (nativeParseResult.Year != null)
                 {
                     parseResult = nativeParseResult;
@@ -143,8 +144,10 @@ namespace Jellyfin.Plugin.MetaShark.Core
             return name.Replace(".", " ").Trim();
         }
 
-        // emby原始电影解析
-        public static ParseNameResult ParseMovie(string fileName)
+        /// <summary>
+        /// emby原始电影解析
+        /// </summary>
+        public static ParseNameResult ParseMovieByDefault(string fileName)
         {
             // 默认解析器会错误把分辨率当年份，先删除
             fileName = resolutionReg.Replace(fileName, "");
@@ -163,6 +166,16 @@ namespace Jellyfin.Plugin.MetaShark.Core
                 parseResult.Year = result.Year;
             }
             return parseResult;
+        }
+
+        /// <summary>
+        /// emby原始剧集解析
+        /// </summary>
+        public static EpisodePathParserResult ParseEpisodeByDefault(string fileName)
+        {
+            var nameOptions = new Emby.Naming.Common.NamingOptions();
+            return new EpisodePathParser(nameOptions)
+                .Parse(fileName, false);
         }
 
 

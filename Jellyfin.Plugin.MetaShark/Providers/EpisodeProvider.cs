@@ -44,8 +44,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 刷新元数据四种模式差别：
             // 自动扫描匹配：info的Name、IndexNumber和ParentIndexNumber是从文件名解析出来的，假如命名不规范，就会导致解析出错误值
             // 识别：info的Name、IndexNumber和ParentIndexNumber是从文件名解析出来的，provinceIds有指定选择项的ProvinceId
+            // 覆盖所有元数据：info的Name、IndexNumber和ParentIndexNumber是从文件名解析出来的，provinceIds保留所有旧值
             // 搜索缺少的元数据：info的Name、IndexNumber和ParentIndexNumber是从当前的元数据获取，provinceIds保留所有旧值
-            // 覆盖所有元数据：info的Name、IndexNumber和ParentIndexNumber是从当前的元数据获取，provinceIds保留所有旧值
             this.Log($"GetEpisodeMetadata of [name]: {info.Name} number: {info.IndexNumber} ParentIndexNumber: {info.ParentIndexNumber} IsAutomated: {info.IsAutomated}");
             var result = new MetadataResult<Episode>();
 
@@ -139,6 +139,14 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             info.Year = parseResult.Year;
             info.Name = parseResult.ChineseName ?? parseResult.Name;
 
+            // 修正文件名有特殊命名SXXEPXX时，默认解析到错误季数的问题，如神探狄仁杰 Detective.Dee.S01EP01.2006.2160p.WEB-DL.x264.AAC-HQC
+            // TODO: 会导致覆盖用户手动修改元数据的季数
+            if (info.ParentIndexNumber.HasValue && parseResult.ParentIndexNumber.HasValue && parseResult.ParentIndexNumber > 0 && info.ParentIndexNumber != parseResult.ParentIndexNumber)
+            {
+                this.Log("FixSeasonNumber by anitomy. old: {0} new: {1}", info.ParentIndexNumber, parseResult.ParentIndexNumber);
+                info.ParentIndexNumber = parseResult.ParentIndexNumber;
+            }
+
             // 没有season级目录(即虚拟季)ParentIndexNumber默认是1，季文件夹命名不规范时，ParentIndexNumber默认是null
             if (info.ParentIndexNumber is null)
             {
@@ -152,10 +160,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 var season = episodeItem != null ? ((Episode)episodeItem).Season : null;
                 if (season != null && season.IndexNumber.HasValue && info.ParentIndexNumber != season.IndexNumber)
                 {
-                    this.Log("FixSeasonNumber: old: {0} new: {1}", info.ParentIndexNumber, season.IndexNumber);
+                    this.Log("FixSeasonNumber by season. old: {0} new: {1}", info.ParentIndexNumber, season.IndexNumber);
                     info.ParentIndexNumber = season.IndexNumber;
                 }
-
 
                 // // 当没有season级目录时，默认为1，即当成只有一季（不需要处理，虚拟季jellyfin默认传的ParentIndexNumber=1）
                 // if (info.ParentIndexNumber is null && season != null && season.LocationType == LocationType.Virtual)
@@ -172,7 +179,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 info.ParentIndexNumber = this.GuessSeasonNumberByDirectoryName(seasonFolderPath);
             }
 
-
             // 识别特典
             if (info.ParentIndexNumber is null && NameParser.IsAnime(fileName) && (parseResult.IsSpecial || NameParser.IsSpecialDirectory(info.Path)))
             {
@@ -186,17 +192,16 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             //     info.ParentIndexNumber = 1;
             // }
 
-
             // 特典优先使用文件名（特典除了前面特别设置，还有SXX/Season XX等默认的）
             if (info.ParentIndexNumber.HasValue && info.ParentIndexNumber == 0)
             {
                 info.Name = parseResult.SpecialName == info.Name ? fileName : parseResult.SpecialName;
             }
 
-
             // 大于1000，可能错误解析了分辨率
-            if (parseResult.IndexNumber.HasValue && parseResult.IndexNumber < 1000)
+            if (parseResult.IndexNumber.HasValue && parseResult.IndexNumber < 1000 && info.IndexNumber != parseResult.IndexNumber)
             {
+                this.Log("FixEpisodeNumber by anitomy. old: {0} new: {1}", info.IndexNumber, parseResult.IndexNumber);
                 info.IndexNumber = parseResult.IndexNumber;
             }
 
