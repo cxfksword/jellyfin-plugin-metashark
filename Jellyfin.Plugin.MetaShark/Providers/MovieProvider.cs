@@ -42,13 +42,14 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             // 从douban搜索
-            // BUG注意：ProviderIds传多个meta值，会导致识别搜索时只返回一个结果
-            var res = await this._doubanApi.SearchAsync(info.Name, cancellationToken).ConfigureAwait(false);
+            var res = await this._doubanApi.SearchMovieAsync(info.Name, cancellationToken).ConfigureAwait(false);
             result.AddRange(res.Take(Configuration.PluginConfiguration.MAX_SEARCH_RESULT).Select(x =>
             {
                 return new RemoteSearchResult
                 {
-                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, x.Sid } },
+                    // 注意：jellyfin 会判断电影所有 provider id 是否有相同的，有相同的值就会认为是同一影片，会被合并不返回，必须保持 provider id 的唯一性
+                    // 这里 Plugin.ProviderId 的值做这么复杂，是为了保持唯一
+                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, x.Sid }, { Plugin.ProviderId, $"{MetaSource.Douban}_{x.Sid}" } },
                     ImageUrl = this.GetProxyImageUrl(x.Img),
                     ProductionYear = x.Year,
                     Name = x.Name,
@@ -64,7 +65,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     return new RemoteSearchResult
                     {
-                        ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), x.Id.ToString(CultureInfo.InvariantCulture) } },
+                        // 注意：jellyfin 会判断电影所有 provider id 是否有相同的，有相同的值就会认为是同一影片，会被合并不返回，必须保持 provider id 的唯一性
+                        // 这里 Plugin.ProviderId 的值做这么复杂，是为了保持唯一
+                        ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), x.Id.ToString(CultureInfo.InvariantCulture) }, { Plugin.ProviderId, $"{MetaSource.Tmdb}_{x.Id}" } },
                         Name = string.Format("[TMDB]{0}", x.Title ?? x.OriginalTitle),
                         ImageUrl = this._tmdbApi.GetPosterUrl(x.PosterPath),
                         Overview = x.Overview,
@@ -86,12 +89,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 使用刷新元数据时，providerIds会保留旧有值，只有识别/新增才会没值
             var sid = info.GetProviderId(DoubanProviderId);
             var tmdbId = info.GetProviderId(MetadataProvider.Tmdb);
-            var metaSource = info.GetProviderId(Plugin.ProviderId);
-            // 用于修正识别时指定tmdb，没法读取tmdb数据的BUG。。。两个合在一起太难了。。。
-            if (string.IsNullOrEmpty(metaSource) && info.Name.StartsWith("[TMDB]"))
-            {
-                metaSource = MetaSource.Tmdb;
-            }
+            var metaSource = info.GetMetaSource(Plugin.ProviderId);
             // 注意：会存在元数据有tmdbId，但metaSource没值的情况（之前由TMDB插件刮削导致）
             var hasTmdbMeta = metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(tmdbId);
             var hasDoubanMeta = metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid);
@@ -120,7 +118,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
                 var movie = new Movie
                 {
-                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, subject.Sid }, { Plugin.ProviderId, MetaSource.Douban } },
+                    // 这里 Plugin.ProviderId 的值做这么复杂，是为了保持唯一
+                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, subject.Sid }, { Plugin.ProviderId, $"{MetaSource.Douban}_{subject.Sid}" } },
                     Name = subject.Name,
                     OriginalTitle = subject.OriginalName,
                     CommunityRating = subject.Rating,
@@ -233,7 +232,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             movie.SetProviderId(MetadataProvider.Tmdb, tmdbId);
             movie.SetProviderId(MetadataProvider.Imdb, movieResult.ImdbId);
-            movie.SetProviderId(Plugin.ProviderId, MetaSource.Tmdb);
+            // 这里 Plugin.ProviderId 的值做这么复杂，是为了保持唯一
+            movie.SetProviderId(Plugin.ProviderId, $"{MetaSource.Tmdb}_{tmdbId}");
 
             // 获取电影系列信息
             if (this.config.EnableTmdbCollection && movieResult.BelongsToCollection != null)

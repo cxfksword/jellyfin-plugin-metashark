@@ -78,7 +78,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
         [TestMethod]
         public void TestGetMetadataByTMDB()
         {
-            var info = new MovieInfo() { Name = "人生大事", MetadataLanguage = "zh", ProviderIds = new Dictionary<string, string> { { Plugin.ProviderId, MetaSource.Tmdb }, { MetadataProvider.Tmdb.ToString(), "945664" } } };
+            var info = new MovieInfo() { Name = "人生大事", MetadataLanguage = "zh", ProviderIds = new Dictionary<string, string> { { Plugin.ProviderId, MetaSource.Tmdb.ToString() }, { MetadataProvider.Tmdb.ToString(), "945664" } } };
             var httpClientFactory = new DefaultHttpClientFactory();
             var libraryManagerStub = new Mock<ILibraryManager>();
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();

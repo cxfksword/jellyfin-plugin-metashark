@@ -37,7 +37,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             var list = new List<RemoteImageInfo>();
             var cid = item.GetProviderId(DoubanProviderId);
-            var metaSource = item.GetProviderId(Plugin.ProviderId);
+            var metaSource = item.GetMetaSource(Plugin.ProviderId);
             this.Log($"GetImages for item: {item.Name} [metaSource]: {metaSource}");
             if (!string.IsNullOrEmpty(cid))
             {

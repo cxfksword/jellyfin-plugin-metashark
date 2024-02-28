@@ -30,7 +30,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
         [TestMethod]
         public void TestGetMetadata()
         {
-            var info = new SeriesInfo() { Name = "一年一度喜剧大赛" };
+            var info = new SeriesInfo() { Name = "天下长河" };
             var httpClientFactory = new DefaultHttpClientFactory();
             var libraryManagerStub = new Mock<ILibraryManager>();
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();

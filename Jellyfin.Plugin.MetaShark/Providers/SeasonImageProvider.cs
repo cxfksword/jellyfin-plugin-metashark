@@ -44,7 +44,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             this.Log($"GetSeasonImages for item: {item.Name} number: {item.IndexNumber}");
             var season = (Season)item;
             var series = season.Series;
-            var metaSource = series.GetProviderId(Plugin.ProviderId);
+            var metaSource = series.GetMetaSource(Plugin.ProviderId);
 
             // get image from douban
             var sid = item.GetProviderId(DoubanProviderId);

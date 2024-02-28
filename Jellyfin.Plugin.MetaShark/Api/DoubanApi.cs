@@ -151,6 +151,18 @@ namespace Jellyfin.Plugin.MetaShark.Api
             }
         }
 
+        public async Task<List<DoubanSubject>> SearchMovieAsync(string keyword, CancellationToken cancellationToken)
+        {
+            var result = await this.SearchAsync(keyword, cancellationToken).ConfigureAwait(false);
+            return result.Where(x => x.Category == "电影").ToList();
+        }
+
+        public async Task<List<DoubanSubject>> SearchTVAsync(string keyword, CancellationToken cancellationToken)
+        {
+            var result = await this.SearchAsync(keyword, cancellationToken).ConfigureAwait(false);
+            return result.Where(x => x.Category == "电视剧").ToList();
+        }
+
         public async Task<List<DoubanSubject>> SearchAsync(string keyword, CancellationToken cancellationToken)
         {
             var list = new List<DoubanSubject>();

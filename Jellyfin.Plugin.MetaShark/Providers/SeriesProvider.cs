@@ -41,12 +41,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             // 从douban搜索
-            var res = await this._doubanApi.SearchAsync(info.Name, cancellationToken).ConfigureAwait(false);
+            var res = await this._doubanApi.SearchTVAsync(info.Name, cancellationToken).ConfigureAwait(false);
             result.AddRange(res.Take(Configuration.PluginConfiguration.MAX_SEARCH_RESULT).Select(x =>
             {
                 return new RemoteSearchResult
                 {
-                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, x.Sid } },
+                    // 这里 Plugin.ProviderId 的值做这么复杂，是为了和电影保持一致并唯一
+                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, x.Sid }, { Plugin.ProviderId, $"{MetaSource.Douban}_{x.Sid}" } },
                     ImageUrl = this.GetProxyImageUrl(x.Img),
                     ProductionYear = x.Year,
                     Name = x.Name,
@@ -61,7 +62,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     return new RemoteSearchResult
                     {
-                        ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), x.Id.ToString(CultureInfo.InvariantCulture) } },
+                        // 这里 Plugin.ProviderId 的值做这么复杂，是为了和电影保持一致并唯一
+                        ProviderIds = new Dictionary<string, string> { { MetadataProvider.Tmdb.ToString(), x.Id.ToString(CultureInfo.InvariantCulture) }, { Plugin.ProviderId, $"{MetaSource.Tmdb}_{x.Id}" } },
                         Name = string.Format("[TMDB]{0}", x.Name ?? x.OriginalName),
                         ImageUrl = this._tmdbApi.GetPosterUrl(x.PosterPath),
                         Overview = x.Overview,
@@ -82,12 +84,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             var sid = info.GetProviderId(DoubanProviderId);
             var tmdbId = info.GetProviderId(MetadataProvider.Tmdb);
-            var metaSource = info.GetProviderId(Plugin.ProviderId);
-            // 用于修正识别时指定tmdb，没法读取tmdb数据的BUG。。。两个合在一起太难了。。。
-            if (string.IsNullOrEmpty(metaSource) && info.Name.StartsWith("[TMDB]"))
-            {
-                metaSource = MetaSource.Tmdb;
-            }
+            var metaSource = info.GetMetaSource(Plugin.ProviderId);
             // 注意：会存在元数据有tmdbId，但metaSource没值的情况（之前由TMDB插件刮削导致）
             var hasTmdbMeta = metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(tmdbId);
             var hasDoubanMeta = metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid);
@@ -110,7 +107,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 var seriesName = RemoveSeasonSubfix(subject.Name);
                 var item = new Series
                 {
-                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, subject.Sid }, { Plugin.ProviderId, MetaSource.Douban } },
+                    ProviderIds = new Dictionary<string, string> { { DoubanProviderId, subject.Sid }, { Plugin.ProviderId, $"{MetaSource.Douban}_{subject.Sid}" } },
                     Name = seriesName,
                     OriginalTitle = RemoveSeasonSubfix(subject.OriginalName),
                     CommunityRating = subject.Rating,
@@ -341,7 +338,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     series.SetProviderId(MetadataProvider.Tvdb, ids.TvdbId);
                 }
             }
-            series.SetProviderId(Plugin.ProviderId, MetaSource.Tmdb);
+            series.SetProviderId(Plugin.ProviderId, $"{MetaSource.Tmdb}_{seriesResult.Id}");
             series.OfficialRating = this.GetTmdbOfficialRatingByData(seriesResult, preferredCountryCode);
 
 

@@ -319,6 +319,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     break;
             }
 
+            this.Log($"Not found tmdb id by [name]: {name} [year]: {year}");
             return null;
         }
 
@@ -355,6 +356,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     break;
             }
 
+            this.Log($"Not found tmdb id by imdb id: {imdb}");
             return null;
         }
 
