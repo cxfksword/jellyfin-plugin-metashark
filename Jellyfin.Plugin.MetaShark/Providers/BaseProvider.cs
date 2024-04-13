@@ -351,6 +351,18 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         this.Log($"Found tmdb [id]: {tmdbId} by imdb id: {imdb}");
                         return $"{tmdbId}";
                     }
+                    if (findResult?.TvEpisode != null && findResult.TvEpisode.Count > 0)
+                    {
+                        var tmdbId = findResult.TvEpisode[0].ShowId;
+                        this.Log($"Found tmdb [id]: {tmdbId} by imdb id: {imdb}");
+                        return $"{tmdbId}";
+                    }
+                    if (findResult?.TvSeason != null && findResult.TvSeason.Count > 0)
+                    {
+                        var tmdbId = findResult.TvSeason[0].ShowId;
+                        this.Log($"Found tmdb [id]: {tmdbId} by imdb id: {imdb}");
+                        return $"{tmdbId}";
+                    }
                     break;
                 default:
                     break;
@@ -386,6 +398,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 当没有season级目录时，path为空，直接返回
             if (string.IsNullOrEmpty(path))
             {
+                this.Log($"Season path is empty!");
                 return null;
             }
 

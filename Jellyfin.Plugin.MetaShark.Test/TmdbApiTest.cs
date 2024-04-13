@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TMDbLib.Objects.Find;
 using TMDbLib.Objects.Languages;
 
 namespace Jellyfin.Plugin.MetaShark.Test
@@ -114,6 +115,28 @@ namespace Jellyfin.Plugin.MetaShark.Test
                 try
                 {
                     var result = await api.SearchSeriesAsync(keyword, "zh", CancellationToken.None).ConfigureAwait(false);
+                    Assert.IsNotNull(result);
+                    TestContext.WriteLine(result.ToJson());
+                }
+                catch (Exception ex)
+                {
+                    TestContext.WriteLine(ex.Message);
+                }
+            }).GetAwaiter().GetResult();
+        }
+
+        
+        [TestMethod]
+        public void TestFindByExternalId()
+        {
+            var api = new TmdbApi(loggerFactory);
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    var result = await api.FindByExternalIdAsync("tt5924366", FindExternalSource.Imdb, "zh", CancellationToken.None)
+               .ConfigureAwait(false);
                     Assert.IsNotNull(result);
                     TestContext.WriteLine(result.ToJson());
                 }
