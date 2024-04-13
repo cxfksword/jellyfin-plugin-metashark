@@ -71,3 +71,9 @@ dotnet publish --configuration=Release Jellyfin.Plugin.MetaShark/Jellyfin.Plugin
 ## Thanks
 
 [AnitomySharp](https://github.com/chu-shen/AnitomySharp)
+
+## 免责声明
+
+本项目代码仅用于学习交流编程技术，下载后请勿用于商业用途。
+
+如果本项目存在侵犯您的合法权益的情况，请及时与开发者联系，开发者将会及时删除有关内容。
