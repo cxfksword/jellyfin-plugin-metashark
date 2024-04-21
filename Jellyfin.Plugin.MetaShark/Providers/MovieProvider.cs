@@ -83,7 +83,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         public async Task<MetadataResult<Movie>> GetMetadata(MovieInfo info, CancellationToken cancellationToken)
         {
             var fileName = this.GetOriginalFileName(info);
-            this.Log($"GetMovieMetadata of [name]: {info.Name} [fileName]: {fileName} IsAutomated: {info.IsAutomated}");
+            this.Log($"GetMovieMetadata of [name]: {info.Name} [fileName]: {fileName} EnableTmdb: {config.EnableTmdb}");
             var result = new MetadataResult<Movie>();
 
             // 使用刷新元数据时，providerIds会保留旧有值，只有识别/新增才会没值
