@@ -50,6 +50,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
         protected Regex regMetaSourcePrefix = new Regex(@"^\[.+\]", RegexOptions.Compiled);
         protected Regex regSeasonNameSuffix = new Regex(@"\s第[0-9一二三四五六七八九十]+?季$|\sSeason\s\d+?$|(?<![0-9a-zA-Z])\d$", RegexOptions.Compiled);
+        protected Regex regDoubanIdAttribute = new Regex(@"\[(?:douban|doubanid)-(\d+?)\]", RegexOptions.Compiled);
 
         protected PluginConfiguration config
         {
@@ -107,10 +108,16 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         protected async Task<string?> GuessByDoubanAsync(ItemLookupInfo info, CancellationToken cancellationToken)
         {
             var fileName = GetOriginalFileName(info);
+            // 从文件名属性格式获取，如[douban-12345]或[doubanid-12345]
+            var doubanId = this.regDoubanIdAttribute.FirstMatchGroup(fileName);
+            if (!string.IsNullOrWhiteSpace(doubanId))
+            {
+                this.Log($"Found douban [id] by attr: {doubanId}");
+                return doubanId;
+            }
             var parseResult = NameParser.Parse(fileName);
             var searchName = !string.IsNullOrEmpty(parseResult.ChineseName) ? parseResult.ChineseName : parseResult.Name;
             info.Year = parseResult.Year;  // 默认parser对anime年份会解析出错，以anitomy为准
-
 
             this.Log($"GuessByDouban of [name]: {info.Name} [file_name]: {fileName} [year]: {info.Year} [search name]: {searchName}");
             List<DoubanSubject> result;
@@ -125,13 +132,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     item = result.Where(x => x.Year == info.Year && x.Name == searchName).FirstOrDefault();
                     if (item != null)
                     {
-                        this.Log($"GuessByDouban found -> {item.Name}({item.Sid}) (suggest)");
+                        this.Log($"Found douban [id]: {item.Name}({item.Sid}) (suggest)");
                         return item.Sid;
                     }
                     item = result.Where(x => x.Year == info.Year).FirstOrDefault();
                     if (item != null)
                     {
-                        this.Log($"GuessByDouban found -> {item.Name}({item.Sid}) (suggest)");
+                        this.Log($"Found douban [id]: {item.Name}({item.Sid}) (suggest)");
                         return item.Sid;
                     }
                 }
@@ -169,7 +176,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             item = result.Where(x => x.Category == cat).FirstOrDefault();
             if (item != null)
             {
-                this.Log($"GuessByDouban found -> {item.Name}({item.Sid})");
+                this.Log($"Found douban [id] by first match: {item.Name}({item.Sid})");
                 return item.Sid;
             }
 
