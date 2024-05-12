@@ -1,4 +1,5 @@
-﻿using Jellyfin.Plugin.MetaShark.Api;
+﻿using Jellyfin.Data.Enums;
+using Jellyfin.Plugin.MetaShark.Api;
 using Jellyfin.Plugin.MetaShark.Model;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -152,7 +153,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 subject.LimitDirectorCelebrities.Take(Configuration.PluginConfiguration.MAX_CAST_MEMBERS).ToList().ForEach(c => result.AddPerson(new PersonInfo
                 {
                     Name = c.Name,
-                    Type = c.RoleType,
+                    Type = c.RoleType == PersonType.Director ? PersonKind.Director : PersonKind.Actor,
                     Role = c.Role,
                     ImageUrl = this.GetLocalProxyImageUrl(c.Img),
                     ProviderIds = new Dictionary<string, string> { { DoubanProviderId, c.Id } },
@@ -356,7 +357,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     {
                         Name = actor.Name.Trim(),
                         Role = actor.Character,
-                        Type = PersonType.Actor,
+                        Type = PersonKind.Actor,
                         SortOrder = actor.Order,
                     };
 
@@ -400,7 +401,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     {
                         Name = person.Name.Trim(),
                         Role = person.Job,
-                        Type = type
+                        Type = type == PersonType.Director ? PersonKind.Director : (type == PersonType.Producer ? PersonKind.Producer : PersonKind.Actor),
                     };
 
                     if (!string.IsNullOrWhiteSpace(person.ProfilePath))

@@ -14,6 +14,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Jellyfin.Data.Enums;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -89,7 +90,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         subject.LimitDirectorCelebrities.Take(Configuration.PluginConfiguration.MAX_CAST_MEMBERS).ToList().ForEach(c => result.AddPerson(new PersonInfo
                         {
                             Name = c.Name,
-                            Type = c.RoleType,
+                            Type = c.RoleType == PersonType.Director ? PersonKind.Director : PersonKind.Actor,
                             Role = c.Role,
                             ImageUrl = this.GetLocalProxyImageUrl(c.Img),
                             ProviderIds = new Dictionary<string, string> { { DoubanProviderId, c.Id } },

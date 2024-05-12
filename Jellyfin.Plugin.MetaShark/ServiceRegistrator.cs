@@ -1,18 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Jellyfin.Plugin.MetaShark.Api;
-using Jellyfin.Plugin.MetaShark.Providers;
-using MediaBrowser.Controller.Providers;
-using MediaBrowser.Common.Plugins;
-using MediaBrowser.Controller.Library;
-using MediaBrowser.Model.IO;
+using MediaBrowser.Controller;
+using MediaBrowser.Controller.Plugins;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MediaBrowser.Controller.Persistence;
-using System.Net.Http;
 
 namespace Jellyfin.Plugin.MetaShark
 {
@@ -20,21 +10,22 @@ namespace Jellyfin.Plugin.MetaShark
     public class ServiceRegistrator : IPluginServiceRegistrator
     {
         /// <inheritdoc />
-        public void RegisterServices(IServiceCollection serviceCollection)
+        public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
         {
-            serviceCollection.AddSingleton<DoubanApi>((ctx) =>
+            
+            serviceCollection.AddSingleton((ctx) =>
             {
                 return new DoubanApi(ctx.GetRequiredService<ILoggerFactory>());
             });
-            serviceCollection.AddSingleton<TmdbApi>((ctx) =>
+            serviceCollection.AddSingleton((ctx) =>
             {
                 return new TmdbApi(ctx.GetRequiredService<ILoggerFactory>());
             });
-            serviceCollection.AddSingleton<OmdbApi>((ctx) =>
+            serviceCollection.AddSingleton((ctx) =>
             {
                 return new OmdbApi(ctx.GetRequiredService<ILoggerFactory>());
             });
-            serviceCollection.AddSingleton<ImdbApi>((ctx) =>
+            serviceCollection.AddSingleton((ctx) =>
             {
                 return new ImdbApi(ctx.GetRequiredService<ILoggerFactory>());
             });

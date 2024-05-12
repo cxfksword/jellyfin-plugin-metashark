@@ -125,13 +125,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     item = result.Where(x => x.Year == info.Year && x.Name == searchName).FirstOrDefault();
                     if (item != null)
                     {
-                        this.Log($"GuessByDouban found -> {item.Name}({item.Sid}) (suggest)");
+                        this.Log($"Found douban [id]: {item.Name}({item.Sid}) (suggest)");
                         return item.Sid;
                     }
                     item = result.Where(x => x.Year == info.Year).FirstOrDefault();
                     if (item != null)
                     {
-                        this.Log($"GuessByDouban found -> {item.Name}({item.Sid}) (suggest)");
+                        this.Log($"Found douban [id]: {item.Name}({item.Sid}) (suggest)");
                         return item.Sid;
                     }
                 }
@@ -169,7 +169,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             item = result.Where(x => x.Category == cat).FirstOrDefault();
             if (item != null)
             {
-                this.Log($"GuessByDouban found -> {item.Name}({item.Sid})");
+                this.Log($"Found douban [id] by first match: {item.Name}({item.Sid})");
                 return item.Sid;
             }
 

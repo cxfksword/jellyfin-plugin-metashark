@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  dotnet-version: 6.0.x
+  dotnet-version: 8.0.x
   python-version: 3.8
   project: Jellyfin.Plugin.MetaShark/Jellyfin.Plugin.MetaShark.csproj
   artifact: metashark
@@ -36,9 +36,9 @@ jobs:
       - name: Build
         run: |
           dotnet restore ${{ env.project }} --no-cache
-          dotnet publish --nologo --no-restore --configuration=Release --framework=net6.0 ${{ env.project }}
+          dotnet publish --nologo --no-restore --configuration=Release --framework=net8.0 ${{ env.project }}
           mkdir -p artifacts
-          cp ./Jellyfin.Plugin.MetaShark/bin/Release/net6.0/Jellyfin.Plugin.MetaShark.dll ./artifacts/
+          cp ./Jellyfin.Plugin.MetaShark/bin/Release/net8.0/Jellyfin.Plugin.MetaShark.dll ./artifacts/
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
