@@ -140,10 +140,19 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return null;
             }
 
-            // 没有季文件夹（即虚拟季），info.Path会为空，直接用series的sid
+            // 没有季文件夹或季文件夹名不规范（即虚拟季），info.Path会为空，直接用series的sid
             if (string.IsNullOrEmpty(info.Path))
             {
                 return sid;
+            }
+
+            // 从文件夹名属性格式获取，如[douban-12345]或[doubanid-12345]
+            var fileName = this.GetOriginalFileName(info);
+            var doubanId = this.regDoubanIdAttribute.FirstMatchGroup(fileName);
+            if (!string.IsNullOrWhiteSpace(doubanId))
+            {
+                this.Log($"Found season douban [id] by attr: {doubanId}");
+                return doubanId;
             }
 
             // 从sereis获取正确名称，info.Name当是标准格式如S01等时，会变成第x季，非标准名称默认文件名
