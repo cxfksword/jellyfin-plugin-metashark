@@ -52,18 +52,10 @@ namespace Jellyfin.Plugin.MetaShark.Api
         Regex regSubname = new Regex(@"又名: (.+?)\n", RegexOptions.Compiled);
         Regex regImdb = new Regex(@"IMDb: (tt\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         Regex regSite = new Regex(@"官方网站: (.+?)\n", RegexOptions.Compiled);
-        Regex regNameMath = new Regex(@"(.+第\w季|[\w\uff1a\uff01\uff0c\u00b7]+)\s*(.*)", RegexOptions.Compiled);
         Regex regRole = new Regex(@"\([饰|配]?\s*?(.+?)\)", RegexOptions.Compiled);
         Regex regBackgroundImage = new Regex(@"url\(([^)]+?)\)$", RegexOptions.Compiled);
-        Regex regGender = new Regex(@"性别: \n(.+?)\n", RegexOptions.Compiled);
-        Regex regConstellation = new Regex(@"星座: \n(.+?)\n", RegexOptions.Compiled);
-        Regex regBirthdate = new Regex(@"出生日期: \n(.+?)\n", RegexOptions.Compiled);
-        Regex regLifedate = new Regex(@"生卒日期: \n(.+?) 至 (.+)", RegexOptions.Compiled);
-        Regex regBirthplace = new Regex(@"出生地: \n(.+?)\n", RegexOptions.Compiled);
-        Regex regCelebrityRole = new Regex(@"职业: \n(.+?)\n", RegexOptions.Compiled);
-        Regex regNickname = new Regex(@"更多外文名: \n(.+?)\n", RegexOptions.Compiled);
-        Regex regFamily = new Regex(@"家庭成员: \n(.+?)\n", RegexOptions.Compiled);
-        Regex regCelebrityImdb = new Regex(@"imdb编号:\s+?(nm\d+)", RegexOptions.Compiled);
+        Regex regLifedate = new Regex(@"(.+?) 至 (.+)", RegexOptions.Compiled);
+        Regex regHtmlTag = new Regex(@"<.?>", RegexOptions.Compiled);
         Regex regImgHost = new Regex(@"\/\/(img\d+?)\.", RegexOptions.Compiled);
         // 匹配除了换行符之外所有空白
         Regex regOverviewSpace = new Regex(@"\n[^\S\n]+", RegexOptions.Compiled);
@@ -90,7 +82,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
             var handler = new HttpClientHandlerEx();
             this._cookieContainer = handler.CookieContainer;
             httpClient = new HttpClient(handler);
-            httpClient.Timeout = TimeSpan.FromSeconds(10);
+            httpClient.Timeout = TimeSpan.FromSeconds(20);
             httpClient.DefaultRequestHeaders.Add("User-Agent", HTTP_USER_AGENT);
             httpClient.DefaultRequestHeaders.Add("Origin", "https://movie.douban.com");
             httpClient.DefaultRequestHeaders.Add("Referer", "https://movie.douban.com/");
@@ -519,48 +511,64 @@ namespace Jellyfin.Plugin.MetaShark.Api
             var contentNode = doc.QuerySelector("#content");
             if (contentNode != null)
             {
-                var img = contentNode.GetAttr("#headline .nbg img", "src") ?? string.Empty;
-                var nameStr = contentNode.GetText("h1") ?? string.Empty;
-                var name = this.ParseCelebrityName(nameStr);
-                var englishName = nameStr.Replace(name, "").Trim();
+                celebrity.Img = contentNode.GetAttr("img.avatar", "src") ?? string.Empty;
+                var nameStr = contentNode.GetText("h1.subject-name") ?? string.Empty;
+                celebrity.Name = this.ParseCelebrityName(nameStr);
+                celebrity.EnglishName = nameStr.Replace(celebrity.Name, "").Trim();
 
-                var intro = contentNode.GetText("#intro span.all") ?? string.Empty;
-                if (string.IsNullOrEmpty(intro))
+                
+                var family = string.Empty;
+                var propertyNodes = contentNode.QuerySelectorAll("ul.subject-property>li");
+                foreach (var li in propertyNodes)
                 {
-                    intro = contentNode.GetText("#intro div.bd") ?? string.Empty;
+                    var label = li.GetText("span.label") ?? string.Empty;
+                    var value = li.GetText("span.value") ?? string.Empty;
+                    switch (label)
+                    {
+                        case "性别:":
+                            celebrity.Gender = value;
+                            break;
+                        case "星座:":
+                            celebrity.Constellation = value;
+                            break;
+                        case "出生日期:":
+                            celebrity.Birthdate = value;
+                            break;
+                        case "去世日期:":
+                            celebrity.Enddate = value;
+                            break;
+                        case "生卒日期:":
+                            var match = this.regLifedate.Match(value);
+                            if (match.Success && match.Groups.Count > 2)
+                            {
+                                celebrity.Birthdate = match.Groups[1].Value.Trim();
+                                celebrity.Enddate = match.Groups[2].Value.Trim();
+                            }
+                            break;
+                        case "出生地:":
+                            celebrity.Birthplace = value;
+                            break;
+                        case "职业:":
+                            celebrity.Role = value;
+                            break;
+                        case "更多外文名:":
+                            celebrity.NickName = value;
+                            break;
+                        case "家庭成员:":
+                            family = value;
+                            break;
+                        case "IMDb编号:":
+                            celebrity.Imdb = value;
+                            break;
+                        default:
+                            break;
+                    }
                 }
-                var info = contentNode.GetText("div.info") ?? string.Empty;
-                var gender = info.GetMatchGroup(this.regGender);
-                var constellation = info.GetMatchGroup(this.regConstellation);
-                var birthdate = info.GetMatchGroup(this.regBirthdate);
 
-                // 生卒日期
-                var enddate = string.Empty;
-                var match = this.regLifedate.Match(info);
-                if (match.Success && match.Groups.Count > 2)
-                {
-                    birthdate = match.Groups[1].Value.Trim();
-                    enddate = match.Groups[2].Value.Trim();
-                }
-
-                var birthplace = info.GetMatchGroup(this.regBirthplace);
-                var role = info.GetMatchGroup(this.regCelebrityRole);
-                var nickname = info.GetMatchGroup(this.regNickname);
-                var family = info.GetMatchGroup(this.regFamily);
-                var imdb = info.GetMatchGroup(this.regCelebrityImdb);
-
-                celebrity.Img = img;
-                celebrity.Gender = gender;
-                celebrity.Birthdate = birthdate;
-                celebrity.Enddate = enddate;
-                celebrity.NickName = nickname;
-                celebrity.EnglishName = englishName;
-                celebrity.Imdb = imdb;
-                celebrity.Birthplace = birthplace;
-                celebrity.Name = name;
+                // 保留段落关系，把段落替换为换行符
+                var intro = contentNode.GetHtml("section.subject-intro div.content") ?? string.Empty;
+                intro = regHtmlTag.Replace(intro.Replace("</p>", "\n"), "");
                 celebrity.Intro = formatOverview(intro);
-                celebrity.Constellation = constellation;
-                celebrity.Role = role;
                 _memoryCache.Set<DoubanCelebrity?>(cacheKey, celebrity, expiredOption);
                 return celebrity;
             }

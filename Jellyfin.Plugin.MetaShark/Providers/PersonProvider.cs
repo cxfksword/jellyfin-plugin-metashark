@@ -120,8 +120,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         var findResult = await this._tmdbApi.FindByExternalIdAsync(c.Imdb, FindExternalSource.Imdb, info.MetadataLanguage, cancellationToken).ConfigureAwait(false);
                         if (findResult?.PersonResults != null && findResult.PersonResults.Count > 0)
                         {
-                            this.Log($"GetPersonMetadata of found tmdb [id]: {findResult.PersonResults[0].Id}");
-                            item.SetProviderId(MetadataProvider.Tmdb, $"{findResult.PersonResults[0].Id}");
+                            var foundTmdbId = findResult.PersonResults.First().Id.ToString();
+                            this.Log($"GetPersonMetadata of found tmdb [id]: {foundTmdbId}");
+                            item.SetProviderId(MetadataProvider.Tmdb, $"{foundTmdbId}");
                         }
                     }
 
