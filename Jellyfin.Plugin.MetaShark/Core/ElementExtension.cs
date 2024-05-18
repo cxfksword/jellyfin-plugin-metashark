@@ -20,6 +20,17 @@ namespace Jellyfin.Plugin.MetaShark.Core
             return null;
         }
 
+        public static string? GetHtml(this IElement el, string css)
+        {
+            var node = el.QuerySelector(css);
+            if (node != null)
+            {
+                return node.Html().Trim();
+            }
+
+            return null;
+        }
+
         public static string GetTextOrDefault(this IElement el, string css, string defaultVal = "")
         {
             var node = el.QuerySelector(css);
