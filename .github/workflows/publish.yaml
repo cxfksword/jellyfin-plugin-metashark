@@ -54,6 +54,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./artifacts/${{ env.artifact }}_*.zip
           tag: ${{ github.ref }}
+          release_name: '${{ github.ref_name }}: Jellyfin v10.9'
           file_glob: true
           overwrite: true
       - name: Publish manifest
