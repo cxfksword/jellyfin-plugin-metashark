@@ -108,7 +108,7 @@ namespace Jellyfin.Plugin.MetaShark.Core
                 }
             }
 
-            // 假如Anitomy解析不到year，尝试使用jellyfin默认parser，看能不能解析成功
+            // 假如 Anitomy 解析不到 year，尝试使用 jellyfin 默认 parser，看能不能解析成功
             if (parseResult.Year == null && !isAnime)
             {
                 var nativeParseResult = ParseMovieByDefault(fileName);
@@ -118,19 +118,33 @@ namespace Jellyfin.Plugin.MetaShark.Core
                 }
             }
 
+            // 假如 Anitomy 解析不到集数，判断 name 是否是数字集号
+            if (parseResult.IndexNumber is null && isEpisode)
+            {
+                if (!string.IsNullOrEmpty(parseResult.Name) && parseResult.Name.IsNumericString())
+                {
+                    parseResult.IndexNumber = parseResult.Name.ToInt();
+                }
+            }
+
             // 修复纯中文集数/特殊标识集数
             if (parseResult.IndexNumber is null)
             {
                 parseResult.IndexNumber = ParseChineseOrSpecialIndexNumber(fileName);
             }
 
-            // 解析不到title时，或解析出多个title时，使用默认名
+            // 解析不到 title 时，或解析出多个 title 时，使用默认名
             if (string.IsNullOrEmpty(parseResult.Name))
             {
                 parseResult.Name = fileName;
             }
 
             return parseResult;
+        }
+
+        public static ParseNameResult ParseEpisode(string fileName)
+        {
+            return Parse(fileName, true);
         }
 
         private static string CleanName(string name)
@@ -173,9 +187,11 @@ namespace Jellyfin.Plugin.MetaShark.Core
         /// </summary>
         public static EpisodePathParserResult ParseEpisodeByDefault(string fileName)
         {
+            // EpisodePathParser需要路径信息， 这里添加一个分隔符模拟路径
+            var path = Path.DirectorySeparatorChar + fileName;
             var nameOptions = new Emby.Naming.Common.NamingOptions();
             return new EpisodePathParser(nameOptions)
-                .Parse(fileName, false);
+                .Parse(path, false);
         }
 
 

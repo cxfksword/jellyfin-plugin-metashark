@@ -78,5 +78,10 @@ namespace Jellyfin.Plugin.MetaShark.Core
 
             return string.Empty;
         }
+
+        public static bool IsNumericString(this string str)
+        {
+            return str.All(char.IsDigit);
+        }
     }
 }

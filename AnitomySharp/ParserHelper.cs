@@ -119,6 +119,29 @@ namespace AnitomySharp
             if (string.IsNullOrEmpty(str)) return "";
             return Ordinals.TryGetValue(str, out var foundString) ? foundString : "";
         }
+        /// <summary>
+        /// 转换原始值中的全角数字
+        /// １２３４５６７８９０
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string GetNumberFromFullWidth(string str)
+        {
+            string output = str;
+            for (int i = 0; i < str.Length; i++)
+            {
+                if (char.IsDigit(str[i]))
+                {
+                    int fullwidthDigit = (int)str[i];
+                    if (fullwidthDigit >= 65296 && fullwidthDigit <= 65305)
+                    {
+                        int halfwidthDigit = fullwidthDigit - 65248;
+                        output = output.Replace(str[i], (char)halfwidthDigit);
+                    }
+                }
+            }
+            return output;
+        }
 
         /// <summary>
         /// Returns the index of the first digit in the <c>str</c>; -1 otherwise.
@@ -273,7 +296,7 @@ namespace AnitomySharp
             var prevToken = Token.FindPrevToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
             if (!IsTokenCategory(prevToken, Token.TokenCategory.Bracket)) return false;
             var nextToken = Token.FindNextToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
-            if (nextToken < 0) return false;
+            if (!Token.InListRange(prevToken, _parser.Tokens) || !Token.InListRange(nextToken, _parser.Tokens)) return false;
             return KeywordManager.Contains(Element.ElementCategory.ElementAnimeType, _parser.Tokens[nextToken].Content);
         }
         /// <summary>
@@ -285,8 +308,8 @@ namespace AnitomySharp
         {
             var prevToken = Token.FindPrevToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
             var nextToken = Token.FindNextToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
+            if(!Token.InListRange(prevToken, _parser.Tokens)||!Token.InListRange(nextToken, _parser.Tokens)) return false;
             if (!IsTokenCategory(nextToken, Token.TokenCategory.Bracket)) return false;
-            if (prevToken < 0) return false;
             return KeywordManager.Contains(Element.ElementCategory.ElementAnimeType, _parser.Tokens[prevToken].Content);
         }
         /// <summary>
@@ -298,8 +321,8 @@ namespace AnitomySharp
         {
             var prevToken = Token.FindPrevToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
             var nextToken = Token.FindNextToken(_parser.Tokens, pos, Token.TokenFlag.FlagNotDelimiter);
+            if (!Token.InListRange(prevToken, _parser.Tokens) || !Token.InListRange(nextToken, _parser.Tokens)) return false;
             if (!IsTokenCategory(nextToken, Token.TokenCategory.Bracket)) return false;
-            if (prevToken < 0) return false;
             return KeywordManager.ContainsInPeekEntries(Element.ElementCategory.ElementAnimeType, _parser.Tokens[prevToken].Content);
         }
 

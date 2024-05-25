@@ -135,7 +135,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             // 使用AnitomySharp进行重新解析，解决anime识别错误
             var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
-            var parseResult = NameParser.Parse(fileName);
+            var parseResult = NameParser.ParseEpisode(fileName);
             info.Year = parseResult.Year;
             info.Name = parseResult.ChineseName ?? parseResult.Name;
 
@@ -192,14 +192,14 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             //     info.ParentIndexNumber = 1;
             // }
 
-            // 特典优先使用文件名（特典除了前面特别设置，还有SXX/Season XX等默认的）
+            // 特典优先使用文件名（特典除了前面特别设置，还有 SXX/Season XX 等默认的）
             if (info.ParentIndexNumber.HasValue && info.ParentIndexNumber == 0)
             {
                 info.Name = parseResult.SpecialName == info.Name ? fileName : parseResult.SpecialName;
             }
 
-            // 大于1000，可能错误解析了分辨率
-            if (parseResult.IndexNumber.HasValue && parseResult.IndexNumber < 1000 && info.IndexNumber != parseResult.IndexNumber)
+            // 修正 episode number
+            if (parseResult.IndexNumber.HasValue && info.IndexNumber != parseResult.IndexNumber)
             {
                 this.Log("FixEpisodeNumber by anitomy. old: {0} new: {1}", info.IndexNumber, parseResult.IndexNumber);
                 info.IndexNumber = parseResult.IndexNumber;
@@ -214,7 +214,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             // 特典或extra视频可能和正片剧集放在同一目录
             var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
-            var parseResult = NameParser.Parse(fileName);
+            var parseResult = NameParser.ParseEpisode(fileName);
             if (parseResult.IsExtra)
             {
                 this.Log($"Found anime extra of [name]: {fileName}");

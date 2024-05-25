@@ -513,7 +513,8 @@ namespace AnitomySharp
                 return true;
             }
 
-            regexPattern = @"([第全]?)([0-9一二三四五六七八九十壱弐参]+)([期章話话巻卷幕夜期発縛])";
+            // 全角数字：\uFF10-\uFF19
+            regexPattern = @"([第全]?)([0-9一二三四五六七八九十壱弐参\uFF10-\uFF19]+)([回集話话幕夜発縛])";
             match = Regex.Match(word, RegexMatchOnlyStart + regexPattern + RegexMatchOnlyEnd, RegexOptions.IgnoreCase);
             if (match.Success)
             {
@@ -522,11 +523,33 @@ namespace AnitomySharp
                 {
                     episodeNumber = ParserHelper.GetNumberFromOrdinal(episodeNumber);
                 }
+                episodeNumber = ParserHelper.GetNumberFromFullWidth(episodeNumber);
+                SetEpisodeNumber(episodeNumber, token, false);
+                return true;
+            }
+            regexPattern = @"([第全]?)([0-9一二三四五六七八九十壱弐参\uFF10-\uFF19]+)([期章巻卷])";
+            match = Regex.Match(word, RegexMatchOnlyStart + regexPattern + RegexMatchOnlyEnd, RegexOptions.IgnoreCase);
+            if (match.Success)
+            {
+                var episodeNumber = match.Groups[2].Value;
+                if (!StringHelper.IsNumericString(episodeNumber))
+                {
+                    episodeNumber = ParserHelper.GetNumberFromOrdinal(episodeNumber);
+                }
+                episodeNumber = ParserHelper.GetNumberFromFullWidth(episodeNumber);
                 SetEpisodeNumber(episodeNumber, token, false);
                 return true;
             }
 
-            regexPattern = @"(vol|EPISODE|ACT|scene|ep|volume|screen|voice|case|menu|rail|round|game|page|collection|cage|office|doll|Princess)([ \.\-_])([0-9]+)";
+            regexPattern = @"(EPISODE|ACT|scene|ep|screen|voice|case|menu|rail|round|game|page|collection|cage|office|doll|Princess)([ \.\-_])([0-9]+)";
+            match = Regex.Match(word, RegexMatchOnlyStart + regexPattern + RegexMatchOnlyEnd, RegexOptions.IgnoreCase);
+            if (match.Success)
+            {
+                var episodeNumber = match.Groups[3].Value;
+                SetEpisodeNumber(episodeNumber, token, false);
+                return true;
+            }
+            regexPattern = @"(vol|volume)([ \.\-_])([0-9]+)";
             match = Regex.Match(word, RegexMatchOnlyStart + regexPattern + RegexMatchOnlyEnd, RegexOptions.IgnoreCase);
             if (match.Success)
             {
