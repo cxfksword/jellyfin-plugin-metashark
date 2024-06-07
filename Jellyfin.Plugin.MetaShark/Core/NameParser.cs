@@ -246,15 +246,21 @@ namespace Jellyfin.Plugin.MetaShark.Core
             return null;
         }
 
-        public static bool IsSpecialDirectory(string path)
+        public static bool IsSpecialDirectory(string path, bool isDirectory = false)
         {
             var folder = Path.GetFileName(Path.GetDirectoryName(path))?.ToUpper() ?? string.Empty;
-            return folder == "SPS" || folder == "SPECIALS" || folder.Contains("特典");
+            if (isDirectory) {
+                folder = Path.GetFileName(path)?.ToUpper() ?? string.Empty;
+            }
+            return folder == "SP" || folder == "SPS" || folder == "SPECIALS" || folder.Contains("特典");
         }
 
-        public static bool IsExtraDirectory(string path)
+        public static bool IsExtraDirectory(string path, bool isDirectory = false)
         {
             var folder = Path.GetFileName(Path.GetDirectoryName(path))?.ToUpper() ?? string.Empty;
+            if (isDirectory) {
+                folder = Path.GetFileName(path)?.ToUpper() ?? string.Empty;
+            }
             return folder == "EXTRA"
             || folder == "MENU"
             || folder == "MENUS"

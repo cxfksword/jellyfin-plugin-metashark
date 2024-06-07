@@ -105,12 +105,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
                 subject.Celebrities = await this._doubanApi.GetCelebritiesBySidAsync(sid, cancellationToken).ConfigureAwait(false);
 
-                var seriesName = RemoveSeasonSubfix(subject.Name);
+                var seriesName = RemoveSeasonSuffix(subject.Name);
                 var item = new Series
                 {
                     ProviderIds = new Dictionary<string, string> { { DoubanProviderId, subject.Sid }, { Plugin.ProviderId, $"{MetaSource.Douban}_{subject.Sid}" } },
                     Name = seriesName,
-                    OriginalTitle = RemoveSeasonSubfix(subject.OriginalName),
+                    OriginalTitle = RemoveSeasonSuffix(subject.OriginalName),
                     CommunityRating = subject.Rating,
                     Overview = subject.Intro,
                     ProductionYear = subject.Year,

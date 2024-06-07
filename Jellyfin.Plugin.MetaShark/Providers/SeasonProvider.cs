@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Jellyfin.Data.Enums;
+using System.IO;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -41,25 +42,27 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             var result = new MetadataResult<Season>();
 
-            // 使用刷新元数据时，之前识别的seasonNumber会保留，不会被覆盖
+            // 使用刷新元数据时，之前识别的 seasonNumber 会保留，不会被覆盖
             info.SeriesProviderIds.TryGetValue(MetadataProvider.Tmdb.ToString(), out var seriesTmdbId);
             info.SeriesProviderIds.TryGetMetaSource(Plugin.ProviderId, out var metaSource);
             info.SeriesProviderIds.TryGetValue(DoubanProviderId, out var sid);
             var seasonNumber = info.IndexNumber; // S00/Season 00特典目录会为0
             var seasonSid = info.GetProviderId(DoubanProviderId);
-            var fileName = this.GetOriginalFileName(info);
+            var fileName = Path.GetFileName(info.Path);
             this.Log($"GetSeasonMetaData of [name]: {info.Name} [fileName]: {fileName} number: {info.IndexNumber} seriesTmdbId: {seriesTmdbId} sid: {sid} metaSource: {metaSource} EnableTmdb: {config.EnableTmdb}");
-
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
-                // 季文件夹名称不规范，没法拿到seasonNumber，尝试从文件夹名猜出
-                // 注意：本办法没法处理没有季文件夹的/虚拟季，因为path会为空
+                // seasonNumber 为 null 有三种情况：
+                // 1. 没有季文件夹时，即虚拟季，info.Path 为空
+                // 2. 一般不规范文件夹命名，没法被 EpisodeResolver 解析的，info.Path 不为空，如：摇曳露营△
+                // 3. 特殊不规范文件夹命名，能被 EpisodeResolver 错误解析，这时被当成了视频文件，相当于没有季文件夹，info.Path 为空，如：冰与火之歌 S02.列王的纷争.2012.1080p.Blu-ray.x265.10bit.AC3
+                //    相关代码：https://github.com/jellyfin/jellyfin/blob/dc2eca9f2ca259b46c7b53f59251794903c730a4/Emby.Server.Implementations/Library/Resolvers/TV/SeasonResolver.cs#L70
                 if (seasonNumber is null)
                 {
                     seasonNumber = this.GuessSeasonNumberByDirectoryName(info.Path);
                 }
 
-                // 搜索豆瓣季id
+                // 搜索豆瓣季 id
                 if (string.IsNullOrEmpty(seasonSid))
                 {
                     seasonSid = await this.GuessDoubanSeasonId(sid, seriesTmdbId, seasonNumber, info, cancellationToken).ConfigureAwait(false);
@@ -96,13 +99,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                             ProviderIds = new Dictionary<string, string> { { DoubanProviderId, c.Id } },
                         }));
 
-                        this.Log($"GetSeasonMetaData of douban [sid]: {seasonSid}");
+                        this.Log($"Season [{info.Name}] found douban [sid]: {seasonSid}");
                         return result;
                     }
                 }
                 else
                 {
-                    this.Log($"GetSeasonMetaData of [name]: {info.Name} not found douban season id!");
+                    this.Log($"Season [{info.Name}] not found douban season id!");
                 }
 
 
@@ -140,13 +143,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 return null;
             }
 
-            // 没有季文件夹或季文件夹名不规范（即虚拟季），info.Path会为空，直接用series的sid
-            if (string.IsNullOrEmpty(info.Path))
+            // 没有季文件夹或季文件夹名不规范时（即虚拟季），info.Path 会为空，seasonNumber 为 null
+            if (string.IsNullOrEmpty(info.Path) && !seasonNumber.HasValue)
             {
-                return sid;
+                return null;
             }
 
-            // 从文件夹名属性格式获取，如[douban-12345]或[doubanid-12345]
+            // 从季文件夹名属性格式获取，如 [douban-12345] 或 [doubanid-12345]
             var fileName = this.GetOriginalFileName(info);
             var doubanId = this.regDoubanIdAttribute.FirstMatchGroup(fileName);
             if (!string.IsNullOrWhiteSpace(doubanId))
@@ -161,7 +164,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             {
                 return null;
             }
-            var seriesName = RemoveSeasonSubfix(series.Name);
+            var seriesName = this.RemoveSeasonSuffix(series.Name);
 
             // 没有季id，但存在tmdbid，尝试从tmdb获取对应季的年份信息，用于从豆瓣搜索对应季数据
             var seasonYear = 0;

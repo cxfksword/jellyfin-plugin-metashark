@@ -64,7 +64,11 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var imdbApi = new ImdbApi(loggerFactory);
 
             var provider = new SeasonProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
-            var result = provider.GuessSeasonNumberByDirectoryName("/data/downloads/jellyfin/tv/向往的生活/第2季");
+
+            var result = provider.GuessSeasonNumberByDirectoryName("/data/downloads/jellyfin/tv/冰与火之歌S01-S08.Game.of.Thrones.1080p.Blu-ray.x265.10bit.AC3/冰与火之歌S2.列王的纷争.2012.1080p.Blu-ray.x265.10bit.AC3");
+            Assert.AreEqual(result, 2);
+
+            result = provider.GuessSeasonNumberByDirectoryName("/data/downloads/jellyfin/tv/向往的生活/第2季");
             Assert.AreEqual(result, 2);
 
             result = provider.GuessSeasonNumberByDirectoryName("/data/downloads/jellyfin/tv/向往的生活 第2季");
