@@ -107,7 +107,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         item.ProductionLocations = new[] { c.Birthplace };
                     }
 
-                    item.SetProviderId(DoubanProviderId, cid);
+                    item.SetProviderId(DoubanProviderId, c.Id);
                     if (!string.IsNullOrEmpty(c.Imdb))
                     {
                         var newImdbId = await this._imdbApi.CheckPersonNewIDAsync(c.Imdb, cancellationToken).ConfigureAwait(false);

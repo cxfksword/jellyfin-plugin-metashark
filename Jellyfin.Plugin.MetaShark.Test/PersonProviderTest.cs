@@ -41,7 +41,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
             Task.Run(async () =>
             {
-                var info = new PersonLookupInfo() { ProviderIds = new Dictionary<string, string>() { { BaseProvider.DoubanProviderId, "1016771" } } };
+                var info = new PersonLookupInfo() { ProviderIds = new Dictionary<string, string>() { { BaseProvider.DoubanProviderId, "27257290" } } };
                 var provider = new PersonProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetMetadata(info, CancellationToken.None);
                 Assert.IsNotNull(result);

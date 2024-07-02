@@ -18,7 +18,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers.ExternalId
         public ExternalIdMediaType? Type => ExternalIdMediaType.Person;
 
         /// <inheritdoc />
-        public string UrlFormatString => "https://movie.douban.com/celebrity/{0}/";
+        public string UrlFormatString => "https://www.douban.com/personage/{0}/";
 
         /// <inheritdoc />
         public bool Supports(IHasProviderIds item) => item is Person;

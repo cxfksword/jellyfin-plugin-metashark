@@ -492,7 +492,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return null;
             }
 
-            var cacheKey = $"celebrity_{id}";
+            var cacheKey = $"personage_{id}";
             var expiredOption = new MemoryCacheEntryOptions() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30) };
             DoubanCelebrity? celebrity;
             if (_memoryCache.TryGetValue<DoubanCelebrity?>(cacheKey, out celebrity))
@@ -500,7 +500,14 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return celebrity;
             }
 
-            var url = $"https://movie.douban.com/celebrity/{id}/";
+            // 兼容旧版 ID 处理
+            var personageID = await this.CheckPersonageIDAsync(id, cancellationToken).ConfigureAwait(false);
+            if (!string.IsNullOrEmpty(personageID))
+            {
+                id = personageID;
+            }
+
+            var url = $"https://www.douban.com/personage/{id}/";
             var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
@@ -511,6 +518,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
             var contentNode = doc.QuerySelector("#content");
             if (contentNode != null)
             {
+                celebrity.Id = id;
                 celebrity.Img = contentNode.GetAttr("img.avatar", "src") ?? string.Empty;
                 var nameStr = contentNode.GetText("h1.subject-name") ?? string.Empty;
                 celebrity.Name = this.ParseCelebrityName(nameStr);
@@ -573,8 +581,36 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return celebrity;
             }
 
-
             _memoryCache.Set<DoubanCelebrity?>(cacheKey, null, expiredOption);
+            return null;
+        }
+
+        public async Task<string?> CheckPersonageIDAsync(string id, CancellationToken cancellationToken)
+        {
+            if (id.Length != 7)
+            {
+                return null;
+            }
+
+            var url = $"https://movie.douban.com/celebrity/{id}/";
+            var handler = new HttpClientHandler()
+            {
+                AllowAutoRedirect = false
+            };
+            using (var noRedirectClient = new HttpClient(handler))
+            {
+                var resp = await noRedirectClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+                if (resp.Headers.TryGetValues("Location", out var values))
+                {
+                    var location = values.First();
+                    var newId = location.GetMatchGroup(this.regId);
+                    if (!string.IsNullOrEmpty(newId))
+                    {
+                        return newId;
+                    }
+                }
+            }
+
             return null;
         }
 
@@ -587,7 +623,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return list;
             }
 
-            var cacheKey = $"celebrity_photo_{cid}";
+            var cacheKey = $"personage_photo_{cid}";
             var expiredOption = new MemoryCacheEntryOptions() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30) };
             if (_memoryCache.TryGetValue<List<DoubanPhoto>>(cacheKey, out var photos))
             {
@@ -598,7 +634,14 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
             try
             {
-                var url = $"https://movie.douban.com/celebrity/{cid}/photos/";
+                // 兼容旧版 ID 处理
+                var personageID = await this.CheckPersonageIDAsync(cid, cancellationToken).ConfigureAwait(false);
+                if (!string.IsNullOrEmpty(personageID))
+                {
+                    cid = personageID;
+                }
+                
+                var url = $"https://www.douban.com/personage/{cid}/photos/";
                 var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
                 if (!response.IsSuccessStatusCode)
                 {
