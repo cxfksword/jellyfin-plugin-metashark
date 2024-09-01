@@ -30,7 +30,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
 
         [TestMethod]
-        public void TestGetMovieImage()
+        public void TestGetImages()
         {
             var info = new MediaBrowser.Controller.Entities.Movies.Movie()
             {
@@ -58,7 +58,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
         }
 
         [TestMethod]
-        public void TestGetMovieImageFromTMDB()
+        public void TestGetImagesFromTMDB()
         {
             var info = new MediaBrowser.Controller.Entities.Movies.Movie()
             {

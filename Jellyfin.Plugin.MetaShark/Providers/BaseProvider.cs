@@ -623,6 +623,26 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
         }
 
+        protected string GetImageLanguageParam(string preferredLanguage, string? originalLanguage = null)
+        {
+            var languageCodeMap = new Dictionary<string, string>() {
+                { "法语", "fr" },
+                { "德语", "de" },
+                { "日语", "ja" },
+                { "俄语", "ru" },
+                { "韩语", "ko" },
+                { "泰语", "th" },
+            };
+            if (!string.IsNullOrEmpty(originalLanguage)) {
+                if (languageCodeMap.TryGetValue(originalLanguage, out var lang) && lang != preferredLanguage)
+                {
+                    return $"{preferredLanguage},{lang}";
+                }
+            }
+
+            return preferredLanguage;
+        }
+
         protected string? GetOriginalSeasonPath(EpisodeInfo info)
         {
             if (info.Path == null) {

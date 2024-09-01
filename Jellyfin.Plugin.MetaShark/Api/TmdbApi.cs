@@ -669,22 +669,27 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
             if (!string.IsNullOrEmpty(preferredLanguage))
             {
-                preferredLanguage = NormalizeLanguage(preferredLanguage);
-
-                languages.Add(preferredLanguage);
-
-                if (preferredLanguage.Length == 5) // like en-US
+                var parts = preferredLanguage.Split(',');
+                foreach (var lang in parts)
                 {
-                    // Currently, TMDB supports 2-letter language codes only
-                    // They are planning to change this in the future, thus we're
-                    // supplying both codes if we're having a 5-letter code.
-                    languages.Add(preferredLanguage.Substring(0, 2));
+                    var l = this.NormalizeLanguage(lang);
+                    if (l.Length == 5) // like en-US
+                    {
+                        // Currently, TMDB supports 2-letter language codes only
+                        // They are planning to change this in the future, thus we're
+                        // supplying both codes if we're having a 5-letter code.
+                        languages.Add(l.Substring(0, 2));
+                    }
+                    else
+                    {
+                        languages.Add(l);
+                    }
                 }
             }
 
             languages.Add("null");
 
-            if (!string.Equals(preferredLanguage, "en", StringComparison.OrdinalIgnoreCase))
+            if (!languages.Contains("en"))
             {
                 languages.Add("en");
             }

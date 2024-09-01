@@ -53,8 +53,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     return Enumerable.Empty<RemoteImageInfo>();
                 }
-                var backdropImgs = await this.GetBackdrop(item, cancellationToken).ConfigureAwait(false);
-                var logoImgs = await this.GetLogos(item, cancellationToken).ConfigureAwait(false);
+                var imageLanguages = this.GetImageLanguageParam(item.PreferredMetadataLanguage, primary.Language);
+                var backdropImgs = await this.GetBackdrop(item, imageLanguages, cancellationToken).ConfigureAwait(false);
+                var logoImgs = await this.GetLogos(item, imageLanguages, cancellationToken).ConfigureAwait(false);
 
                 var res = new List<RemoteImageInfo> {
                     new RemoteImageInfo
@@ -132,7 +133,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// Query for a background photo
         /// </summary>
         /// <param name="cancellationToken">Instance of the <see cref="CancellationToken"/> interface.</param>
-        private async Task<IEnumerable<RemoteImageInfo>> GetBackdrop(BaseItem item, CancellationToken cancellationToken)
+        private async Task<IEnumerable<RemoteImageInfo>> GetBackdrop(BaseItem item, string imageLanguages, CancellationToken cancellationToken)
         {
             var sid = item.GetProviderId(DoubanProviderId);
             var tmdbId = item.GetProviderId(MetadataProvider.Tmdb);
@@ -151,7 +152,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         {
                             return new RemoteImageInfo
                             {
-                                ProviderName = Name,
+                                ProviderName = this.Name,
                                 Url = this.GetProxyImageUrl(x.Raw),
                                 Height = x.Height,
                                 Width = x.Width,
@@ -162,7 +163,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         {
                             return new RemoteImageInfo
                             {
-                                ProviderName = Name,
+                                ProviderName = this.Name,
                                 Url = this.GetProxyImageUrl(x.Large),
                                 Type = ImageType.Backdrop,
                             };
@@ -176,17 +177,17 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (list.Count == 0 && config.EnableTmdbBackdrop && !string.IsNullOrEmpty(tmdbId))
             {
                 var language = item.GetPreferredMetadataLanguage();
-                var movie = await _tmdbApi
-                .GetMovieAsync(tmdbId.ToInt(), language, language, cancellationToken)
+                var movie = await this._tmdbApi
+                .GetMovieAsync(tmdbId.ToInt(), language, imageLanguages, cancellationToken)
                 .ConfigureAwait(false);
 
                 if (movie != null && !string.IsNullOrEmpty(movie.BackdropPath))
                 {
-                    this.Log("GetBackdrop from tmdb id: {0}", tmdbId);
+                    this.Log("GetBackdrop from tmdb id: {0} lang: {1}", tmdbId, imageLanguages);
                     list.Add(new RemoteImageInfo
                     {
-                        ProviderName = Name,
-                        Url = _tmdbApi.GetBackdropUrl(movie.BackdropPath),
+                        ProviderName = this.Name,
+                        Url = this._tmdbApi.GetBackdropUrl(movie.BackdropPath),
                         Type = ImageType.Backdrop,
                     });
                 }
@@ -195,16 +196,16 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return list;
         }
 
-        private async Task<IEnumerable<RemoteImageInfo>> GetLogos(BaseItem item, CancellationToken cancellationToken)
+        private async Task<IEnumerable<RemoteImageInfo>> GetLogos(BaseItem item, string imageLanguages, CancellationToken cancellationToken)
         {
             var tmdbId = item.GetProviderId(MetadataProvider.Tmdb);
             var list = new List<RemoteImageInfo>();
             var language = item.GetPreferredMetadataLanguage();
             if (this.config.EnableTmdbLogo && !string.IsNullOrEmpty(tmdbId))
             {
-                this.Log("GetLogos from tmdb id: {0} lang: {1}", tmdbId, language);
+                this.Log("GetLogos from tmdb id: {0} lang: {1}", tmdbId, imageLanguages);
                 var movie = await this._tmdbApi
-                .GetMovieAsync(tmdbId.ToInt(), language, language, cancellationToken)
+                .GetMovieAsync(tmdbId.ToInt(), language, imageLanguages, cancellationToken)
                 .ConfigureAwait(false);
 
                 if (movie != null && movie.Images != null)
