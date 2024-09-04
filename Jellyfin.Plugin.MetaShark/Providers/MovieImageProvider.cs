@@ -7,7 +7,6 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Extensions;
 using MediaBrowser.Model.Providers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -53,9 +52,8 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 {
                     return Enumerable.Empty<RemoteImageInfo>();
                 }
-                var imageLanguages = this.GetImageLanguageParam(item.PreferredMetadataLanguage, primary.Language);
-                var backdropImgs = await this.GetBackdrop(item, imageLanguages, cancellationToken).ConfigureAwait(false);
-                var logoImgs = await this.GetLogos(item, imageLanguages, cancellationToken).ConfigureAwait(false);
+                var backdropImgs = await this.GetBackdrop(item, primary.PrimaryLanguageCode, cancellationToken).ConfigureAwait(false);
+                var logoImgs = await this.GetLogos(item, primary.PrimaryLanguageCode, cancellationToken).ConfigureAwait(false);
 
                 var res = new List<RemoteImageInfo> {
                     new RemoteImageInfo
@@ -63,6 +61,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         ProviderName = this.Name,
                         Url = this.GetDoubanPoster(primary),
                         Type = ImageType.Primary,
+                        Language = "zh",
                     },
                 };
                 res.AddRange(backdropImgs);
@@ -133,7 +132,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         /// Query for a background photo
         /// </summary>
         /// <param name="cancellationToken">Instance of the <see cref="CancellationToken"/> interface.</param>
-        private async Task<IEnumerable<RemoteImageInfo>> GetBackdrop(BaseItem item, string imageLanguages, CancellationToken cancellationToken)
+        private async Task<IEnumerable<RemoteImageInfo>> GetBackdrop(BaseItem item, string alternativeImageLanguage, CancellationToken cancellationToken)
         {
             var sid = item.GetProviderId(DoubanProviderId);
             var tmdbId = item.GetProviderId(MetadataProvider.Tmdb);
@@ -157,6 +156,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                                 Height = x.Height,
                                 Width = x.Width,
                                 Type = ImageType.Backdrop,
+                                Language = "zh",
                             };
                         }
                         else
@@ -166,6 +166,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                                 ProviderName = this.Name,
                                 Url = this.GetProxyImageUrl(x.Large),
                                 Type = ImageType.Backdrop,
+                                Language = "zh",
                             };
                         }
                     }).ToList();
@@ -173,22 +174,23 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
             }
 
-            // 背景图缺失，从TheMovieDb补充背景图
-            if (list.Count == 0 && config.EnableTmdbBackdrop && !string.IsNullOrEmpty(tmdbId))
+            // 添加 TheMovieDb 背景图为备选
+            if (config.EnableTmdbBackdrop && !string.IsNullOrEmpty(tmdbId))
             {
                 var language = item.GetPreferredMetadataLanguage();
                 var movie = await this._tmdbApi
-                .GetMovieAsync(tmdbId.ToInt(), language, imageLanguages, cancellationToken)
+                .GetMovieAsync(tmdbId.ToInt(), language, language, cancellationToken)
                 .ConfigureAwait(false);
 
                 if (movie != null && !string.IsNullOrEmpty(movie.BackdropPath))
                 {
-                    this.Log("GetBackdrop from tmdb id: {0} lang: {1}", tmdbId, imageLanguages);
+                    this.Log("GetBackdrop from tmdb id: {0} lang: {1}", tmdbId, language);
                     list.Add(new RemoteImageInfo
                     {
                         ProviderName = this.Name,
                         Url = this._tmdbApi.GetBackdropUrl(movie.BackdropPath),
                         Type = ImageType.Backdrop,
+                        Language = language,
                     });
                 }
             }
@@ -196,16 +198,16 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return list;
         }
 
-        private async Task<IEnumerable<RemoteImageInfo>> GetLogos(BaseItem item, string imageLanguages, CancellationToken cancellationToken)
+        private async Task<IEnumerable<RemoteImageInfo>> GetLogos(BaseItem item, string alternativeImageLanguage, CancellationToken cancellationToken)
         {
             var tmdbId = item.GetProviderId(MetadataProvider.Tmdb);
             var list = new List<RemoteImageInfo>();
             var language = item.GetPreferredMetadataLanguage();
             if (this.config.EnableTmdbLogo && !string.IsNullOrEmpty(tmdbId))
             {
-                this.Log("GetLogos from tmdb id: {0} lang: {1}", tmdbId, imageLanguages);
+                this.Log("GetLogos from tmdb id: {0}", tmdbId);
                 var movie = await this._tmdbApi
-                .GetMovieAsync(tmdbId.ToInt(), language, imageLanguages, cancellationToken)
+                .GetMovieAsync(tmdbId.ToInt(), null, null, cancellationToken)
                 .ConfigureAwait(false);
 
                 if (movie != null && movie.Images != null)
@@ -224,7 +226,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
             }
 
-            return list.OrderByLanguageDescending(language);
+            // TODO：jellyfin 内部判断取哪个图片时，还会默认使用 OrderByLanguageDescending 排序一次，这里排序没用
+            //       默认图片优先级是：默认语言 > 无语言 > en > 其他语言
+            return this.AdjustImageLanguagePriority(list, language, alternativeImageLanguage);
         }
 
     }

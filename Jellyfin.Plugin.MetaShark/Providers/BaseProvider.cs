@@ -20,6 +20,8 @@ using Jellyfin.Plugin.MetaShark.Configuration;
 using Jellyfin.Plugin.MetaShark.Core;
 using Microsoft.AspNetCore.Http;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Model.Providers;
+using TMDbLib.Objects.Languages;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -561,6 +563,24 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             return imageLanguage;
+        }
+
+        // 把第一个备选图片语言设为空，提高图片优先级，保证备选语言图片优先级比英文高
+        protected List<RemoteImageInfo> AdjustImageLanguagePriority(IList<RemoteImageInfo> images, string preferLanguage, string alternativeLanguage)
+        {
+            var imagesOrdered = images.OrderByLanguageDescending(preferLanguage, alternativeLanguage).ToList();
+
+            // 不存在默认语言图片，且备选语言是日语
+            if (alternativeLanguage == "ja" && imagesOrdered.Where(x => x.Language == preferLanguage).Count() == 0)
+            {
+                var idx = imagesOrdered.FindIndex(x => x.Language == alternativeLanguage);
+                if (idx >= 0)
+                {
+                    imagesOrdered[idx].Language = null;
+                }
+            }
+
+            return imagesOrdered;
         }
 
         /// <summary>

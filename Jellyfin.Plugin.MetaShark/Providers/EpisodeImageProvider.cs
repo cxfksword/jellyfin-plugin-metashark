@@ -82,7 +82,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     CommunityRating = episodeResult.VoteAverage,
                     VoteCount = episodeResult.VoteCount,
                     ProviderName = Name,
-                    Type = ImageType.Primary
+                    Type = ImageType.Primary,
                 });
             }
             return result;

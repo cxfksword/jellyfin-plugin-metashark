@@ -26,7 +26,7 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// 豆瓣海报使用大图
     /// </summary>
-    public bool EnableDoubanLargePoster { get; set; } = false;
+    public bool EnableDoubanLargePoster { get; set; } = true;
     /// <summary>
     /// 豆瓣背景图使用原图
     /// </summary>

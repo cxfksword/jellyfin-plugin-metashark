@@ -5,7 +5,6 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Extensions;
 using MediaBrowser.Model.Providers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -62,6 +61,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         ProviderName = primary.Name,
                         Url = this.GetDoubanPoster(primary),
                         Type = ImageType.Primary,
+                        Language = "zh",
                     },
                 };
                 return res;

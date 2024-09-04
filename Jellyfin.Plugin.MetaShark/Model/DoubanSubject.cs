@@ -112,7 +112,32 @@ namespace Jellyfin.Plugin.MetaShark.Model
         }
 
 
+        [JsonIgnore]
+        public string PrimaryLanguageCode
+        {
+            get
+            {
+                var languageCodeMap = new Dictionary<string, string>() {
+                    { "日语", "ja" },
+                    { "法语", "fr" },
+                    { "德语", "de" },
+                    { "俄语", "ru" },
+                    { "韩语", "ko" },
+                    { "泰语", "th" },
+                    { "泰米尔语", "ta" },
+                };
+                var primaryLanguage = this.Language.Split("/").Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).FirstOrDefault();
+                if (!string.IsNullOrEmpty(primaryLanguage))
+                {
+                    if (languageCodeMap.TryGetValue(primaryLanguage, out var lang))
+                    {
+                        return lang;
+                    }
+                }
 
+                return string.Empty;
+            }
+        }
     }
 
     public class DoubanCelebrity

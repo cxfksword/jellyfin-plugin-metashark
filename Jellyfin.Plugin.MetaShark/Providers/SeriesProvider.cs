@@ -80,7 +80,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var fileName = this.GetOriginalFileName(info);
-            this.Log($"GetSeriesMetadata of [name]: {info.Name} [fileName]: {fileName} IsAutomated: {info.IsAutomated}");
             var result = new MetadataResult<Series>();
 
             var sid = info.GetProviderId(DoubanProviderId);
@@ -89,6 +88,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 注意：会存在元数据有tmdbId，但metaSource没值的情况（之前由TMDB插件刮削导致）
             var hasTmdbMeta = metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(tmdbId);
             var hasDoubanMeta = metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid);
+            this.Log($"GetSeriesMetadata of [name]: {info.Name} [fileName]: {fileName} metaSource: {metaSource} EnableTmdb: {config.EnableTmdb}");
             if (!hasDoubanMeta && !hasTmdbMeta)
             {
                 // 自动扫描搜索匹配元数据

@@ -85,7 +85,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         public async Task<MetadataResult<Movie>> GetMetadata(MovieInfo info, CancellationToken cancellationToken)
         {
             var fileName = this.GetOriginalFileName(info);
-            this.Log($"GetMovieMetadata of [name]: {info.Name} [fileName]: {fileName} EnableTmdb: {config.EnableTmdb}");
             var result = new MetadataResult<Movie>();
 
             // 使用刷新元数据时，providerIds会保留旧有值，只有识别/新增才会没值
@@ -95,6 +94,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 注意：会存在元数据有tmdbId，但metaSource没值的情况（之前由TMDB插件刮削导致）
             var hasTmdbMeta = metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(tmdbId);
             var hasDoubanMeta = metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid);
+            this.Log($"GetMovieMetadata of [name]: {info.Name} [fileName]: {fileName} metaSource: {metaSource} EnableTmdb: {config.EnableTmdb}");
             if (!hasDoubanMeta && !hasTmdbMeta)
             {
                 // 处理extras影片

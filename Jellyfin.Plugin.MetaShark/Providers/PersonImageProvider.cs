@@ -49,6 +49,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         ProviderName = this.Name,
                         Url = this.GetProxyImageUrl(celebrity.Img),
                         Type = ImageType.Primary,
+                        Language = "zh",
                     });
                 }
 
@@ -68,6 +69,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         Width = x.Width,
                         Height = x.Height,
                         Type = ImageType.Primary,
+                        Language = "zh",
                     });
                 });
             }

@@ -30,7 +30,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
 
         [TestMethod]
-        public void TestGetMetadata()
+        public void TestSearch()
         {
             var httpClientFactory = new DefaultHttpClientFactory();
             var libraryManagerStub = new Mock<ILibraryManager>();
@@ -45,6 +45,29 @@ namespace Jellyfin.Plugin.MetaShark.Test
                 var info = new MovieInfo() { Name = "我", MetadataLanguage = "zh" };
                 var provider = new MovieProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetSearchResults(info, CancellationToken.None);
+                Assert.IsNotNull(result);
+
+                var str = result.ToJson();
+                Console.WriteLine(result.ToJson());
+            }).GetAwaiter().GetResult();
+        }
+
+        [TestMethod]
+        public void TestGetMetadata()
+        {
+            var httpClientFactory = new DefaultHttpClientFactory();
+            var libraryManagerStub = new Mock<ILibraryManager>();
+            var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
+            var doubanApi = new DoubanApi(loggerFactory);
+            var tmdbApi = new TmdbApi(loggerFactory);
+            var omdbApi = new OmdbApi(loggerFactory);
+            var imdbApi = new ImdbApi(loggerFactory);
+
+            Task.Run(async () =>
+            {
+                var info = new MovieInfo() { Name = "姥姥的外孙", MetadataLanguage = "zh" };
+                var provider = new MovieProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
+                var result = await provider.GetMetadata(info, CancellationToken.None);
                 Assert.IsNotNull(result);
 
                 var str = result.ToJson();
