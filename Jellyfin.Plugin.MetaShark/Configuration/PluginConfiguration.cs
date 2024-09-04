@@ -57,7 +57,7 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool EnableTmdbLogo { get; set; } = true;
     
     /// <summary>
-    /// 是否获取电影系列信息
+    /// 是否根据电影系列自动创建合集
     /// </summary>
     public bool EnableTmdbCollection { get; set; } = true;
     /// <summary>

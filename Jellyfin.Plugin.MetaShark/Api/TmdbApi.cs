@@ -60,7 +60,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return null;
             }
 
-            var key = $"movie-{tmdbId.ToString(CultureInfo.InvariantCulture)}-{language}";
+            var key = $"movie-{tmdbId.ToString(CultureInfo.InvariantCulture)}-{language}-{imageLanguages}";
             if (_memoryCache.TryGetValue(key, out Movie movie))
             {
                 return movie;
@@ -101,7 +101,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
         /// <returns>The TMDb collection or null if not found.</returns>
         public async Task<Collection?> GetCollectionAsync(int tmdbId, string language, string imageLanguages, CancellationToken cancellationToken)
         {
-            var key = $"collection-{tmdbId.ToString(CultureInfo.InvariantCulture)}-{language}";
+            var key = $"collection-{tmdbId.ToString(CultureInfo.InvariantCulture)}-{language}-{imageLanguages}";
             if (_memoryCache.TryGetValue(key, out Collection collection))
             {
                 return collection;
@@ -112,7 +112,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
             collection = await _tmDbClient.GetCollectionAsync(
                 tmdbId,
                 NormalizeLanguage(language),
-                imageLanguages,
+                GetImageLanguagesParam(imageLanguages),
                 CollectionMethods.Images,
                 cancellationToken).ConfigureAwait(false);
 
@@ -139,7 +139,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return null;
             }
 
-            var key = $"series-{tmdbId.ToString(CultureInfo.InvariantCulture)}-{language}";
+            var key = $"series-{tmdbId.ToString(CultureInfo.InvariantCulture)}-{language}-{imageLanguages}";
             if (_memoryCache.TryGetValue(key, out TvShow series))
             {
                 return series;
@@ -186,7 +186,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return null;
             }
 
-            var key = $"season-{tvShowId.ToString(CultureInfo.InvariantCulture)}-s{seasonNumber.ToString(CultureInfo.InvariantCulture)}-{language}";
+            var key = $"season-{tvShowId.ToString(CultureInfo.InvariantCulture)}-s{seasonNumber.ToString(CultureInfo.InvariantCulture)}-{language}-{imageLanguages}";
             if (_memoryCache.TryGetValue(key, out TvSeason season))
             {
                 return season;
@@ -233,7 +233,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return null;
             }
 
-            var key = $"episode-{tvShowId.ToString(CultureInfo.InvariantCulture)}-s{seasonNumber.ToString(CultureInfo.InvariantCulture)}e{episodeNumber.ToString(CultureInfo.InvariantCulture)}-{language}";
+            var key = $"episode-{tvShowId.ToString(CultureInfo.InvariantCulture)}-s{seasonNumber.ToString(CultureInfo.InvariantCulture)}e{episodeNumber.ToString(CultureInfo.InvariantCulture)}-{language}-{imageLanguages}";
             if (_memoryCache.TryGetValue(key, out TvEpisode episode))
             {
                 return episode;

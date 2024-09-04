@@ -107,14 +107,6 @@
                             <div class="fieldDescription">勾选后，使用TheMovieDb的商标图片补全</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label" for="EnableTmdbCollection">
-                                <input id="EnableTmdbCollection" name="EnableTmdbCollection" type="checkbox"
-                                    is="emby-checkbox" />
-                                <span>从TheMovieDb获取电影系列信息</span>
-                            </label>
-                            <div class="fieldDescription">勾选后，刮削会变慢，会自动创建电影系列合集（需先在媒体库配置中打开<b>自动添加到合集</b>功能）</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label" for="EnableTmdbOfficialRating">
                                 <input id="EnableTmdbOfficialRating" name="EnableTmdbOfficialRating" type="checkbox"
                                     is="emby-checkbox" />
@@ -122,6 +114,15 @@
                             </label>
                             <div class="fieldDescription">勾选后，刮削会变慢</div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label" for="EnableTmdbCollection">
+                                <input id="EnableTmdbCollection" name="EnableTmdbCollection" type="checkbox"
+                                    is="emby-checkbox" />
+                                <span>根据TheMovieDb电影系列信息自动创建合集</span>
+                            </label>
+                            <div class="fieldDescription">勾选后，会自动创建电影系列合集（和媒体库配置中的<b>自动添加到合集</b>功能冲突，需要先关闭）</div>
+                        </div>
+                        
                         <div class="inputContainer">
                             <label class="inputLabel inputLabelUnfocused" for="TmdbApiKey">Api Key</label>
                             <input id="TmdbApiKey" name="TmdbApiKey" type="text" is="emby-input" />

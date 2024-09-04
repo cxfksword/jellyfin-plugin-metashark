@@ -12,7 +12,7 @@ namespace Jellyfin.Plugin.MetaShark
         /// <inheritdoc />
         public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
         {
-            
+            serviceCollection.AddHostedService<BoxSetManager>();
             serviceCollection.AddSingleton((ctx) =>
             {
                 return new DoubanApi(ctx.GetRequiredService<ILoggerFactory>());

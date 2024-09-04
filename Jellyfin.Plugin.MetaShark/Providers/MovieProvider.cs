@@ -19,6 +19,7 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using TMDbLib.Objects.Search;
 
 namespace Jellyfin.Plugin.MetaShark.Providers
 {
@@ -157,12 +158,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
 
                 // 通过imdb获取电影系列信息
-                if (this.config.EnableTmdbCollection && !string.IsNullOrEmpty(tmdbId))
+                if (!string.IsNullOrEmpty(tmdbId))
                 {
-                    var collectionName = await this.GetTmdbCollection(info, tmdbId, cancellationToken).ConfigureAwait(false);
-                    if (!string.IsNullOrEmpty(collectionName))
+                    var belongCollection = await this.GetTmdbCollection(info, tmdbId, cancellationToken).ConfigureAwait(false);
+                    if (belongCollection != null && !string.IsNullOrEmpty(belongCollection.Name))
                     {
-                        movie.CollectionName = collectionName;
+                        movie.CollectionName = belongCollection.Name;
                     }
                 }
 
@@ -237,7 +238,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             movie.SetProviderId(Plugin.ProviderId, $"{MetaSource.Tmdb}_{tmdbId}");
 
             // 获取电影系列信息
-            if (this.config.EnableTmdbCollection && movieResult.BelongsToCollection != null)
+            if (movieResult.BelongsToCollection != null)
             {
                 movie.CollectionName = movieResult.BelongsToCollection.Name;
             }
@@ -364,15 +365,15 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
         }
 
-        private async Task<String?> GetTmdbCollection(MovieInfo info, string tmdbId, CancellationToken cancellationToken)
+        private async Task<SearchCollection?> GetTmdbCollection(MovieInfo info, string tmdbId, CancellationToken cancellationToken)
         {
 
             var movieResult = await _tmdbApi
                             .GetMovieAsync(Convert.ToInt32(tmdbId, CultureInfo.InvariantCulture), info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
                             .ConfigureAwait(false);
-            if (movieResult != null && movieResult.BelongsToCollection != null)
+            if (movieResult != null)
             {
-                return movieResult.BelongsToCollection.Name;
+                return movieResult.BelongsToCollection;
             }
 
             return null;
