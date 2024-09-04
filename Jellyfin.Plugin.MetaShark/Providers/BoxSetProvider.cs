@@ -5,9 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.MetaShark.Api;
-using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
@@ -98,7 +96,11 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
                 if (searchResults is not null && searchResults.Count > 0)
                 {
-                    tmdbId = searchResults[0].Id;
+                    tmdbId = searchResults.FirstOrDefault(x => x.Name == info.Name)?.Id ?? 0;
+                    if (tmdbId <= 0)
+                    {
+                        tmdbId = searchResults[0].Id;
+                    }
                 }
             }
 
@@ -115,17 +117,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         Name = collection.Name,
                         Overview = collection.Overview,
                     };
-
-                    var oldBotSet = _libraryManager.GetItemList(new InternalItemsQuery
-                    {
-                        IncludeItemTypes = new[] { BaseItemKind.BoxSet },
-                        CollapseBoxSetItems = false,
-                        Recursive = true
-                    }).Select(b => b as BoxSet).FirstOrDefault(x => x.Name == collection.Name);
-                    if (oldBotSet != null)
-                    {
-                        item.LinkedChildren = oldBotSet.LinkedChildren;
-                    }
 
                     item.SetProviderId(MetadataProvider.Tmdb, collection.Id.ToString(CultureInfo.InvariantCulture));
 
