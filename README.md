@@ -1,7 +1,7 @@
 # jellyfin-plugin-metashark
 
 [![release](https://img.shields.io/github/v/release/cxfksword/jellyfin-plugin-metashark)](https://github.com/cxfksword/jellyfin-plugin-metashark/releases)
-[![platform](https://img.shields.io/badge/jellyfin-10.9.x-lightgrey?logo=jellyfin)](https://github.com/cxfksword/jellyfin-plugin-metashark/releases)
+[![platform](https://img.shields.io/badge/jellyfin-10.9.x|10.10.x-lightgrey?logo=jellyfin)](https://github.com/cxfksword/jellyfin-plugin-metashark/releases)
 [![license](https://img.shields.io/github/license/cxfksword/jellyfin-plugin-metashark)](https://github.com/cxfksword/jellyfin-plugin-metashark/main/LICENSE) 
 
 jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TheMovieDb补全缺失的剧集数据。
