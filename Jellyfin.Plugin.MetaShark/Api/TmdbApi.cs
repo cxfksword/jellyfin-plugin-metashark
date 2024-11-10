@@ -549,7 +549,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return null;
             }
 
-            return _tmDbClient.GetImageUrl(_tmDbClient.Config.Images.PosterSizes[^1], posterPath).ToString();
+            return _tmDbClient.GetImageUrl(_tmDbClient.Config.Images.PosterSizes[^1], posterPath, true).ToString();
         }
 
         /// <summary>
@@ -564,7 +564,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return null;
             }
 
-            return _tmDbClient.GetImageUrl(_tmDbClient.Config.Images.BackdropSizes[^1], posterPath).ToString();
+            return _tmDbClient.GetImageUrl(_tmDbClient.Config.Images.BackdropSizes[^1], posterPath, true).ToString();
         }
 
         /// <summary>
@@ -579,7 +579,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return null;
             }
 
-            return _tmDbClient.GetImageUrl(_tmDbClient.Config.Images.ProfileSizes[^1], actorProfilePath).ToString();
+            return _tmDbClient.GetImageUrl(_tmDbClient.Config.Images.ProfileSizes[^1], actorProfilePath, true).ToString();
         }
 
         /// <summary>
@@ -594,7 +594,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return null;
             }
 
-            return _tmDbClient.GetImageUrl(_tmDbClient.Config.Images.StillSizes[^1], filePath).ToString();
+            return _tmDbClient.GetImageUrl(_tmDbClient.Config.Images.StillSizes[^1], filePath, true).ToString();
         }
 
         public string? GetLogoUrl(string filePath)
@@ -604,7 +604,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 return null;
             }
 
-            return _tmDbClient.GetImageUrl(_tmDbClient.Config.Images.LogoSizes[^1], filePath).ToString();
+            return _tmDbClient.GetImageUrl(_tmDbClient.Config.Images.LogoSizes[^1], filePath, true).ToString();
         }
 
         /// <inheritdoc />
