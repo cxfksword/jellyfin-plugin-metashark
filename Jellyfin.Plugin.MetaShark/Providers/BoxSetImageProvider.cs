@@ -50,6 +50,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
         {
             var tmdbId = Convert.ToInt32(item.GetProviderId(MetadataProvider.Tmdb), CultureInfo.InvariantCulture);
+            this.Log($"GetBoxSetImages of [name]: {item.Name} [tmdbId]: {tmdbId}");
 
             if (tmdbId <= 0)
             {

@@ -12,13 +12,13 @@ namespace Jellyfin.Plugin.MetaShark.Api
     public class OmdbApi : IDisposable
     {
         public const string DEFAULT_API_KEY = "2c9d9507";
-        private readonly ILogger<DoubanApi> _logger;
+        private readonly ILogger<OmdbApi> _logger;
         private readonly IMemoryCache _memoryCache;
         private readonly HttpClient httpClient;
 
         public OmdbApi(ILoggerFactory loggerFactory)
         {
-            _logger = loggerFactory.CreateLogger<DoubanApi>();
+            _logger = loggerFactory.CreateLogger<OmdbApi>();
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
             httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(5);
@@ -46,7 +46,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
             try
             {
-                var url = $"http://www.omdbapi.com/?i={id}&apikey={DEFAULT_API_KEY}";
+                var url = $"https://www.omdbapi.com/?i={id}&apikey={DEFAULT_API_KEY}";
                 item = await this.httpClient.GetFromJsonAsync<OmdbItem>(url, cancellationToken).ConfigureAwait(false);
                 _memoryCache.Set(cacheKey, item, expiredOption);
                 return item;
