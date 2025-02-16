@@ -63,7 +63,7 @@ def main():
         json.dump(manifest, f, indent=2)
 
     # # 国内加速
-    cn_domain = 'https://mirror.ghproxy.com/'
+    cn_domain = 'https://ghfast.top/'
     if 'CN_DOMAIN' in os.environ and os.environ["CN_DOMAIN"]:
         cn_domain = os.environ["CN_DOMAIN"]
     cn_domain = cn_domain.rstrip('/')

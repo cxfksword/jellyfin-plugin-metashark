@@ -16,7 +16,7 @@ jellyfin电影元数据插件，影片信息只要从豆瓣获取，并由TheMov
 
 添加插件存储库：
 
-国内加速：https://mirror.ghproxy.com/https://github.com/cxfksword/jellyfin-plugin-metashark/releases/download/manifest/manifest_cn.json
+国内加速：https://ghfast.top/https://github.com/cxfksword/jellyfin-plugin-metashark/releases/download/manifest/manifest_cn.json
 
 国外访问：https://github.com/cxfksword/jellyfin-plugin-metashark/releases/download/manifest/manifest.json
 
