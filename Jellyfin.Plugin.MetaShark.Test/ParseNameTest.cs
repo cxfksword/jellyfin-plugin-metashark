@@ -237,6 +237,12 @@ namespace Jellyfin.Plugin.MetaShark.Test
             Assert.AreEqual(parseResult.ParentIndexNumber, null);
             Assert.AreEqual(parseResult.IndexNumber, 2);
 
+            fileName = "Yes, Prime Minister s01e03 (The Grand Design) [PAL][DVD][DD2] x264.mkv";
+            parseResult = NameParser.ParseEpisode(fileName);
+            Assert.AreEqual(parseResult.Name, "Yes, Prime Minister");
+            Assert.AreEqual(parseResult.ParentIndexNumber, 1);
+            Assert.AreEqual(parseResult.IndexNumber, 3);
+
             // anime带季数
             fileName = "[WMSUB][Detective Conan - Zero‘s Tea Time ][S01][E06][BIG5][1080P].mp4";
             parseResult = NameParser.ParseEpisode(fileName);
@@ -272,7 +278,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
         [TestMethod]
         public void TestCheckExtra()
         {
-            var fileName = "[VCB-Studio] Spice and Wolf [CM02][Ma10p_1080p][x265_flac]";
+            var fileName = "A.Fight.for.Justice.S01E01.2024.2160p.IQ.WEB-DL.AAC.H265-Sunshine.mkv";
             var parseResult = NameParser.Parse(fileName);
             Assert.IsTrue(parseResult.IsExtra);
 
