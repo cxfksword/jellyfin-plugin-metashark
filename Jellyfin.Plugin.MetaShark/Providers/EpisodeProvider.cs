@@ -47,8 +47,14 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 覆盖所有元数据：info的Name、IndexNumber和ParentIndexNumber是从文件名解析出来的，provinceIds保留所有旧值
             // 搜索缺少的元数据：info的Name、IndexNumber和ParentIndexNumber是从当前的元数据获取，provinceIds保留所有旧值
             var fileName = Path.GetFileName(info.Path);
-            this.Log($"GetEpisodeMetadata of [name]: {info.Name} [fileName]: {fileName} number: {info.IndexNumber} ParentIndexNumber: {info.ParentIndexNumber} EnableTmdb: {config.EnableTmdb}");
+            this.Log($"GetEpisodeMetadata of [name]: {info.Name} [fileName]: {fileName} number: {info.IndexNumber} ParentIndexNumber: {info.ParentIndexNumber} IsMissingEpisode: {info.IsMissingEpisode} EnableTmdb: {config.EnableTmdb}");
             var result = new MetadataResult<Episode>();
+
+            // Allowing this will dramatically increase scan times
+            if (info.IsMissingEpisode)
+            {
+                return result;
+            }
 
             // 动画特典和extras处理
             var specialResult = this.HandleAnimeExtras(info);
@@ -136,6 +142,10 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             // 使用 AnitomySharp 进行重新解析，解决 anime 识别错误
             var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return info;
+            }
             var parseResult = NameParser.ParseEpisode(fileName);
             info.Year = parseResult.Year;
             info.Name = parseResult.ChineseName ?? parseResult.Name;
@@ -204,6 +214,11 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             // 特典或extra视频可能和正片剧集放在同一目录
             var fileName = Path.GetFileNameWithoutExtension(info.Path) ?? info.Name;
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return null;
+            }
+
             var parseResult = NameParser.ParseEpisode(fileName);
             if (parseResult.IsExtra)
             {
