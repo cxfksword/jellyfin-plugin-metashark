@@ -88,7 +88,27 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             var language = info.MetadataLanguage;
             this.Log($"GetBoxSetMetadata of [name]: {info.Name} [tmdbId]: {tmdbId} EnableTmdb: {config.EnableTmdb}");
 
-            // We don't already have an Id, need to fetch it
+            // 优先从文件名属性格式获取TMDB ID，支持 {tmdb-12345} 和 [tmdbid-12345] 格式
+            if (tmdbId <= 0)
+            {
+                var fileName = this.GetOriginalFileName(info);
+                this.Log($"[BoxSet TMDB ID提取] 开始检查文件名: {fileName}");
+                var tmdbIdFromFileName = this.regTmdbIdAttribute.FirstMatchGroup(fileName);
+                if (!string.IsNullOrWhiteSpace(tmdbIdFromFileName) && int.TryParse(tmdbIdFromFileName, out var parsedTmdbId))
+                {
+                    this.Log($"[BoxSet TMDB ID提取] ✓ 成功从文件名提取到TMDB ID: {tmdbIdFromFileName} (文件名: {fileName})");
+                    tmdbId = parsedTmdbId;
+                }
+                else
+                {
+                    this.Log($"[BoxSet TMDB ID提取] ✗ 文件名中未找到TMDB ID格式 (文件名: {fileName})");
+                }
+            }
+            else
+            {
+                this.Log($"[BoxSet TMDB ID提取] 已存在TMDB ID: {tmdbId}，跳过文件名提取");
+            }
+
             if (tmdbId <= 0)
             {
                 // ParseName is required here.

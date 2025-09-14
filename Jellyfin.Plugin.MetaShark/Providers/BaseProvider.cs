@@ -54,6 +54,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         protected Regex regMetaSourcePrefix = new Regex(@"^\[.+\]", RegexOptions.Compiled);
         protected Regex regSeasonNameSuffix = new Regex(@"\s第[0-9一二三四五六七八九十]+?季$|\sSeason\s\d+?$|(?<![0-9a-zA-Z])\d$", RegexOptions.Compiled);
         protected Regex regDoubanIdAttribute = new Regex(@"\[(?:douban|doubanid)-(\d+?)\]", RegexOptions.Compiled);
+        protected Regex regTmdbIdAttribute = new Regex(@"\{tmdb-(\d+?)\}|\[tmdbid-(\d+?)\]", RegexOptions.Compiled);
 
         protected PluginConfiguration config
         {
@@ -274,6 +275,19 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         protected async Task<string?> GuestByTmdbAsync(string name, int? year, ItemLookupInfo info, CancellationToken cancellationToken)
         {
             var fileName = GetOriginalFileName(info);
+            this.Log($"[TMDB ID提取] 开始检查文件名: {fileName}");
+
+            // 从文件名属性格式获取TMDB ID，支持 {tmdb-12345} 和 [tmdbid-12345] 格式
+            var tmdbId = this.regTmdbIdAttribute.FirstMatchGroup(fileName);
+            if (!string.IsNullOrWhiteSpace(tmdbId))
+            {
+                this.Log($"[TMDB ID提取] ✓ 成功从文件名提取到TMDB ID: {tmdbId} (文件名: {fileName})");
+                return tmdbId;
+            }
+            else
+            {
+                this.Log($"[TMDB ID提取] ✗ 文件名中未找到TMDB ID格式 (文件名: {fileName})");
+            }
 
             this.Log($"GuestByTmdb of [name]: {name} [year]: {year}");
             switch (info)

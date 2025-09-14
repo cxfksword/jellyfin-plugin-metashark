@@ -90,6 +90,27 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 使用刷新元数据时，providerIds会保留旧有值，只有识别/新增才会没值
             var sid = info.GetProviderId(DoubanProviderId);
             var tmdbId = info.GetProviderId(MetadataProvider.Tmdb);
+            
+            // 优先从文件名属性格式获取TMDB ID，支持 {tmdb-12345} 和 [tmdbid-12345] 格式
+            if (string.IsNullOrEmpty(tmdbId))
+            {
+                this.Log($"[Movie TMDB ID提取] 开始检查文件名: {fileName}");
+                var tmdbIdFromFileName = this.regTmdbIdAttribute.FirstMatchGroup(fileName);
+                if (!string.IsNullOrWhiteSpace(tmdbIdFromFileName))
+                {
+                    this.Log($"[Movie TMDB ID提取] ✓ 成功从文件名提取到TMDB ID: {tmdbIdFromFileName} (文件名: {fileName})");
+                    tmdbId = tmdbIdFromFileName;
+                }
+                else
+                {
+                    this.Log($"[Movie TMDB ID提取] ✗ 文件名中未找到TMDB ID格式 (文件名: {fileName})");
+                }
+            }
+            else
+            {
+                this.Log($"[Movie TMDB ID提取] 已存在TMDB ID: {tmdbId}，跳过文件名提取");
+            }
+            
             var metaSource = info.GetMetaSource(Plugin.ProviderId);
             // 注意：会存在元数据有tmdbId，但metaSource没值的情况（之前由TMDB插件刮削导致）
             var hasTmdbMeta = metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(tmdbId);
