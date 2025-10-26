@@ -36,9 +36,9 @@ jobs:
       - name: Build
         run: |
           dotnet restore ${{ env.project }} --no-cache
-          dotnet publish --nologo --no-restore --configuration=Release --framework=net8.0 ${{ env.project }}
+          dotnet publish --nologo --no-restore --configuration=Release --framework=net9.0 ${{ env.project }}
           mkdir -p artifacts
-          cp ./Jellyfin.Plugin.MetaShark/bin/Release/net8.0/Jellyfin.Plugin.MetaShark.dll ./artifacts/
+          cp ./Jellyfin.Plugin.MetaShark/bin/Release/net9.0/Jellyfin.Plugin.MetaShark.dll ./artifacts/
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
