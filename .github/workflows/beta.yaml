@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  dotnet-version: 8.0.x
+  dotnet-version: 9.0.x
   python-version: 3.8
   project: Jellyfin.Plugin.MetaShark/Jellyfin.Plugin.MetaShark.csproj
   artifact: metashark

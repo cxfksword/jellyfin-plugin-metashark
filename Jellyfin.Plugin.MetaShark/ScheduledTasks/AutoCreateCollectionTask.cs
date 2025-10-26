@@ -37,7 +37,7 @@ namespace Jellyfin.Plugin.MetaShark.ScheduledTasks
         {
             yield return new TaskTriggerInfo
             {
-                Type = TaskTriggerInfo.TriggerDaily,
+                Type = TaskTriggerInfoType.DailyTrigger,
                 TimeOfDayTicks = TimeSpan.FromHours(0).Ticks
             };
         }

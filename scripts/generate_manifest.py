@@ -26,7 +26,7 @@ def generate_version(filepath, version, changelog):
     return {
         'version': f"{version}.0",
         'changelog': changelog,
-        'targetAbi': '10.9.0.0',
+        'targetAbi': '10.11.0.0',
         'sourceUrl': f'https://github.com/cxfksword/jellyfin-plugin-metashark/releases/download/v{version}/metashark_{version}.0.zip',
         'checksum': md5sum(filepath),
         'timestamp': datetime.now().strftime('%Y-%m-%dT%H:%M:%S')

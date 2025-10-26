@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-dotnet@v3
         id: dotnet
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 9.0.x
       - name: Change default dotnet version
         run: |
           echo '{"sdk":{"version": "${{ steps.dotnet.outputs.dotnet-version }}"}}' > ./global.json

@@ -19,8 +19,6 @@ namespace Jellyfin.Plugin.MetaShark.Providers.ExternalId
 
         public ExternalIdMediaType? Type => null;
 
-        public string UrlFormatString => "https://movie.douban.com/subject/{0}/";
-
         public bool Supports(IHasProviderIds item)
         {
             return item is Movie || item is Series || item is Season;
