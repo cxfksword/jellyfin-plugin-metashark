@@ -36,7 +36,9 @@ jobs:
         run: |
           VERSION=$(echo "${GITHUB_REF#refs/*/}" | sed s/^v//)
           VERSION="$VERSION.0"
+          CHANGE_LOG=$(git tag -l '--format=%(contents)' ${{ github.ref_name }})
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "CHANGE_LOG=${CHANGE_LOG}" >> $GITHUB_OUTPUT
           echo "APP_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_OUTPUT
       - name: Build
         run: |
@@ -57,6 +59,9 @@ jobs:
           release_name: '${{ github.ref_name }}'
           file_glob: true
           overwrite: true
+          body: |
+            ${{steps.vars.outputs.CHANGE_LOG}}
+            ![download](https://img.shields.io/github/downloads/${{ github.repository }}/${{ github.ref_name }}/total?label=Downloads)
       - name: Publish manifest
         uses: svenstaro/upload-release-action@v2
         with:

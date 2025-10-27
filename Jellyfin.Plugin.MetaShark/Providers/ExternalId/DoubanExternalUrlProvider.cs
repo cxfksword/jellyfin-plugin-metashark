@@ -19,9 +19,22 @@ namespace Jellyfin.Plugin.MetaShark.Providers.ExternalId
         /// <inheritdoc/>
         public IEnumerable<string> GetExternalUrls(BaseItem item)
         {
-            if (item.TryGetProviderId(BaseProvider.DoubanProviderId, out var externalId))
+            switch (item)
             {
-                yield return $"https://movie.douban.com/subject/{externalId}/";
+                case Person:
+                    if (item.TryGetProviderId(BaseProvider.DoubanProviderId, out var externalId))
+                    {
+                        yield return $"https://www.douban.com/personage/{externalId}/";
+                    }
+
+                    break;
+                default:
+                    if (item.TryGetProviderId(BaseProvider.DoubanProviderId, out externalId))
+                    {
+                        yield return $"https://movie.douban.com/subject/{externalId}/";
+                    }
+
+                    break;
             }
         }
     }
