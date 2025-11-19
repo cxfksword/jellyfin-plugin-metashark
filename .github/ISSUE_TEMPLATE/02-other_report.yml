@@ -1,0 +1,24 @@
+name: "其他问题报告"
+description: 其他问题报告 / 问题
+title: "请修改标题为您遇到的问题"
+body:
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: 问题描述（必填）
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志（必填）
+      description: |
+        请复制粘贴相关日志，(可隐藏隐私字段) 日志访问路径：`打开菜单 -> 控制台 -> 日志`
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图（可选）
+      description: |
+        请提供相关问题截图。

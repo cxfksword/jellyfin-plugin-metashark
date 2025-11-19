@@ -1,0 +1,41 @@
+name: "错误报告"
+description: 错误报告 / 问题
+title: "[BUG] 请修改标题为您遇到的问题"
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢您花时间填写此错误报告。
+        请**务必**确认您的问题无重复，且不是因为您的操作、网络或第三方软件问题。
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: 问题描述（必填）
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志（必填）
+      description: |
+        请复制粘贴错误日志，(可隐藏隐私字段) 日志访问路径：`打开菜单 -> 控制台 -> 日志`
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图（可选）
+      description: |
+        请提供相关问题截图。
+  - type: textarea
+    id: environment
+    attributes:
+      label: 运行环境（可选）
+      description: |
+        请提供运行环境信息
+      value: |
+        - 操作系统：[例如 windows/docker]
+        - jellyfin 版本：[例如 10.8.9]
+        - 插件版本：[例如 1.7.1]
