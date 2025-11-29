@@ -92,6 +92,51 @@ namespace Jellyfin.Plugin.MetaShark.Api
         }
 
         /// <summary>
+        /// Gets a movie images from the TMDb API based on its TMDb id.
+        /// </summary>
+        /// <param name="tmdbId">The movie's TMDb id.</param>
+        /// <param name="language">The movie's language.</param>
+        /// <param name="imageLanguages">A comma-separated list of image languages.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The TMDb movie images or null if not found.</returns>
+        public async Task<ImagesWithId?> GetMovieImagesAsync(int tmdbId, string language, string imageLanguages, CancellationToken cancellationToken)
+        {
+            if (!this.IsEnable())
+            {
+                return null;
+            }
+
+            var key = $"movie-images-{tmdbId.ToString(CultureInfo.InvariantCulture)}-{language}-{imageLanguages}";
+            if (_memoryCache.TryGetValue(key, out ImagesWithId images))
+            {
+                return images;
+            }
+
+            try
+            {
+                await EnsureClientConfigAsync().ConfigureAwait(false);
+
+                images = await _tmDbClient.GetMovieImagesAsync(
+                    tmdbId,
+                    NormalizeLanguage(language),
+                    GetImageLanguagesParam(imageLanguages),
+                    cancellationToken).ConfigureAwait(false);
+
+                if (images != null)
+                {
+                    _memoryCache.Set(key, images, TimeSpan.FromHours(CacheDurationInHours));
+                }
+
+                return images;
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, ex.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Gets a collection from the TMDb API based on its TMDb id.
         /// </summary>
         /// <param name="tmdbId">The collection's TMDb id.</param>
@@ -162,6 +207,51 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 }
 
                 return series;
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, ex.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets a tv show images from the TMDb API based on its TMDb id.
+        /// </summary>
+        /// <param name="tmdbId">The tv show's TMDb id.</param>
+        /// <param name="language">The tv show's language.</param>
+        /// <param name="imageLanguages">A comma-separated list of image languages.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The TMDb tv show images or null if not found.</returns>
+        public async Task<ImagesWithId?> GetSeriesImagesAsync(int tmdbId, string language, string imageLanguages, CancellationToken cancellationToken)
+        {
+            if (!this.IsEnable())
+            {
+                return null;
+            }
+
+            var key = $"series-images-{tmdbId.ToString(CultureInfo.InvariantCulture)}-{language}-{imageLanguages}";
+            if (_memoryCache.TryGetValue(key, out ImagesWithId images))
+            {
+                return images;
+            }
+
+            try
+            {
+                await EnsureClientConfigAsync().ConfigureAwait(false);
+
+                images = await _tmDbClient.GetTvShowImagesAsync(
+                    tmdbId,
+                    NormalizeLanguage(language),
+                    GetImageLanguagesParam(imageLanguages),
+                    cancellationToken).ConfigureAwait(false);
+
+                if (images != null)
+                {
+                    _memoryCache.Set(key, images, TimeSpan.FromHours(CacheDurationInHours));
+                }
+
+                return images;
             }
             catch (Exception ex)
             {

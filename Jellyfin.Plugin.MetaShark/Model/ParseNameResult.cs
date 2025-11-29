@@ -43,7 +43,7 @@ namespace Jellyfin.Plugin.MetaShark.Model
         {
             get
             {
-                return !string.IsNullOrEmpty(AnimeType) && AnimeType.ToUpper() != "SP";
+                return !string.IsNullOrEmpty(AnimeType) && AnimeType.ToUpper() != "SP" && AnimeType.ToUpper() != "OVA";
             }
         }
 

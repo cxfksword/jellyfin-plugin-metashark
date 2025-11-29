@@ -76,9 +76,17 @@
                             <h3>TheMovieDb</h3>
                         </legend>
                         <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label" for="EnableTmdbMatch">
+                                <input id="EnableTmdbMatch" name="EnableTmdbMatch" type="checkbox"
+                                    is="emby-checkbox" />
+                                <span>启用TheMovieDb自动匹配</span>
+                            </label>
+                            <div class="fieldDescription">勾选后，当从豆瓣匹配不到元数据时，会尝试从TheMovieDb获取元数据</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label" for="EnableTmdb">
                                 <input id="EnableTmdb" name="EnableTmdb" type="checkbox" is="emby-checkbox" />
-                                <span>启用从TheMovieDb获取元数据</span>
+                                <span>启用从TheMovieDb获取剧集元数据</span>
                             </label>
                             <div class="fieldDescription">勾选后，会尝试从TheMovieDb获取剧集元数据</div>
                         </div>
@@ -186,6 +194,7 @@
 
                         document.querySelector('#EnableTmdb').checked = config.EnableTmdb;
                         document.querySelector('#EnableTmdbSearch').checked = config.EnableTmdbSearch;
+                        document.querySelector('#EnableTmdbMatch').checked = config.EnableTmdbMatch;
                         document.querySelector('#EnableTmdbBackdrop').checked = config.EnableTmdbBackdrop;
                         document.querySelector('#EnableTmdbLogo').checked = config.EnableTmdbLogo;
                         document.querySelector('#EnableTmdbCollection').checked = config.EnableTmdbCollection;
@@ -216,6 +225,7 @@
 
                         config.EnableTmdb = document.querySelector('#EnableTmdb').checked;
                         config.EnableTmdbSearch = document.querySelector('#EnableTmdbSearch').checked;
+                        config.EnableTmdbMatch = document.querySelector('#EnableTmdbMatch').checked;
                         config.EnableTmdbBackdrop = document.querySelector('#EnableTmdbBackdrop').checked;
                         config.EnableTmdbLogo = document.querySelector('#EnableTmdbLogo').checked;
                         config.EnableTmdbCollection = document.querySelector('#EnableTmdbCollection').checked;
@@ -263,7 +273,7 @@
                     if (resp && resp.code != 1) {
                         $('#login_msg').css("color", "red").text('(已失效)').show();
                     } else {
-                        $('#login_msg').css("color", "").text('(已生效)').show();
+                        $('#login_msg').css("color", "green").text('(已生效)').show();
                     }
                 })
             }

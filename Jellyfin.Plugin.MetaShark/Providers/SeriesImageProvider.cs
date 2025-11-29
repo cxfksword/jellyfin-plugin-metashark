@@ -44,7 +44,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             var sid = item.GetProviderId(DoubanProviderId);
             var metaSource = item.GetMetaSource(Plugin.ProviderId);
-            this.Log($"GetImages for item: {item.Name} [metaSource]: {metaSource}");
+            this.Log($"GetImages for item: {item.Name} lang: {item.GetPreferredMetadataLanguage()} [metaSource]: {metaSource}");
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
                 var primary = await this._doubanApi.GetMovieAsync(sid, cancellationToken).ConfigureAwait(false);
@@ -58,7 +58,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         ProviderName = this.Name,
                         Url = this.GetDoubanPoster(primary),
                         Type = ImageType.Primary,
-                        Language = "zh",
+                        Language = item.GetPreferredMetadataLanguage(),
                     },
                 };
 
@@ -73,19 +73,24 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (metaSource == MetaSource.Tmdb && !string.IsNullOrEmpty(tmdbId))
             {
                 var language = item.GetPreferredMetadataLanguage();
-                // 设定language会导致图片被过滤，这里设为null，保持取全部语言图片
+                
                 var movie = await this._tmdbApi
-                .GetSeriesAsync(tmdbId.ToInt(), null, null, cancellationToken)
+                .GetSeriesAsync(tmdbId.ToInt(), language, language, cancellationToken)
                 .ConfigureAwait(false);
 
-                if (movie?.Images == null)
+                // 设定language会导致图片被过滤，这里设为null，保持取全部语言图片
+                var images = await this._tmdbApi
+                .GetSeriesImagesAsync(tmdbId.ToInt(), null, null, cancellationToken)
+                .ConfigureAwait(false);
+
+                if (movie == null || images == null)
                 {
                     return Enumerable.Empty<RemoteImageInfo>();
                 }
 
                 var remoteImages = new List<RemoteImageInfo>();
 
-                remoteImages.AddRange(movie.Images.Posters.Select(x => new RemoteImageInfo {
+                remoteImages.AddRange(images.Posters.Where(x => x.FilePath == movie.PosterPath).Select(x => new RemoteImageInfo {
                         ProviderName = this.Name,
                         Url = this._tmdbApi.GetPosterUrl(x.FilePath),
                         Type = ImageType.Primary,
@@ -93,11 +98,11 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         VoteCount = x.VoteCount,
                         Width = x.Width,
                         Height = x.Height,
-                        Language = this.AdjustImageLanguage(x.Iso_639_1, language),
+                        Language = language,
                         RatingType = RatingType.Score,
                     }));
 
-                remoteImages.AddRange(movie.Images.Backdrops.Select(x => new RemoteImageInfo {
+                remoteImages.AddRange(images.Backdrops.Where(x => x.FilePath == movie.BackdropPath).Select(x => new RemoteImageInfo {
                         ProviderName = this.Name,
                         Url = this._tmdbApi.GetBackdropUrl(x.FilePath),
                         Type = ImageType.Backdrop,
@@ -105,11 +110,11 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         VoteCount = x.VoteCount,
                         Width = x.Width,
                         Height = x.Height,
-                        Language = this.AdjustImageLanguage(x.Iso_639_1, language),
+                        Language = language,
                         RatingType = RatingType.Score,
                     }));
 
-                remoteImages.AddRange(movie.Images.Logos.Select(x => new RemoteImageInfo {
+                remoteImages.AddRange(images.Logos.Select(x => new RemoteImageInfo {
                         ProviderName = this.Name,
                         Url = this._tmdbApi.GetLogoUrl(x.FilePath),
                         Type = ImageType.Logo,
@@ -121,6 +126,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         RatingType = RatingType.Score,
                     }));
 
+                // TODO：jellyfin 内部判断取哪个图片时，还会默认使用 OrderByLanguageDescending 排序一次，这里排序没用
                 return remoteImages.OrderByLanguageDescending(language);
             }
 
@@ -205,13 +211,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             if (this.config.EnableTmdbLogo && !string.IsNullOrEmpty(tmdbId))
             {
                 this.Log("GetLogos from tmdb id: {0}", tmdbId);
-                var movie = await this._tmdbApi
-                .GetSeriesAsync(tmdbId.ToInt(), null, null, cancellationToken)
+                var images = await this._tmdbApi
+                .GetSeriesImagesAsync(tmdbId.ToInt(), null, null, cancellationToken)
                 .ConfigureAwait(false);
 
-                if (movie != null && movie.Images != null)
+                if (images != null)
                 {
-                    list.AddRange(movie.Images.Logos.Select(x => new RemoteImageInfo {
+                    list.AddRange(images.Logos.Select(x => new RemoteImageInfo {
                         ProviderName = this.Name,
                         Url = this._tmdbApi.GetLogoUrl(x.FilePath),
                         Type = ImageType.Logo,

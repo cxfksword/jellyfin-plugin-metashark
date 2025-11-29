@@ -174,15 +174,25 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 从季文件夹名称猜出 season number
             // 没有 season 级目录或部分特殊不规范命名，会变成虚拟季，ParentIndexNumber 默认设为 1
             // https://github.com/jellyfin/jellyfin/blob/926470829d91d93b4c0b22c5b8b89a791abbb434/Emby.Server.Implementations/Library/LibraryManager.cs#L2626
+            // 从 10.10.7 开始 jellyfin 去掉了虚拟季默认为 1 的处理，需要我们自己修正
+            // https://github.com/jellyfin/jellyfin/commit/72911501d34a1da4333f731e1f24169c21248f54 
             var isVirtualSeason = this.IsVirtualSeason(info);
             var seasonFolderPath = this.GetOriginalSeasonPath(info);
-            if (info.ParentIndexNumber is null or 1 && isVirtualSeason && seasonFolderPath != null)
+            if (info.ParentIndexNumber is null or 1 && isVirtualSeason)
             {
-                var guestSeasonNumber = this.GuessSeasonNumberByDirectoryName(seasonFolderPath);
-                if (guestSeasonNumber.HasValue && guestSeasonNumber != info.ParentIndexNumber)
+                if (seasonFolderPath != null)
                 {
-                    this.Log("FixSeasonNumber by season path. old: {0} new: {1}", info.ParentIndexNumber, guestSeasonNumber);
-                    info.ParentIndexNumber = guestSeasonNumber;
+                    var guestSeasonNumber = this.GuessSeasonNumberByDirectoryName(seasonFolderPath);
+                    if (guestSeasonNumber.HasValue && guestSeasonNumber != info.ParentIndexNumber)
+                    {
+                        this.Log("FixSeasonNumber by season path. old: {0} new: {1}", info.ParentIndexNumber, guestSeasonNumber);
+                        info.ParentIndexNumber = guestSeasonNumber;
+                    }
+                }
+                else
+                {
+                    this.Log("FixSeasonNumber by virtual season. old: {0} new: {1}", info.ParentIndexNumber, 1);
+                    info.ParentIndexNumber = 1;
                 }
             }
 

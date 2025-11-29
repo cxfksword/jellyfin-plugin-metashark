@@ -47,6 +47,11 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool EnableTmdbSearch { get; set; } = false;
 
     /// <summary>
+    /// 启用tmdb自动匹配
+    /// </summary>
+    public bool EnableTmdbMatch { get; set; } = true;
+
+    /// <summary>
     /// 启用tmdb获取背景图
     /// </summary>
     public bool EnableTmdbBackdrop { get; set; } = true;
