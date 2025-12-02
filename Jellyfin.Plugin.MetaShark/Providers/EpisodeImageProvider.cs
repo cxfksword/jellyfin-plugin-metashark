@@ -62,18 +62,15 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
             var language = item.GetPreferredMetadataLanguage();
 
-            // 利用season缓存取剧集信息会更快
-            var seasonResult = await this._tmdbApi
-                .GetSeasonAsync(seriesTmdbId, seasonNumber.Value, null, null, cancellationToken)
+            var episodeResult = await this.GetEpisodeAsync(seriesTmdbId, seasonNumber, episodeNumber, series.DisplayOrder, language, language, cancellationToken)
                 .ConfigureAwait(false);
-            if (seasonResult == null || seasonResult.Episodes.Count < episodeNumber.Value)
+            if (episodeResult == null)
             {
-                this.Log($"[GetEpisodeImages] Can't get season data for seasonNumber: {seasonNumber} episodeNumber: {episodeNumber}");
+                this.Log("GetEpisodeImages] 找不到tmdb剧集数据. seriesTmdbId: {0} seasonNumber: {1} episodeNumber: {2} displayOrder: {3}", seriesTmdbId, seasonNumber, episodeNumber, series.DisplayOrder);
                 return Enumerable.Empty<RemoteImageInfo>();
             }
 
             var result = new List<RemoteImageInfo>();
-            var episodeResult = seasonResult.Episodes[episodeNumber.Value - 1];
             if (!string.IsNullOrEmpty(episodeResult.StillPath))
             {
                 result.Add(new RemoteImageInfo

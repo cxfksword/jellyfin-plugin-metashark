@@ -198,7 +198,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                     tmdbId,
                     language: NormalizeLanguage(language),
                     includeImageLanguage: GetImageLanguagesParam(imageLanguages),
-                    extraMethods: TvShowMethods.Credits | TvShowMethods.Images | TvShowMethods.Keywords | TvShowMethods.ExternalIds | TvShowMethods.Videos | TvShowMethods.ContentRatings,
+                    extraMethods: TvShowMethods.Credits | TvShowMethods.Images | TvShowMethods.Keywords | TvShowMethods.ExternalIds | TvShowMethods.Videos | TvShowMethods.ContentRatings | TvShowMethods.EpisodeGroups,
                     cancellationToken: cancellationToken).ConfigureAwait(false);
 
                 if (series != null)
@@ -252,6 +252,65 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 }
 
                 return images;
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, ex.Message);
+                return null;
+            }
+        }
+
+        public async Task<TvGroupCollection?> GetSeriesGroupAsync(int tvShowId, string displayOrder, string? language, string? imageLanguages, CancellationToken cancellationToken)
+        {
+            if (!this.IsEnable())
+            {
+                return null;
+            }
+
+            TvGroupType? groupType =
+                string.Equals(displayOrder, "originalAirDate", StringComparison.Ordinal) ? TvGroupType.OriginalAirDate :
+                string.Equals(displayOrder, "absolute", StringComparison.Ordinal) ? TvGroupType.Absolute :
+                string.Equals(displayOrder, "dvd", StringComparison.Ordinal) ? TvGroupType.DVD :
+                string.Equals(displayOrder, "digital", StringComparison.Ordinal) ? TvGroupType.Digital :
+                string.Equals(displayOrder, "storyArc", StringComparison.Ordinal) ? TvGroupType.StoryArc :
+                string.Equals(displayOrder, "production", StringComparison.Ordinal) ? TvGroupType.Production :
+                string.Equals(displayOrder, "tv", StringComparison.Ordinal) ? TvGroupType.TV :
+                null;
+
+            if (groupType is null)
+            {
+                return null;
+            }
+
+            var key = $"group-{tvShowId.ToString(CultureInfo.InvariantCulture)}-{displayOrder}-{language}";
+            if (_memoryCache.TryGetValue(key, out TvGroupCollection? group))
+            {
+                return group;
+            }
+
+            try
+            {
+                await EnsureClientConfigAsync().ConfigureAwait(false);
+
+                var series = await GetSeriesAsync(tvShowId, language, imageLanguages, cancellationToken).ConfigureAwait(false);
+                var episodeGroupId = series?.EpisodeGroups.Results.Find(g => g.Type == groupType)?.Id;
+
+                if (episodeGroupId is null)
+                {
+                    return null;
+                }
+
+                group = await _tmDbClient.GetTvEpisodeGroupsAsync(
+                    episodeGroupId,
+                    language: NormalizeLanguage(language),
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
+
+                if (group is not null)
+                {
+                    _memoryCache.Set(key, group, TimeSpan.FromHours(CacheDurationInHours));
+                }
+
+                return group;
             }
             catch (Exception ex)
             {

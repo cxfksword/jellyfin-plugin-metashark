@@ -47,7 +47,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             // 覆盖所有元数据：info的Name、IndexNumber和ParentIndexNumber是从文件名解析出来的，provinceIds保留所有旧值
             // 搜索缺少的元数据：info的Name、IndexNumber和ParentIndexNumber是从当前的元数据获取，provinceIds保留所有旧值
             var fileName = Path.GetFileName(info.Path);
-            this.Log($"GetEpisodeMetadata of [name]: {info.Name} [fileName]: {fileName} number: {info.IndexNumber} ParentIndexNumber: {info.ParentIndexNumber} IsMissingEpisode: {info.IsMissingEpisode} EnableTmdb: {config.EnableTmdb}");
+            this.Log($"GetEpisodeMetadata of [name]: {info.Name} [fileName]: {fileName} number: {info.IndexNumber} ParentIndexNumber: {info.ParentIndexNumber} IsMissingEpisode: {info.IsMissingEpisode} EnableTmdb: {config.EnableTmdb} DisplayOrder: {info.SeriesDisplayOrder}");
             var result = new MetadataResult<Episode>();
 
             // Allowing this will dramatically increase scan times
@@ -80,32 +80,17 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             if (episodeNumber is null or 0 || seasonNumber is null || string.IsNullOrEmpty(seriesTmdbId))
             {
-                this.Log("Lack meta data. episodeNumber: {0} seasonNumber: {1} seriesTmdbId:{2}", episodeNumber, seasonNumber, seriesTmdbId);
+                this.Log("缺少元数据. episodeNumber: {0} seasonNumber: {1} seriesTmdbId:{2}", episodeNumber, seasonNumber, seriesTmdbId);
                 return result;
             }
 
-            // 利用season缓存取剧集信息会更快
-            var seasonResult = await this._tmdbApi
-                .GetSeasonAsync(seriesTmdbId.ToInt(), seasonNumber.Value, info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
+            var episodeResult = await this.GetEpisodeAsync(seriesTmdbId.ToInt(), seasonNumber, episodeNumber, info.SeriesDisplayOrder, info.MetadataLanguage, info.MetadataLanguage, cancellationToken)
                 .ConfigureAwait(false);
-            if (seasonResult == null || seasonResult.Episodes == null || seasonResult.Episodes.Count < episodeNumber.Value)
+            if (episodeResult == null)
             {
-                this.Log("Can‘t found episode data from tmdb. Name: {0} seriesTmdbId: {1} seasonNumber: {2} episodeNumber: {3}", info.Name, seriesTmdbId, seasonNumber, episodeNumber);
+                this.Log("找不到tmdb剧集数据. seriesTmdbId: {0} seasonNumber: {1} episodeNumber: {2} displayOrder: {3}", seriesTmdbId, seasonNumber, episodeNumber, info.SeriesDisplayOrder);
                 return result;
             }
-
-            // TODO：自动搜索匹配或识别时，判断tmdb剧集信息数目和视频是否一致，不一致不处理（现在通过IsAutomated判断不太准确）
-            // if (info.IsAutomated)
-            // {
-            //     var videoFilesCount = this.GetVideoFileCount(Path.GetDirectoryName(info.Path));
-            //     if (videoFilesCount > 0 && seasonResult.Episodes.Count != videoFilesCount)
-            //     {
-            //         this.Log("Tmdb episode number not match. Name: {0} tmdb episode count: {1} video files count: {2}", info.Name, seasonResult.Episodes.Count, videoFilesCount);
-            //         return result;
-            //     }
-            // }
-
-            var episodeResult = seasonResult.Episodes[episodeNumber.Value - 1];
 
             result.HasMetadata = true;
             result.QueriedById = true;

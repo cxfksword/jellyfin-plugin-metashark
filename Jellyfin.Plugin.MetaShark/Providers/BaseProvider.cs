@@ -76,6 +76,51 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             this._httpContextAccessor = httpContextAccessor;
         }
 
+        protected async Task<TMDbLib.Objects.Search.TvSeasonEpisode?> GetEpisodeAsync(int seriesTmdbId, int? seasonNumber, int? episodeNumber, string displayOrder, string? language, string? imageLanguages, CancellationToken cancellationToken)
+        {
+            // 根据剧集组获取对应的剧集信息
+            if (!string.IsNullOrWhiteSpace(displayOrder))
+            {
+                var group = await this._tmdbApi.GetSeriesGroupAsync(seriesTmdbId, displayOrder, language, imageLanguages, cancellationToken).ConfigureAwait(false);
+                if (group != null)
+                {
+                    var season = group.Groups.Find(s => s.Order == seasonNumber);
+                    // Episode order starts at 0
+                    var ep = season?.Episodes.Find(e => e.Order == episodeNumber - 1);
+                    if (ep is not null)
+                    {
+                        // 利用season缓存取剧集信息会更快
+                        var result = await this._tmdbApi
+                            .GetSeasonAsync(seriesTmdbId, ep.SeasonNumber, language, imageLanguages, cancellationToken)
+                            .ConfigureAwait(false);
+                        if (result == null || result.Episodes == null)
+                        {
+                            return null;
+                        }
+                        if (ep.EpisodeNumber > result.Episodes.Count)
+                        {
+                            return null;
+                        }
+                        return result.Episodes[ep.EpisodeNumber - 1];
+                    }
+                }
+            }
+
+            // 利用season缓存取剧集信息会更快
+            var seasonResult = await this._tmdbApi
+                .GetSeasonAsync(seriesTmdbId, seasonNumber.Value, language, imageLanguages, cancellationToken)
+                .ConfigureAwait(false);
+            if (seasonResult == null || seasonResult.Episodes == null)
+            {
+                return null;
+            }
+            if (episodeNumber.Value > seasonResult.Episodes.Count)
+            {
+                return null;
+            }
+            return seasonResult.Episodes[episodeNumber.Value - 1];
+        }
+
         /// <inheritdoc />
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
