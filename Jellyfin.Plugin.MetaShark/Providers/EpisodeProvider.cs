@@ -181,6 +181,22 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
             }
 
+            // 修正 season number
+            // TODO: 10.11有时特殊剧集名如【再与天比高SUPER双语版.E04（国语有删减）.mp4】不传ParentIndexNumber，原因不明
+            if (info.ParentIndexNumber is null && !isVirtualSeason && !string.IsNullOrEmpty(seasonFolderPath))
+            {
+                var guestSeasonNumber = this._libraryManager.GetSeasonNumberFromPath(seasonFolderPath, null);
+                if (!guestSeasonNumber.HasValue)
+                {
+                    guestSeasonNumber = this.GuessSeasonNumberByDirectoryName(seasonFolderPath);
+                }
+                if (guestSeasonNumber.HasValue && guestSeasonNumber != info.ParentIndexNumber)
+                {
+                    this.Log("FixSeasonNumber by season path. old: {0} new: {1}", info.ParentIndexNumber, guestSeasonNumber);
+                    info.ParentIndexNumber = guestSeasonNumber;
+                }
+            }
+
             // 识别特典
             if (info.ParentIndexNumber is null && NameParser.IsAnime(fileName) && (parseResult.IsSpecial || NameParser.IsSpecialDirectory(info.Path)))
             {
