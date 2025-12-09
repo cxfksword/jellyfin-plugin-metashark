@@ -25,9 +25,11 @@ body:
   - type: textarea
     id: environment
     attributes:
-      label: 运行环境（可选）
+      label: 运行环境（必填）
       description: |
         请提供运行环境信息
+      validations:
+        required: true
       value: |
         - 操作系统：[例如 windows/docker]
         - jellyfin 版本：[例如 10.8.9]
