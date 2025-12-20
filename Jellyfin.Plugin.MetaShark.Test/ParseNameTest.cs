@@ -187,6 +187,12 @@ namespace Jellyfin.Plugin.MetaShark.Test
             Assert.AreEqual(parseResult.Name, "New World");
             Assert.AreEqual(parseResult.Year, 2013);
 
+            fileName = "琅琊榜 全54集 List of Langya 2015 EP49 4K WEB-DL H265 AAC-.mp4";
+            parseResult = NameParser.Parse(fileName);
+            Assert.AreEqual(parseResult.Name, "琅琊榜 全54集 List of Langya");
+            Assert.AreEqual(parseResult.Year, 2015);
+            Assert.AreEqual(parseResult.IndexNumber, 49);
+
             // 只英文 S01E01
             fileName = "She-Hulk.Attorney.At.Law.S01E01.1080p.WEBRip.x265-RARBG";
             parseResult = NameParser.ParseEpisode(fileName);
@@ -231,6 +237,13 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
 
             // anime
+            fileName = "Shigurui.TV.2007.EP01.BDRip.1920x1080.h264.AC3 5.1ch.2Audio";
+            parseResult = NameParser.ParseEpisode(fileName);
+            Assert.AreEqual(parseResult.Name, "Shigurui TV");
+            Assert.AreEqual(parseResult.ParentIndexNumber, null);
+            Assert.AreEqual(parseResult.IndexNumber, 1);
+            Assert.AreEqual(parseResult.IsExtra, false);
+
             fileName = "[YYDM-11FANS][THERMAE_ROMAE][02][BDRIP][720P][X264-10bit_AAC][7FF2269F]";
             parseResult = NameParser.ParseEpisode(fileName);
             Assert.AreEqual(parseResult.Name, "THERMAE ROMAE");

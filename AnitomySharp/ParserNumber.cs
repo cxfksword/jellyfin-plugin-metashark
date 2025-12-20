@@ -514,7 +514,7 @@ namespace AnitomySharp
             }
 
             // 全角数字：\uFF10-\uFF19
-            regexPattern = @"([第全]?)([0-9一二三四五六七八九十壱弐参\uFF10-\uFF19]+)([回集話话幕夜発縛])";
+            regexPattern = @"([第]?)([0-9一二三四五六七八九十壱弐参\uFF10-\uFF19]+)([回集話话幕夜発縛])";
             match = Regex.Match(word, RegexMatchOnlyStart + regexPattern + RegexMatchOnlyEnd, RegexOptions.IgnoreCase);
             if (match.Success)
             {
@@ -527,7 +527,7 @@ namespace AnitomySharp
                 SetEpisodeNumber(episodeNumber, token, false);
                 return true;
             }
-            regexPattern = @"([第全]?)([0-9一二三四五六七八九十壱弐参\uFF10-\uFF19]+)([期章巻卷])";
+            regexPattern = @"([第]?)([0-9一二三四五六七八九十壱弐参\uFF10-\uFF19]+)([期章巻卷])";
             match = Regex.Match(word, RegexMatchOnlyStart + regexPattern + RegexMatchOnlyEnd, RegexOptions.IgnoreCase);
             if (match.Success)
             {
