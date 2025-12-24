@@ -532,7 +532,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 await EnsureClientConfigAsync().ConfigureAwait(false);
 
                 var searchResults = await _tmDbClient
-                    .SearchTvShowAsync(name, NormalizeLanguage(language), cancellationToken: cancellationToken)
+                    .SearchTvShowAsync(name, NormalizeLanguage(language), includeAdult: Plugin.Instance.Configuration.EnableTmdbAdult, cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
 
                 if (searchResults.Results.Count > 0)
@@ -572,7 +572,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 await EnsureClientConfigAsync().ConfigureAwait(false);
 
                 var searchResults = await _tmDbClient
-                    .SearchPersonAsync(name, cancellationToken: cancellationToken)
+                    .SearchPersonAsync(name, includeAdult: Plugin.Instance.Configuration.EnableTmdbAdult, cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
 
                 if (searchResults.Results.Count > 0)
@@ -627,7 +627,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 await EnsureClientConfigAsync().ConfigureAwait(false);
 
                 var searchResults = await _tmDbClient
-                    .SearchMovieAsync(name, NormalizeLanguage(language), year: year, cancellationToken: cancellationToken)
+                    .SearchMovieAsync(name, NormalizeLanguage(language), includeAdult: Plugin.Instance.Configuration.EnableTmdbAdult, year: year, cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
 
                 if (searchResults.Results.Count > 0)

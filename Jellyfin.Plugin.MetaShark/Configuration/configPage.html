@@ -123,6 +123,14 @@
                             <div class="fieldDescription">勾选后，刮削会变慢</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label" for="EnableTmdbAdult">
+                                <input id="EnableTmdbAdult" name="EnableTmdbAdult" type="checkbox"
+                                    is="emby-checkbox" />
+                                <span>显示R18评级内容</span>
+                            </label>
+                            <div class="fieldDescription">勾选后，搜索和获取元数据时会包含R18评级内容</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label" for="EnableTmdbCollection">
                                 <input id="EnableTmdbCollection" name="EnableTmdbCollection" type="checkbox"
                                     is="emby-checkbox" />
@@ -197,6 +205,7 @@
                         document.querySelector('#EnableTmdbMatch').checked = config.EnableTmdbMatch;
                         document.querySelector('#EnableTmdbBackdrop').checked = config.EnableTmdbBackdrop;
                         document.querySelector('#EnableTmdbLogo').checked = config.EnableTmdbLogo;
+                        document.querySelector('#EnableTmdbAdult').checked = config.EnableTmdbAdult;
                         document.querySelector('#EnableTmdbCollection').checked = config.EnableTmdbCollection;
                         document.querySelector('#EnableTmdbOfficialRating').checked = config.EnableTmdbOfficialRating;
                         document.querySelector('#TmdbApiKey').value = config.TmdbApiKey;
@@ -228,6 +237,7 @@
                         config.EnableTmdbMatch = document.querySelector('#EnableTmdbMatch').checked;
                         config.EnableTmdbBackdrop = document.querySelector('#EnableTmdbBackdrop').checked;
                         config.EnableTmdbLogo = document.querySelector('#EnableTmdbLogo').checked;
+                        config.EnableTmdbAdult = document.querySelector('#EnableTmdbAdult').checked;
                         config.EnableTmdbCollection = document.querySelector('#EnableTmdbCollection').checked;
                         config.EnableTmdbOfficialRating = document.querySelector('#EnableTmdbOfficialRating').checked;
                         config.TmdbApiKey = document.querySelector('#TmdbApiKey').value;

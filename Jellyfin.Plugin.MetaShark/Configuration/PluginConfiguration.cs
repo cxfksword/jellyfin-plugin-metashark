@@ -66,6 +66,10 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public bool EnableTmdbCollection { get; set; } = true;
     /// <summary>
+    /// 启用tmdb获取成人内容
+    /// </summary>
+    public bool EnableTmdbAdult { get; set; } = false;
+    /// <summary>
     /// 是否获取tmdb分级信息
     /// </summary>
     public bool EnableTmdbOfficialRating { get; set; } = true;

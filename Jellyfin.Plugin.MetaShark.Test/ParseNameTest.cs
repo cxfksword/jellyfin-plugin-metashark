@@ -275,6 +275,12 @@ namespace Jellyfin.Plugin.MetaShark.Test
             Assert.AreEqual(parseResult.ParentIndexNumber, null);
             Assert.AreEqual(parseResult.IndexNumber, 1);
 
+            fileName = "[980225][GREEN BUNNY] A KITE VOL.1.mkv";
+            parseResult = NameParser.ParseEpisode(fileName);
+            Assert.AreEqual(parseResult.Name, "A KITE");
+            Assert.AreEqual(parseResult.ParentIndexNumber, null);
+            Assert.AreEqual(parseResult.IndexNumber, 1);
+
             // anime特典
             fileName = "[KissSub][Steins;Gate][SP][GB_BIG5_JP][BDrip][1080P][HEVC] 边界曲面的缺失之环";
             parseResult = NameParser.ParseEpisode(fileName);

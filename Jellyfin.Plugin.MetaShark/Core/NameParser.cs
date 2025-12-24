@@ -118,6 +118,16 @@ namespace Jellyfin.Plugin.MetaShark.Core
                 }
             }
 
+            // 假如 Anitomy 解析不到集数，尝试从 volume 中获取
+            if (parseResult.IndexNumber is null && isEpisode)
+            {
+                var volume = anitomyResult?.FirstOrDefault(e => e.Category == AnitomySharp.Element.ElementCategory.ElementVolumeNumber);
+                if (volume != null && volume.Value.ToInt() > 0)
+                {
+                    parseResult.IndexNumber = volume.Value.ToInt();
+                }
+            }
+
             // 假如 Anitomy 解析不到集数，判断 name 是否是数字集号
             if (parseResult.IndexNumber is null && isEpisode)
             {
