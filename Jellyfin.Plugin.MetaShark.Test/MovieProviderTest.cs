@@ -68,7 +68,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
                 var info = new MovieInfo() { Name = "姥姥的外孙", MetadataLanguage = "zh" };
                 var provider = new MovieProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetMetadata(info, CancellationToken.None);
-                Assert.IsNotNull(result);
+                Assert.IsNotNull(result.Item);
 
                 var str = result.ToJson();
                 Console.WriteLine(result.ToJson());
@@ -91,7 +91,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
             {
                 var provider = new MovieProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetMetadata(info, CancellationToken.None);
-                Assert.IsNotNull(result);
+                Assert.IsNotNull(result.Item);
 
                 var str = result.ToJson();
                 Console.WriteLine(result.ToJson());
@@ -114,7 +114,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
             {
                 var provider = new MovieProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetMetadata(info, CancellationToken.None);
-                Assert.IsNotNull(result);
+                Assert.IsNotNull(result.Item);
 
                 var str = result.ToJson();
                 Console.WriteLine(result.ToJson());

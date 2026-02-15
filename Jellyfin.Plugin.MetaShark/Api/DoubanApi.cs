@@ -81,7 +81,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
             var handler = new HttpClientHandlerEx();
             this._cookieContainer = handler.CookieContainer;
-            httpClient = new HttpClient(handler);
+            var doubanHandler = new DoubanSecHandler(_logger) { InnerHandler = handler };
+            httpClient = new HttpClient(doubanHandler);
             httpClient.Timeout = TimeSpan.FromSeconds(20);
             httpClient.DefaultRequestHeaders.Add("User-Agent", HTTP_USER_AGENT);
             httpClient.DefaultRequestHeaders.Add("Origin", "https://movie.douban.com");
@@ -319,92 +320,88 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
             var url = $"https://movie.douban.com/subject/{sid}/";
             var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-            {
-                return null;
-            }
+            response.EnsureSuccessStatusCode();
 
             movie = new DoubanSubject();
             var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var context = BrowsingContext.New();
             var doc = await context.OpenAsync(req => req.Content(body), cancellationToken).ConfigureAwait(false);
             var contentNode = doc.QuerySelector("#content");
-            if (contentNode != null)
+            if (contentNode == null)
             {
-                var nameStr = contentNode.GetText("h1>span:first-child") ?? string.Empty;
-                var name = GetTitle(body);
-                var orginalName = nameStr.Replace(name, "").Trim();
-                var yearStr = contentNode.GetText("h1>span.year") ?? string.Empty;
-                var year = yearStr.GetMatchGroup(this.regYear);
-                var rating = contentNode.GetText("div.rating_self strong.rating_num") ?? "0";
-                var img = contentNode.GetAttr("a.nbgnbg>img", "src") ?? string.Empty;
-                var category = contentNode.QuerySelector("div.episode_list") == null ? "电影" : "电视剧";
-                var intro = contentNode.GetText("div#link-report-intra>span.all") ?? contentNode.GetText("div#link-report-intra>span") ?? string.Empty;
-                intro = formatOverview(intro);
-
-
-
-                var info = contentNode.GetText("#info") ?? string.Empty;
-                var director = info.GetMatchGroup(this.regDirector);
-                var writer = info.GetMatchGroup(this.regWriter);
-                var actor = info.GetMatchGroup(this.regActor);
-                var genre = info.GetMatchGroup(this.regGenre);
-                var country = info.GetMatchGroup(this.regCountry);
-                var language = info.GetMatchGroup(this.regLanguage);
-                var duration = info.GetMatchGroup(this.regDuration);
-                var subname = info.GetMatchGroup(this.regSubname);
-                var imdb = info.GetMatchGroup(this.regImdb);
-                var site = info.GetMatchGroup(this.regSite);
-                var matchs = this.regScreen.Match(info);
-                var screen = matchs.Groups.Count > 2 ? matchs.Groups[2].Value : string.Empty;
-
-                movie.Sid = sid;
-                movie.Name = name;
-                movie.OriginalName = orginalName;
-                movie.Year = year.ToInt();
-                movie.Rating = rating.ToFloat();
-                movie.Img = img;
-                movie.Intro = intro;
-                movie.Subname = subname;
-                movie.Director = director;
-                movie.Genre = genre;
-                movie.Category = category;
-                movie.Country = country;
-                movie.Language = language;
-                movie.Duration = duration;
-                movie.Screen = screen;
-                movie.Site = site;
-                movie.Actor = actor;
-                movie.Writer = writer;
-                movie.Imdb = imdb;
-
-                movie.Celebrities = new List<DoubanCelebrity>();
-                var celebrityNodes = contentNode.QuerySelectorAll("#celebrities li.celebrity");
-                foreach (var node in celebrityNodes)
-                {
-                    var celebrityIdStr = node.GetAttr("div.info a.name", "href") ?? string.Empty;
-                    var celebrityId = celebrityIdStr.GetMatchGroup(this.regId);
-                    var celebrityImgStr = node.GetAttr("div.avatar", "style") ?? string.Empty;
-                    var celebrityImg = celebrityImgStr.GetMatchGroup(this.regBackgroundImage);
-                    var celebrityName = node.GetText("div.info a.name") ?? string.Empty;
-                    var celebrityRole = node.GetText("div.info span.role") ?? string.Empty;
-                    var celebrityRoleType = string.Empty;
-
-                    var celebrity = new DoubanCelebrity();
-                    celebrity.Id = celebrityId;
-                    celebrity.Name = celebrityName;
-                    celebrity.Role = celebrityRole;
-                    celebrity.RoleType = celebrityRoleType;
-                    celebrity.Img = celebrityImg;
-                    movie.Celebrities.Add(celebrity);
-                }
-                _memoryCache.Set<DoubanSubject?>(cacheKey, movie, expiredOption);
-                return movie;
+                this._logger.LogError("获取不到douban页面内容，可能触发douban防爬或页面结构已改变! url: {0}", url);
+                return null;
             }
 
+            var nameStr = contentNode.GetText("h1>span:first-child") ?? string.Empty;
+            var name = GetTitle(body);
+            var orginalName = nameStr.Replace(name, "").Trim();
+            var yearStr = contentNode.GetText("h1>span.year") ?? string.Empty;
+            var year = yearStr.GetMatchGroup(this.regYear);
+            var rating = contentNode.GetText("div.rating_self strong.rating_num") ?? "0";
+            var img = contentNode.GetAttr("a.nbgnbg>img", "src") ?? string.Empty;
+            var category = contentNode.QuerySelector("div.episode_list") == null ? "电影" : "电视剧";
+            var intro = contentNode.GetText("div#link-report-intra>span.all") ?? contentNode.GetText("div#link-report-intra>span") ?? string.Empty;
+            intro = formatOverview(intro);
 
-            _memoryCache.Set<DoubanSubject?>(cacheKey, null, expiredOption);
-            return null;
+
+
+            var info = contentNode.GetText("#info") ?? string.Empty;
+            var director = info.GetMatchGroup(this.regDirector);
+            var writer = info.GetMatchGroup(this.regWriter);
+            var actor = info.GetMatchGroup(this.regActor);
+            var genre = info.GetMatchGroup(this.regGenre);
+            var country = info.GetMatchGroup(this.regCountry);
+            var language = info.GetMatchGroup(this.regLanguage);
+            var duration = info.GetMatchGroup(this.regDuration);
+            var subname = info.GetMatchGroup(this.regSubname);
+            var imdb = info.GetMatchGroup(this.regImdb);
+            var site = info.GetMatchGroup(this.regSite);
+            var matchs = this.regScreen.Match(info);
+            var screen = matchs.Groups.Count > 2 ? matchs.Groups[2].Value : string.Empty;
+
+            movie.Sid = sid;
+            movie.Name = name;
+            movie.OriginalName = orginalName;
+            movie.Year = year.ToInt();
+            movie.Rating = rating.ToFloat();
+            movie.Img = img;
+            movie.Intro = intro;
+            movie.Subname = subname;
+            movie.Director = director;
+            movie.Genre = genre;
+            movie.Category = category;
+            movie.Country = country;
+            movie.Language = language;
+            movie.Duration = duration;
+            movie.Screen = screen;
+            movie.Site = site;
+            movie.Actor = actor;
+            movie.Writer = writer;
+            movie.Imdb = imdb;
+
+            movie.Celebrities = new List<DoubanCelebrity>();
+            var celebrityNodes = contentNode.QuerySelectorAll("#celebrities li.celebrity");
+            foreach (var node in celebrityNodes)
+            {
+                var celebrityIdStr = node.GetAttr("div.info a.name", "href") ?? string.Empty;
+                var celebrityId = celebrityIdStr.GetMatchGroup(this.regId);
+                var celebrityImgStr = node.GetAttr("div.avatar", "style") ?? string.Empty;
+                var celebrityImg = celebrityImgStr.GetMatchGroup(this.regBackgroundImage);
+                var celebrityName = node.GetText("div.info a.name") ?? string.Empty;
+                var celebrityRole = node.GetText("div.info span.role") ?? string.Empty;
+                var celebrityRoleType = string.Empty;
+
+                var celebrity = new DoubanCelebrity();
+                celebrity.Id = celebrityId;
+                celebrity.Name = celebrityName;
+                celebrity.Role = celebrityRole;
+                celebrity.RoleType = celebrityRoleType;
+                celebrity.Img = celebrityImg;
+                movie.Celebrities.Add(celebrity);
+            }
+            _memoryCache.Set<DoubanSubject?>(cacheKey, movie, expiredOption);
+            return movie;
         }
 
         public async Task<List<DoubanCelebrity>> GetCelebritiesBySidAsync(string sid, CancellationToken cancellationToken)
@@ -968,7 +965,6 @@ namespace Jellyfin.Plugin.MetaShark.Api
         {
             return Plugin.Instance?.Configuration.EnableDoubanAvoidRiskControl ?? false;
         }
-
 
         public void Dispose()
         {

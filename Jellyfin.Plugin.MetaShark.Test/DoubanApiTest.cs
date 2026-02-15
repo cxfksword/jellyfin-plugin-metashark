@@ -204,5 +204,28 @@ namespace Jellyfin.Plugin.MetaShark.Test
             Assert.AreEqual<string>(result, "李凡秀");
 
         }
+
+        [TestMethod]
+        public void TestGetMovieAsync()
+        {
+            var sid = "26654184";
+
+            var api = new DoubanApi(loggerFactory);
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    var result = await api.GetMovieAsync(sid, CancellationToken.None);
+                    Assert.IsNotNull(result, "GetMovieAsync 返回 null");
+                    Assert.AreEqual(sid, result?.Sid, "Sid 不匹配");
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail($"调用 GetMovieAsync 时出现异常: {ex.Message}");
+                }
+            }).GetAwaiter().GetResult();
+        }
+
     }
 }
