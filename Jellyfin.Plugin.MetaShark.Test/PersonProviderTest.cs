@@ -39,16 +39,15 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var omdbApi = new OmdbApi(loggerFactory);
             var imdbApi = new ImdbApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
                 var info = new PersonLookupInfo() { ProviderIds = new Dictionary<string, string>() { { BaseProvider.DoubanProviderId, "27257290" } } };
                 var provider = new PersonProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetMetadata(info, CancellationToken.None);
                 Assert.IsNotNull(result);
 
-                var str = result.ToJson();
                 Console.WriteLine(result.ToJson());
-            }).GetAwaiter().GetResult();
+            }, "movie.douban.com");
         }
 
         [TestMethod]
@@ -62,16 +61,15 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var omdbApi = new OmdbApi(loggerFactory);
             var imdbApi = new ImdbApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
                 var info = new PersonLookupInfo() { ProviderIds = new Dictionary<string, string>() { { MetadataProvider.Tmdb.ToString(), "78871" } } };
                 var provider = new PersonProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetMetadata(info, CancellationToken.None);
                 Assert.IsNotNull(result);
 
-                var str = result.ToJson();
                 Console.WriteLine(result.ToJson());
-            }).GetAwaiter().GetResult();
+            }, "api.tmdb.org");
         }
 
 

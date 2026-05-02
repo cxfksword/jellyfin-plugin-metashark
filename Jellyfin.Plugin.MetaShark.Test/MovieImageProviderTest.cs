@@ -46,15 +46,14 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var omdbApi = new OmdbApi(loggerFactory);
             var imdbApi = new ImdbApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
                 var provider = new MovieImageProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetImages(info, CancellationToken.None);
                 Assert.IsNotNull(result);
 
-                var str = result.ToJson();
                 Console.WriteLine(result.ToJson());
-            }).GetAwaiter().GetResult();
+            }, "movie.douban.com", "api.tmdb.org");
         }
 
         [TestMethod]
@@ -73,15 +72,14 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var omdbApi = new OmdbApi(loggerFactory);
             var imdbApi = new ImdbApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
                 var provider = new MovieImageProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetImages(info, CancellationToken.None);
                 Assert.IsNotNull(result);
 
-                var str = result.ToJson();
                 Console.WriteLine(result.ToJson());
-            }).GetAwaiter().GetResult();
+            }, "api.tmdb.org");
         }
 
         [TestMethod]
@@ -95,15 +93,14 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var omdbApi = new OmdbApi(loggerFactory);
             var imdbApi = new ImdbApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
                 var provider = new MovieImageProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetImageResponse("https://img1.doubanio.com/view/photo/m/public/p2893270877.jpg", CancellationToken.None);
                 Assert.IsNotNull(result);
 
-                var str = result.ToJson();
                 Console.WriteLine(result.ToJson());
-            }).GetAwaiter().GetResult();
+            }, "img1.doubanio.com");
         }
     }
 }

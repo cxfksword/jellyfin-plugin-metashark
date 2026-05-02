@@ -40,15 +40,14 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var omdbApi = new OmdbApi(loggerFactory);
             var imdbApi = new ImdbApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
                 var provider = new SeasonProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetMetadata(info, CancellationToken.None);
                 Assert.IsNotNull(result);
 
-                var str = result.ToJson();
                 Console.WriteLine(result.ToJson());
-            }).GetAwaiter().GetResult();
+            }, "movie.douban.com", "api.tmdb.org");
         }
 
         [TestMethod]
@@ -101,12 +100,12 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var omdbApi = new OmdbApi(loggerFactory);
             var imdbApi = new ImdbApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
                 var provider = new SeasonProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GuestDoubanSeasonByYearAsync("机动战士高达0083 星尘的回忆", 1991, null, CancellationToken.None);
                 Assert.AreEqual(result, "1766564");
-            }).GetAwaiter().GetResult();
+            }, "www.douban.com");
         }
 
     }

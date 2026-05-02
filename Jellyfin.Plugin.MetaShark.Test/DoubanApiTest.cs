@@ -35,18 +35,11 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var keyword = "声生不息";
             var api = new DoubanApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
-                try
-                {
-                    var result = await api.SearchAsync(keyword, CancellationToken.None);
-                    TestContext.WriteLine(result.ToJson());
-                }
-                catch (Exception ex)
-                {
-                    TestContext.WriteLine(ex.Message);
-                }
-            }).GetAwaiter().GetResult();
+                var result = await api.SearchAsync(keyword, CancellationToken.None);
+                TestContext.WriteLine(result.ToJson());
+            }, "www.douban.com");
         }
 
 
@@ -56,19 +49,11 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var keyword = "重返少年时";
             var api = new DoubanApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
-                try
-                {
-                    var result = await api.SearchBySuggestAsync(keyword, CancellationToken.None);
-                    var str = result.ToJson();
-                    TestContext.WriteLine(result.ToJson());
-                }
-                catch (Exception ex)
-                {
-                    TestContext.WriteLine(ex.Message);
-                }
-            }).GetAwaiter().GetResult();
+                var result = await api.SearchBySuggestAsync(keyword, CancellationToken.None);
+                TestContext.WriteLine(result.ToJson());
+            }, "www.douban.com");
         }
 
 
@@ -79,18 +64,11 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
             var api = new DoubanApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
-                try
-                {
-                    var result = await api.GetMovieAsync(sid, CancellationToken.None);
-                    TestContext.WriteLine(result.ToJson());
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-            }).GetAwaiter().GetResult();
+                var result = await api.GetMovieAsync(sid, CancellationToken.None);
+                TestContext.WriteLine(result.ToJson());
+            }, "movie.douban.com");
         }
 
         [TestMethod]
@@ -101,18 +79,12 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
             var api = new DoubanApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
-                try
-                {
-                    var result = await api.GetMovieAsync(sid, CancellationToken.None);
-                    Assert.AreEqual<string>("https://img2.doubanio.com/view/celebrity/raw/public/p1598199472.61.jpg", result.Celebrities.First(x => x.Name == "刘陆").Img);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-            }).GetAwaiter().GetResult();
+                var result = await api.GetMovieAsync(sid, CancellationToken.None);
+                ExternalApiTestHelper.AssertNotNullOrInconclusive(result, "movie.douban.com", "GetMovieAsync 返回 null");
+                Assert.AreEqual<string>("https://img2.doubanio.com/view/celebrity/raw/public/p1598199472.61.jpg", result.Celebrities.First(x => x.Name == "刘陆").Img);
+            }, "movie.douban.com");
         }
 
         [TestMethod]
@@ -122,18 +94,11 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
             var api = new DoubanApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
-                try
-                {
-                    var result = await api.GetCelebritiesBySidAsync(sid, CancellationToken.None);
-                    TestContext.WriteLine(result.ToJson());
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-            }).GetAwaiter().GetResult();
+                var result = await api.GetCelebritiesBySidAsync(sid, CancellationToken.None);
+                TestContext.WriteLine(result.ToJson());
+            }, "movie.douban.com");
         }
 
         [TestMethod]
@@ -143,18 +108,11 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
             var api = new DoubanApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
-                try
-                {
-                    var result = await api.GetCelebrityAsync(cid, CancellationToken.None);
-                    TestContext.WriteLine(result.ToJson());
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-            }).GetAwaiter().GetResult();
+                var result = await api.GetCelebrityAsync(cid, CancellationToken.None);
+                TestContext.WriteLine(result.ToJson());
+            }, "movie.douban.com");
         }
 
         [TestMethod]
@@ -164,18 +122,11 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
             var api = new DoubanApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
-                try
-                {
-                    var result = await api.GetCelebrityPhotosAsync(cid, CancellationToken.None);
-                    TestContext.WriteLine(result.ToJson());
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-            }).GetAwaiter().GetResult();
+                var result = await api.GetCelebrityPhotosAsync(cid, CancellationToken.None);
+                TestContext.WriteLine(result.ToJson());
+            }, "movie.douban.com");
         }
 
 
@@ -212,19 +163,12 @@ namespace Jellyfin.Plugin.MetaShark.Test
 
             var api = new DoubanApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
-                try
-                {
-                    var result = await api.GetMovieAsync(sid, CancellationToken.None);
-                    Assert.IsNotNull(result, "GetMovieAsync 返回 null");
-                    Assert.AreEqual(sid, result?.Sid, "Sid 不匹配");
-                }
-                catch (Exception ex)
-                {
-                    Assert.Fail($"调用 GetMovieAsync 时出现异常: {ex.Message}");
-                }
-            }).GetAwaiter().GetResult();
+                var result = await api.GetMovieAsync(sid, CancellationToken.None);
+                ExternalApiTestHelper.AssertNotNullOrInconclusive(result, "movie.douban.com", "GetMovieAsync 返回 null");
+                Assert.AreEqual(sid, result.Sid, "Sid 不匹配");
+            }, "movie.douban.com");
         }
 
     }
