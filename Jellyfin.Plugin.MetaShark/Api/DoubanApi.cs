@@ -135,15 +135,15 @@ namespace Jellyfin.Plugin.MetaShark.Api
             }
         }
 
-        internal static IReadOnlyList<Cookie> ParseConfiguredCookies(string? configCookie)
+        internal static IReadOnlyList<Cookie> ParseConfiguredCookies(string? cookieString)
         {
             var cookies = new List<Cookie>();
-            if (string.IsNullOrWhiteSpace(configCookie))
+            if (string.IsNullOrWhiteSpace(cookieString))
             {
                 return cookies;
             }
 
-            foreach (var str in configCookie.Split(';'))
+            foreach (var str in cookieString.Split(';'))
             {
                 var separatorIndex = str.IndexOf('=', StringComparison.Ordinal);
                 if (separatorIndex <= 0)
@@ -892,10 +892,18 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
         internal static bool IsLoginRedirectUrl(string? requestUrl)
         {
-            return requestUrl == null
-                || requestUrl.Contains("accounts.douban.com", StringComparison.OrdinalIgnoreCase)
-                || requestUrl.Contains("login", StringComparison.OrdinalIgnoreCase)
-                || requestUrl.Contains("sec.douban.com", StringComparison.OrdinalIgnoreCase);
+            if (requestUrl == null || !Uri.TryCreate(requestUrl, UriKind.Absolute, out var uri))
+            {
+                return true;
+            }
+
+            if (string.Equals(uri.Host, "accounts.douban.com", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(uri.Host, "sec.douban.com", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return uri.PathAndQuery.Contains("/login", StringComparison.OrdinalIgnoreCase);
         }
 
         internal static bool IsLogined(string? requestUrl, string? loginName)
