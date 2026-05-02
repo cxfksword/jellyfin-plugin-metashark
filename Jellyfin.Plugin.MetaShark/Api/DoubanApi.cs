@@ -880,7 +880,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                 var loginName = this.Match(body, regLoginName).Trim();
                 loginInfo.Name = loginName;
-                loginInfo.IsLogined = !string.IsNullOrWhiteSpace(loginName) || !IsLoginRedirectUrl(requestUrl);
+                loginInfo.IsLogined = IsLogined(requestUrl, loginName);
             }
             catch (Exception ex)
             {
@@ -896,6 +896,11 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 || requestUrl.Contains("accounts.douban.com", StringComparison.OrdinalIgnoreCase)
                 || requestUrl.Contains("login", StringComparison.OrdinalIgnoreCase)
                 || requestUrl.Contains("sec.douban.com", StringComparison.OrdinalIgnoreCase);
+        }
+
+        internal static bool IsLogined(string? requestUrl, string? loginName)
+        {
+            return !IsLoginRedirectUrl(requestUrl) && !string.IsNullOrWhiteSpace(loginName);
         }
 
         protected async Task LimitRequestFrequently()

@@ -23,5 +23,13 @@ namespace Jellyfin.Plugin.MetaShark.Test
             Assert.IsTrue(DoubanApi.IsLoginRedirectUrl("https://sec.douban.com/c"));
             Assert.IsFalse(DoubanApi.IsLoginRedirectUrl("https://www.douban.com/mine/"));
         }
+
+        [TestMethod]
+        public void IsLogined_ShouldRequireProfileNameAndNonRedirectUrl()
+        {
+            Assert.IsTrue(DoubanApi.IsLogined("https://www.douban.com/mine/", "tester"));
+            Assert.IsFalse(DoubanApi.IsLogined("https://www.douban.com/mine/", string.Empty));
+            Assert.IsFalse(DoubanApi.IsLogined("https://accounts.douban.com/passport/login", "tester"));
+        }
     }
 }
