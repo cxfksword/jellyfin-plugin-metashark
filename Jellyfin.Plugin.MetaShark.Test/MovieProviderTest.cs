@@ -40,16 +40,15 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var omdbApi = new OmdbApi(loggerFactory);
             var imdbApi = new ImdbApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
                 var info = new MovieInfo() { Name = "我", MetadataLanguage = "zh" };
                 var provider = new MovieProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetSearchResults(info, CancellationToken.None);
                 Assert.IsNotNull(result);
 
-                var str = result.ToJson();
                 Console.WriteLine(result.ToJson());
-            }).GetAwaiter().GetResult();
+            }, "www.douban.com", "api.tmdb.org");
         }
 
         [TestMethod]
@@ -63,16 +62,15 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var omdbApi = new OmdbApi(loggerFactory);
             var imdbApi = new ImdbApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
                 var info = new MovieInfo() { Name = "姥姥的外孙", MetadataLanguage = "zh" };
                 var provider = new MovieProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetMetadata(info, CancellationToken.None);
-                Assert.IsNotNull(result.Item);
+                ExternalApiTestHelper.AssertNotNullOrInconclusive(result.Item, "www.douban.com", "Movie metadata should not be null");
 
-                var str = result.ToJson();
                 Console.WriteLine(result.ToJson());
-            }).GetAwaiter().GetResult();
+            }, "www.douban.com", "movie.douban.com", "api.tmdb.org");
         }
 
         [TestMethod]
@@ -87,15 +85,14 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var omdbApi = new OmdbApi(loggerFactory);
             var imdbApi = new ImdbApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
                 var provider = new MovieProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetMetadata(info, CancellationToken.None);
-                Assert.IsNotNull(result.Item);
+                ExternalApiTestHelper.AssertNotNullOrInconclusive(result.Item, "www.douban.com", "Movie metadata should not be null");
 
-                var str = result.ToJson();
                 Console.WriteLine(result.ToJson());
-            }).GetAwaiter().GetResult();
+            }, "www.douban.com", "movie.douban.com", "api.tmdb.org");
         }
 
         [TestMethod]
@@ -110,15 +107,14 @@ namespace Jellyfin.Plugin.MetaShark.Test
             var omdbApi = new OmdbApi(loggerFactory);
             var imdbApi = new ImdbApi(loggerFactory);
 
-            Task.Run(async () =>
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
             {
                 var provider = new MovieProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
                 var result = await provider.GetMetadata(info, CancellationToken.None);
-                Assert.IsNotNull(result.Item);
+                ExternalApiTestHelper.AssertNotNullOrInconclusive(result.Item, "api.tmdb.org", "TMDB movie metadata should not be null");
 
-                var str = result.ToJson();
                 Console.WriteLine(result.ToJson());
-            }).GetAwaiter().GetResult();
+            }, "api.tmdb.org");
         }
 
     }
