@@ -119,20 +119,11 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 // 附加新的cookie
                 if (!string.IsNullOrEmpty(configCookie))
                 {
-                    var arr = configCookie.Split(';');
-                    foreach (var str in arr)
+                    foreach (var cookie in ParseConfiguredCookies(configCookie))
                     {
-                        var cookieArr = str.Split('=');
-                        if (cookieArr.Length != 2)
-                        {
-                            continue;
-                        }
-
-                        var key = cookieArr[0].Trim();
-                        var value = cookieArr[1].Trim();
                         try
                         {
-                            _cookieContainer.Add(new Cookie(key, value, "/", ".douban.com"));
+                            _cookieContainer.Add(cookie);
                         }
                         catch (Exception ex)
                         {
@@ -142,6 +133,35 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
                 }
             }
+        }
+
+        internal static IReadOnlyList<Cookie> ParseConfiguredCookies(string? configCookie)
+        {
+            var cookies = new List<Cookie>();
+            if (string.IsNullOrWhiteSpace(configCookie))
+            {
+                return cookies;
+            }
+
+            foreach (var str in configCookie.Split(';'))
+            {
+                var separatorIndex = str.IndexOf('=', StringComparison.Ordinal);
+                if (separatorIndex <= 0)
+                {
+                    continue;
+                }
+
+                var key = str[..separatorIndex].Trim();
+                var value = str[(separatorIndex + 1)..].Trim();
+                if (string.IsNullOrEmpty(key))
+                {
+                    continue;
+                }
+
+                cookies.Add(new Cookie(key, value, "/", ".douban.com"));
+            }
+
+            return cookies;
         }
 
         public async Task<List<DoubanSubject>> SearchMovieAsync(string keyword, CancellationToken cancellationToken)
@@ -845,22 +865,8 @@ namespace Jellyfin.Plugin.MetaShark.Api
 
         public async Task<bool> CheckLoginAsync(CancellationToken cancellationToken)
         {
-            try
-            {
-                var url = "https://www.douban.com/mine/";
-                var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-                var requestUrl = response.RequestMessage?.RequestUri?.ToString();
-                if (requestUrl == null || requestUrl.Contains("accounts.douban.com") || requestUrl.Contains("login") || requestUrl.Contains("sec.douban.com"))
-                {
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                this._logger.LogError(ex, "CheckLoginAsync error.");
-            }
-
-            return true;
+            var loginInfo = await GetLoginInfoAsync(cancellationToken).ConfigureAwait(false);
+            return loginInfo.IsLogined;
         }
 
         public async Task<DoubanLoginInfo> GetLoginInfoAsync(CancellationToken cancellationToken)
@@ -874,7 +880,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                 var loginName = this.Match(body, regLoginName).Trim();
                 loginInfo.Name = loginName;
-                loginInfo.IsLogined = !(requestUrl == null || requestUrl.Contains("accounts.douban.com") || requestUrl.Contains("login") || requestUrl.Contains("sec.douban.com"));
+                loginInfo.IsLogined = !string.IsNullOrWhiteSpace(loginName) || !IsLoginRedirectUrl(requestUrl);
             }
             catch (Exception ex)
             {
@@ -882,6 +888,14 @@ namespace Jellyfin.Plugin.MetaShark.Api
             }
 
             return loginInfo;
+        }
+
+        internal static bool IsLoginRedirectUrl(string? requestUrl)
+        {
+            return requestUrl == null
+                || requestUrl.Contains("accounts.douban.com", StringComparison.OrdinalIgnoreCase)
+                || requestUrl.Contains("login", StringComparison.OrdinalIgnoreCase)
+                || requestUrl.Contains("sec.douban.com", StringComparison.OrdinalIgnoreCase);
         }
 
         protected async Task LimitRequestFrequently()
