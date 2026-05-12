@@ -18,6 +18,11 @@ namespace Jellyfin.Plugin.MetaShark.Model
         /// </summary>
         public string? EpisodeName { get; set; } = null;
 
+        /// <summary>
+        /// 是否是动画
+        /// </summary>
+        public bool IsAnime { get; set; } = false;
+
         private string _animeType = string.Empty;
         public string AnimeType
         {

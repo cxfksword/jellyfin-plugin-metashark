@@ -297,7 +297,7 @@ namespace Jellyfin.Plugin.MetaShark.Test
         [TestMethod]
         public void TestCheckExtra()
         {
-            var fileName = "A.Fight.for.Justice.S01E01.2024.2160p.IQ.WEB-DL.AAC.H265-Sunshine.mkv";
+            var fileName = "[VCB-Studio] Spice and Wolf [CM02][Ma10p_1080p][x265_flac]";
             var parseResult = NameParser.Parse(fileName);
             Assert.IsTrue(parseResult.IsExtra);
 

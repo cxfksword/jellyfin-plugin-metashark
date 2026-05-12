@@ -499,17 +499,15 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
             }
 
-            // SXX 季名
-            regSeason = new Regex(@"(?<![a-z])S(\d\d?)(?![0-9a-z])", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            match = regSeason.Match(fileName);
-            if (match.Success && match.Groups.Count > 1)
+            // SXX / Season XX 季名
+            // 支持 "S01", "S1", "Season 1", "Season01", "Season_01" 等格式
+            var parentPath = Path.GetDirectoryName(path);
+            var seasonResult = Emby.Naming.TV.SeasonPathParser.Parse(path, parentPath, true, true);
+            if (seasonResult.SeasonNumber.HasValue && seasonResult.SeasonNumber > 0)
             {
-                var seasonNumber = match.Groups[1].Value.ToInt();
-                if (seasonNumber > 0)
-                {
-                    this.Log($"Found season number of filename: {fileName} seasonNumber: {seasonNumber}");
-                    return seasonNumber;
-                }
+                var seasonNumber = seasonResult.SeasonNumber.Value;
+                this.Log($"Found season number of filename: {fileName} seasonNumber: {seasonNumber}");
+                return seasonNumber;
             }
 
 
