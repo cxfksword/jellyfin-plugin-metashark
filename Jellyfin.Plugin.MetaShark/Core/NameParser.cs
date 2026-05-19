@@ -34,6 +34,7 @@ namespace Jellyfin.Plugin.MetaShark.Core
 
             var parseResult = new ParseNameResult();
             var isAnime = IsAnime(fileName);
+            parseResult.IsAnime = isAnime;
             IEnumerable<AnitomySharp.Element> anitomyResult = Array.Empty<AnitomySharp.Element>();
             try
             {
