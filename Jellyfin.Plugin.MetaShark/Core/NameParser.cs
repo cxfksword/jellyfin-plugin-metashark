@@ -41,15 +41,7 @@ namespace Jellyfin.Plugin.MetaShark.Core
             }
             catch (IndexOutOfRangeException)
             {
-                if (!isAnime)
-                {
-                    return ParseMovieByDefault(fileName);
-                }
-
-                return new ParseNameResult
-                {
-                    Name = fileName,
-                };
+                return ParseMovieByDefault(fileName);
             }
             foreach (var item in anitomyResult)
             {
