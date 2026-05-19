@@ -33,9 +33,16 @@ namespace Jellyfin.Plugin.MetaShark.Core
             fileName = NormalizeFileName(fileName);
 
             var parseResult = new ParseNameResult();
-            var anitomyResult = AnitomySharp.AnitomySharp.Parse(fileName);
             var isAnime = IsAnime(fileName);
-            parseResult.IsAnime = isAnime;
+            IEnumerable<AnitomySharp.Element> anitomyResult = Array.Empty<AnitomySharp.Element>();
+            try
+            {
+                anitomyResult = AnitomySharp.AnitomySharp.Parse(fileName);
+            }
+            catch (Exception)
+            {
+                return ParseMovieByDefault(fileName);
+            }
             foreach (var item in anitomyResult)
             {
                 switch (item.Category)

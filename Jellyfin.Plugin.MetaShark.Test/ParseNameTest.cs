@@ -109,6 +109,22 @@ namespace Jellyfin.Plugin.MetaShark.Test
         }
 
         [TestMethod]
+        public void TestMovieParseWhenTitleEndsWithNumber()
+        {
+            var fileName = "Assassin in Red 2 (2023)";
+            var parseResult = NameParser.Parse(fileName);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Name));
+            Assert.IsTrue(parseResult.Name.StartsWith("Assassin in Red", StringComparison.Ordinal));
+            Assert.AreEqual(parseResult.Year, 2023);
+
+            fileName = "Pegasus 3 (2026)";
+            parseResult = NameParser.Parse(fileName);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Name));
+            Assert.IsTrue(parseResult.Name.StartsWith("Pegasus", StringComparison.Ordinal));
+            Assert.AreEqual(parseResult.Year, 2026);
+        }
+
+        [TestMethod]
         public void TestTVSeriesParse()
         {
             // 混合中英文
