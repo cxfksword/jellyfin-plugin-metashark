@@ -39,7 +39,7 @@ namespace Jellyfin.Plugin.MetaShark.Core
             {
                 anitomyResult = AnitomySharp.AnitomySharp.Parse(fileName);
             }
-            catch (Exception)
+            catch (IndexOutOfRangeException)
             {
                 if (!isAnime)
                 {
