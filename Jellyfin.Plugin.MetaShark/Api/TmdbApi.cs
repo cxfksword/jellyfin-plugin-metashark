@@ -416,6 +416,58 @@ namespace Jellyfin.Plugin.MetaShark.Api
         }
 
         /// <summary>
+        /// Gets the external ids (e.g. imdb id) of a single tv episode from the lightweight external_ids endpoint.
+        /// </summary>
+        /// <param name="tvShowId">The tv show's TMDb id.</param>
+        /// <param name="seasonNumber">The season number.</param>
+        /// <param name="episodeNumber">The episode number.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The external ids of the episode or null if not found.</returns>
+        public async Task<ExternalIdsTvEpisode?> GetEpisodeExternalIdsAsync(int tvShowId, int seasonNumber, int episodeNumber, CancellationToken cancellationToken)
+        {
+            if (!this.IsEnable())
+            {
+                return null;
+            }
+
+            var key = $"episode-externalids-{tvShowId.ToString(CultureInfo.InvariantCulture)}-s{seasonNumber.ToString(CultureInfo.InvariantCulture)}e{episodeNumber.ToString(CultureInfo.InvariantCulture)}";
+            if (_memoryCache.TryGetValue(key, out ExternalIdsTvEpisode? ids))
+            {
+                return ids;
+            }
+
+            try
+            {
+                await EnsureClientConfigAsync().ConfigureAwait(false);
+
+                ids = await _tmDbClient.GetTvEpisodeExternalIdsAsync(
+                    tvShowId,
+                    seasonNumber,
+                    episodeNumber,
+                    cancellationToken).ConfigureAwait(false);
+
+                if (ids != null)
+                {
+                    _memoryCache.Set(key, ids, TimeSpan.FromHours(CacheDurationInHours));
+                }
+                else
+                {
+                    // 多数单集没有 imdb id，缓存空结果避免扫描时频繁重发请求
+                    _memoryCache.Set(key, (ExternalIdsTvEpisode?)null, TimeSpan.FromSeconds(30));
+                }
+
+                return ids;
+            }
+            catch (Exception ex)
+            {
+                // 网络异常时也缓存一下，避免对同一集反复请求
+                _memoryCache.Set(key, (ExternalIdsTvEpisode?)null, TimeSpan.FromSeconds(30));
+                this._logger.LogError(ex, ex.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Gets a person eg. cast or crew member from the TMDb API based on its TMDb id.
         /// </summary>
         /// <param name="personTmdbId">The person's TMDb id.</param>
