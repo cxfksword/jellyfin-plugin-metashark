@@ -62,8 +62,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     seasonNumber = this.GuessSeasonNumberByDirectoryName(info.Path);
                 }
 
-                // 搜索豆瓣季 id
-                if (string.IsNullOrEmpty(seasonSid))
+                // 季文件夹名中用户显式指定的[doubanid-xxx]优先级最高，应覆盖已保存的豆瓣季id
+                var attrSeasonDoubanId = this.GetDoubanIdByFileNameAttribute(this.GetOriginalFileName(info));
+                if (!string.IsNullOrWhiteSpace(attrSeasonDoubanId))
+                {
+                    seasonSid = attrSeasonDoubanId;
+                }
+                else if (string.IsNullOrEmpty(seasonSid))
                 {
                     seasonSid = await this.GuessDoubanSeasonId(sid, seriesTmdbId, seasonNumber, info, cancellationToken).ConfigureAwait(false);
                 }
@@ -151,10 +156,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             // 从季文件夹名属性格式获取，如 [douban-12345] 或 [doubanid-12345]
             var fileName = this.GetOriginalFileName(info);
-            var doubanId = this.regDoubanIdAttribute.FirstMatchGroup(fileName);
+            var doubanId = this.GetDoubanIdByFileNameAttribute(fileName);
             if (!string.IsNullOrWhiteSpace(doubanId))
             {
-                this.Log($"Found season douban [id] by attr: {doubanId}");
                 return doubanId;
             }
 

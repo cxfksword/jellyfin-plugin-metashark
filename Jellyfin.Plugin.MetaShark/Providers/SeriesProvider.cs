@@ -100,6 +100,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
             }
 
+            // 文件名中用户显式指定的[doubanid-xxx]优先级最高，应覆盖已有的豆瓣id
+            var attrDoubanId = this.GetDoubanIdByFileNameAttribute(fileName);
+            if (!string.IsNullOrWhiteSpace(attrDoubanId))
+            {
+                sid = attrDoubanId;
+            }
+
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
                 this.Log($"GetSeriesMetadata of douban [sid]: {sid}");
@@ -133,11 +140,20 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     item.SetProviderId(MetadataProvider.Imdb, newImdbId);
                 }
 
-                // 搜索匹配tmdbId
-                var newTmdbId = await this.FindTmdbId(seriesName, subject.Imdb, subject.Year, info, cancellationToken).ConfigureAwait(false);
-                if (!string.IsNullOrEmpty(newTmdbId))
+                // 文件名中用户显式指定的[tmdbid-xxx]优先级最高，其次使用已有的tmdbId，都不应被imdb反查或搜索匹配的结果覆盖
+                var attrTmdbId = this.GetTmdbIdByFileNameAttribute(fileName);
+                if (!string.IsNullOrEmpty(attrTmdbId))
                 {
-                    tmdbId = newTmdbId;
+                    tmdbId = attrTmdbId;
+                }
+                else if (string.IsNullOrEmpty(tmdbId))
+                {
+                    // 无用户指定和已有tmdbId时，才通过imdb反查或搜索匹配获取
+                    tmdbId = await this.FindTmdbId(seriesName, subject.Imdb, subject.Year, info, cancellationToken).ConfigureAwait(false);
+                }
+
+                if (!string.IsNullOrEmpty(tmdbId))
+                {
                     item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
                 }
 

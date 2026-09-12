@@ -158,10 +158,9 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         {
             var fileName = GetOriginalFileName(info);
             // 从文件名属性格式获取，如[douban-12345]或[doubanid-12345]
-            var doubanId = this.regDoubanIdAttribute.FirstMatchGroup(fileName);
+            var doubanId = this.GetDoubanIdByFileNameAttribute(fileName);
             if (!string.IsNullOrWhiteSpace(doubanId))
             {
-                this.Log($"Found douban [id] by attr: {doubanId}");
                 return doubanId;
             }
             var parseResult = NameParser.Parse(fileName);
@@ -316,14 +315,43 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             return null;
         }
 
+        /// <summary>
+        /// 从文件名属性格式获取用户显式指定的豆瓣id，如[douban-12345]或[doubanid-12345]，用户指定值优先级最高
+        /// </summary>
+        protected string? GetDoubanIdByFileNameAttribute(string? fileName)
+        {
+            var doubanId = this.regDoubanIdAttribute.FirstMatchGroup(fileName ?? string.Empty);
+            if (!string.IsNullOrWhiteSpace(doubanId))
+            {
+                this.Log($"Found douban [id] by attr: {doubanId}");
+                return doubanId;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 从文件名属性格式获取用户显式指定的tmdbId，如[tmdb-12345]或[tmdbid-12345]，用户指定值优先级最高
+        /// </summary>
+        protected string? GetTmdbIdByFileNameAttribute(string? fileName)
+        {
+            var tmdbId = this.regTmdbIdAttribute.FirstMatchGroup(fileName ?? string.Empty);
+            if (!string.IsNullOrWhiteSpace(tmdbId))
+            {
+                this.Log($"Found tmdb [id] by attr: {tmdbId}");
+                return tmdbId;
+            }
+
+            return null;
+        }
+
         protected async Task<string?> GuestByTmdbAsync(ItemLookupInfo info, CancellationToken cancellationToken)
         {
             var fileName = GetOriginalFileName(info);
             // 从文件名属性格式获取，如[tmdb-12345]或{tmdb-12345}
-            var tmdbId = this.regTmdbIdAttribute.FirstMatchGroup(fileName);
+            var tmdbId = this.GetTmdbIdByFileNameAttribute(fileName);
             if (!string.IsNullOrWhiteSpace(tmdbId))
             {
-                this.Log($"Found tmdb [id] by attr: {tmdbId}");
                 return tmdbId;
             }
             var parseResult = NameParser.Parse(fileName);

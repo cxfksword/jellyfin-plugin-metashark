@@ -73,5 +73,31 @@ namespace Jellyfin.Plugin.MetaShark.Test
             }, "www.douban.com", "movie.douban.com", "api.tmdb.org");
         }
 
+        [TestMethod]
+        public void TestGetMetadataWithTmdbIdAttr()
+        {
+            // 目录名显式指定的[tmdbid-xxx]应优先于imdb反查结果，不应被覆盖（issue #127）
+            // 狐妖小红娘在TMDB存在两个条目，豆瓣imdb反查得到的是75787，目录名指定的是按篇分季的298533
+            var info = new SeriesInfo() { Name = "狐妖小红娘" };
+            info.Path = "/tmp/狐妖小红娘 (2015) [tmdbid-298533]";
+            var httpClientFactory = new DefaultHttpClientFactory();
+            var libraryManagerStub = new Mock<ILibraryManager>();
+            var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
+            var doubanApi = new DoubanApi(loggerFactory);
+            var tmdbApi = new TmdbApi(loggerFactory);
+            var omdbApi = new OmdbApi(loggerFactory);
+            var imdbApi = new ImdbApi(loggerFactory);
+
+            ExternalApiTestHelper.RunOrInconclusive(async () =>
+            {
+                var provider = new SeriesProvider(httpClientFactory, loggerFactory, libraryManagerStub.Object, httpContextAccessorStub.Object, doubanApi, tmdbApi, omdbApi, imdbApi);
+                var result = await provider.GetMetadata(info, CancellationToken.None);
+                ExternalApiTestHelper.AssertNotNullOrInconclusive(result.Item, "www.douban.com", "Series metadata should not be null");
+                Assert.AreEqual("298533", result.Item.ProviderIds[MediaBrowser.Model.Entities.MetadataProvider.Tmdb.ToString()]);
+
+                Console.WriteLine(result.ToJson());
+            }, "www.douban.com", "movie.douban.com", "api.tmdb.org", "www.omdbapi.com");
+        }
+
     }
 }

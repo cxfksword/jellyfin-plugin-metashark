@@ -113,6 +113,13 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                 }
             }
 
+            // 文件名中用户显式指定的[doubanid-xxx]优先级最高，应覆盖已有的豆瓣id
+            var attrDoubanId = this.GetDoubanIdByFileNameAttribute(fileName);
+            if (!string.IsNullOrWhiteSpace(attrDoubanId))
+            {
+                sid = attrDoubanId;
+            }
+
             if (metaSource != MetaSource.Tmdb && !string.IsNullOrEmpty(sid))
             {
                 this.Log($"GetMovieMetadata of douban [sid]: \"{sid}\"");
@@ -141,25 +148,29 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     var newImdbId = await this.CheckNewImdbID(subject.Imdb, cancellationToken).ConfigureAwait(false);
                     subject.Imdb = newImdbId;
                     movie.SetProviderId(MetadataProvider.Imdb, newImdbId);
+                }
 
+                // 文件名中用户显式指定的[tmdbid-xxx]优先级最高，其次使用已有的tmdbId，都不应被imdb反查或搜索匹配的结果覆盖
+                var attrTmdbId = this.GetTmdbIdByFileNameAttribute(fileName);
+                if (!string.IsNullOrEmpty(attrTmdbId))
+                {
+                    tmdbId = attrTmdbId;
+                }
+                else if (string.IsNullOrEmpty(tmdbId) && !string.IsNullOrEmpty(subject.Imdb))
+                {
                     // 通过imdb获取TMDB id
-                    var newTmdbId = await this.GetTmdbIdByImdbAsync(subject.Imdb, info.MetadataLanguage, info, cancellationToken).ConfigureAwait(false);
-                    if (!string.IsNullOrEmpty(newTmdbId))
-                    {
-                        tmdbId = newTmdbId;
-                        movie.SetProviderId(MetadataProvider.Tmdb, tmdbId);
-                    }
+                    tmdbId = await this.GetTmdbIdByImdbAsync(subject.Imdb, info.MetadataLanguage, info, cancellationToken).ConfigureAwait(false);
                 }
 
                 // 尝试通过搜索匹配获取tmdbId
                 if (string.IsNullOrEmpty(tmdbId) && subject.Year > 0)
                 {
-                    var newTmdbId = await this.GuestByTmdbAsync(subject.Name, subject.Year, info, cancellationToken).ConfigureAwait(false);
-                    if (!string.IsNullOrEmpty(newTmdbId))
-                    {
-                        tmdbId = newTmdbId;
-                        movie.SetProviderId(MetadataProvider.Tmdb, tmdbId);
-                    }
+                    tmdbId = await this.GuestByTmdbAsync(subject.Name, subject.Year, info, cancellationToken).ConfigureAwait(false);
+                }
+
+                if (!string.IsNullOrEmpty(tmdbId))
+                {
+                    movie.SetProviderId(MetadataProvider.Tmdb, tmdbId);
                 }
 
                 // 通过imdb获取电影系列信息
