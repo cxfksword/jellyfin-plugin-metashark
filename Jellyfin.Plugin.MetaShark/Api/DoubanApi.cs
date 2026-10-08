@@ -931,7 +931,7 @@ namespace Jellyfin.Plugin.MetaShark.Api
             }
         }
 
-        private string GetTitle(string body)
+        internal string GetTitle(string body)
         {
             var title = string.Empty;
 
@@ -941,12 +941,12 @@ namespace Jellyfin.Plugin.MetaShark.Api
                 title = keyword.Split(",").FirstOrDefault();
                 if (!string.IsNullOrEmpty(title))
                 {
-                    return title.Trim();
+                    return HttpUtility.HtmlDecode(title.Trim());  // keywords meta title is HTML-escaped, decode it
                 }
             }
 
             title = Match(body, regTitle);
-            return title.Replace("(豆瓣)", "").Trim();
+            return HttpUtility.HtmlDecode(title.Replace("(豆瓣)", string.Empty, StringComparison.Ordinal).Trim());
         }
 
         private string? GetText(IElement el, string css)
