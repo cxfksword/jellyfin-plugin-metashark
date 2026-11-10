@@ -114,7 +114,7 @@ namespace Jellyfin.Plugin.MetaShark.ScheduledTasks
                 Recursive = true
             };
 
-            var items = _libraryManager.GetItemList(query);
+            var items = _libraryManager.QueryItemsCompat(query);
 
             return items.Where(item =>
             (!item.ProviderIds.ContainsKey(BaseProvider.DoubanProviderId) && !item.HasImage(ImageType.Primary)) ||

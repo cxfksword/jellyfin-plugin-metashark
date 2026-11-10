@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.MetaShark.Api;
+using Jellyfin.Plugin.MetaShark.Core;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
@@ -120,12 +121,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         Overview = collection.Overview,
                     };
 
-                    var oldBotSet = _libraryManager.GetItemList(new InternalItemsQuery
+                    var oldBotSet = _libraryManager.QueryItemsCompat(new InternalItemsQuery
                     {
                         IncludeItemTypes = new[] { BaseItemKind.BoxSet },
                         CollapseBoxSetItems = false,
                         Recursive = true
-                    }).Select(b => b as BoxSet).FirstOrDefault(x => x.Name == collection.Name);
+                    }).Select(b => b as BoxSet).FirstOrDefault(x => x?.Name == collection.Name);
                     if (oldBotSet != null)
                     {
                         item.LinkedChildren = oldBotSet.LinkedChildren;

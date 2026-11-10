@@ -98,7 +98,7 @@ public class BoxSetManager : IHostedService
 
     private IReadOnlyCollection<BoxSet> GetAllBoxSetsFromLibrary()
     {
-        return _libraryManager.GetItemList(new InternalItemsQuery
+        return _libraryManager.QueryItemsCompat(new InternalItemsQuery
         {
             IncludeItemTypes = new[] { BaseItemKind.BoxSet },
             CollapseBoxSetItems = false,
@@ -125,7 +125,7 @@ public class BoxSetManager : IHostedService
             
             while (true)
             {
-                var movies = _libraryManager.GetItemList(new InternalItemsQuery
+                var movies = _libraryManager.QueryItemsCompat(new InternalItemsQuery
                 {
                     IncludeItemTypes = new[] { BaseItemKind.Movie },
                     IsVirtualItem = false,
@@ -206,15 +206,31 @@ public class BoxSetManager : IHostedService
         // Clear the queue now, TODO what if it crashes? Should it be cleared after it's done?
         _queuedTmdbCollection.Clear();
 
-        var boxSets = GetAllBoxSetsFromLibrary();
-        var movies = GetMoviesFromLibrary();
-        foreach (var collectionName in tmdbCollectionNames)
+        // 定时器回调运行在线程池线程上，任何未捕获异常都会成为未处理异常并直接导致 Jellyfin 进程退出，
+        // 因此这里必须兜底捕获所有异常，仅记录日志而不向上抛出。
+        try
         {
-            if (movies.TryGetValue(collectionName, out var collectionMovies))
+            var boxSets = GetAllBoxSetsFromLibrary();
+            var movies = GetMoviesFromLibrary();
+            foreach (var collectionName in tmdbCollectionNames)
             {
-                var boxSet = boxSets.FirstOrDefault(b => b?.Name == collectionName);
-                AddMoviesToCollection(collectionMovies, collectionName, boxSet).GetAwaiter().GetResult();
+                try
+                {
+                    if (movies.TryGetValue(collectionName, out var collectionMovies))
+                    {
+                        var boxSet = boxSets.FirstOrDefault(b => b?.Name == collectionName);
+                        AddMoviesToCollection(collectionMovies, collectionName, boxSet).GetAwaiter().GetResult();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "自动创建合集失败：{CollectionName}", collectionName);
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "自动创建合集定时任务执行失败");
         }
     }
 
