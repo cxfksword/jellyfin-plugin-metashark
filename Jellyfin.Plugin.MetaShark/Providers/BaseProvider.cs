@@ -261,22 +261,39 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             // 通过搜索页面查找
             var result = await this._doubanApi.SearchAsync(seriesName, cancellationToken).ConfigureAwait(false);
-            var item = result.Where(x => x.Category == "电视剧" && x.Year == year).FirstOrDefault();
-            if (item != null && !string.IsNullOrEmpty(item.Sid))
+            var item = SelectSeasonCandidateByYear(result.Where(x => x.Category == "电视剧" && x.Year == year), seasonNumber);
+            if (item != null)
             {
-                // 判断名称中是否有第X季，有的话和seasonNumber比较，用于修正多季都在同一年时，每次都是错误取第一个的情况
-                var nameIndexNumber = ParseChineseSeasonNumberByName(item.Name);
-                if (nameIndexNumber.HasValue && seasonNumber.HasValue && nameIndexNumber != seasonNumber)
-                {
-                    this.Log($"GuestDoubanSeasonByYear not found!");
-                    return null;
-                }
-
                 this.Log($"Found douban [id]: {item.Name}({item.Sid})");
                 return item.Sid;
             }
 
             this.Log($"GuestDoubanSeasonByYear not found!");
+            return null;
+        }
+
+        /// <summary>
+        /// 从同年份的电视剧候选中，按名称中的第X季与seasonNumber比较，跳过不匹配的候选，返回第一个匹配的候选。
+        /// 用于修正多季都在同一年时，每次都错误取第一个的情况（见 issue #132）。
+        /// </summary>
+        internal static DoubanSubject? SelectSeasonCandidateByYear(IEnumerable<DoubanSubject> candidates, int? seasonNumber)
+        {
+            foreach (var candidate in candidates)
+            {
+                if (string.IsNullOrEmpty(candidate.Sid))
+                {
+                    continue;
+                }
+
+                var nameIndexNumber = ParseChineseSeasonNumberByName(candidate.Name);
+                if (nameIndexNumber.HasValue && seasonNumber.HasValue && nameIndexNumber != seasonNumber)
+                {
+                    continue;
+                }
+
+                return candidate;
+            }
+
             return null;
         }
 
@@ -303,7 +320,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             // 通过名称精确匹配
             var result = await this._doubanApi.SearchAsync(name, cancellationToken).ConfigureAwait(false);
-            var item = result.Where(x => x.Category == "电视剧" && x.Rating > 0 && (x.Name == seasonName || x.Name == chineseSeasonName)).FirstOrDefault();
+            var item = result.Where(x => x.Category == "电视剧" && x.Rating > 0 && IsMatchingSeasonName(x.Name, seasonName, chineseSeasonName)).FirstOrDefault();
             if (item != null && !string.IsNullOrEmpty(item.Sid))
             {
                 this.Log($"Found douban [id]: {item.Name}({item.Sid})");
@@ -313,6 +330,23 @@ namespace Jellyfin.Plugin.MetaShark.Providers
 
             this.Log($"GuestDoubanSeasonBySeasonNameAsync not found!");
             return null;
+        }
+
+        /// <summary>
+        /// 比较豆瓣名称是否匹配，忽略内部多余空白（如豆瓣标题中偶尔出现的连续空格，见 issue #132）。
+        /// </summary>
+        internal static bool IsMatchingSeasonName(string candidateName, string seasonName, string chineseSeasonName)
+        {
+            var normalizedCandidateName = NormalizeWhitespace(candidateName);
+            return normalizedCandidateName == NormalizeWhitespace(seasonName) || normalizedCandidateName == NormalizeWhitespace(chineseSeasonName);
+        }
+
+        /// <summary>
+        /// 将连续空白字符折叠为单个空格，并去除首尾空白。
+        /// </summary>
+        internal static string NormalizeWhitespace(string name)
+        {
+            return Regex.Replace(name ?? string.Empty, @"\s+", " ").Trim();
         }
 
         /// <summary>
@@ -572,7 +606,7 @@ namespace Jellyfin.Plugin.MetaShark.Providers
         }
 
 
-        public int? ParseChineseSeasonNumberByName(string name)
+        public static int? ParseChineseSeasonNumberByName(string name)
         {
             var regSeason = new Regex(@"\s第([0-9零一二三四五六七八九]+?)(季|部)", RegexOptions.Compiled);
             var match = regSeason.Match(name);
