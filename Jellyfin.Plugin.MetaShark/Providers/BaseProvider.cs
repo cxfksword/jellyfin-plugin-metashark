@@ -183,6 +183,12 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                         this.Log($"Found douban [id]: {item.Name}({item.Sid}) (suggest)");
                         return item.Sid;
                     }
+                    item = SelectSameNameWithinOneYear(result, searchName, info.Year.Value, null);
+                    if (item != null)
+                    {
+                        this.Log($"Found douban [id]: {item.Name}({item.Sid}) (suggest, year ±1)");
+                        return item.Sid;
+                    }
                     item = result.Where(x => x.Year == info.Year).FirstOrDefault();
                     if (item != null)
                     {
@@ -205,11 +211,17 @@ namespace Jellyfin.Plugin.MetaShark.Providers
                     this.Log($"Found douban [id]: {item.Name}({item.Sid})");
                     return item.Sid;
                 }
-                else
+
+                // 影展/点映跨年时，豆瓣年份可能与文件名差1年：仅在片名完全相同时放宽到±1年（见 issue #136）
+                item = SelectSameNameWithinOneYear(result, searchName, info.Year.Value, cat);
+                if (item != null)
                 {
-                    // TODO: 有年份找不到，直接返回，由其他插件接手查找（还是返回第一个好？？？？）
-                    return null;
+                    this.Log($"Found douban [id]: {item.Name}({item.Sid}) (year ±1)");
+                    return item.Sid;
                 }
+
+                // TODO: 有年份找不到，直接返回，由其他插件接手查找（还是返回第一个好？？？？）
+                return null;
             }
 
             //// 不存在年份，计算相似度，返回相似度大于0.8的第一个（可能出现冷门资源名称更相同的情况。。。）
@@ -229,6 +241,25 @@ namespace Jellyfin.Plugin.MetaShark.Providers
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// 片名完全相同、年份相差不超过1年的第一个候选（精确年份的匹配由调用方先行处理）。
+        /// 用于文件名年份与豆瓣年份因影展/点映跨年而差1年的情况（见 issue #136）；差2年及以上不放宽，以区分翻拍。
+        /// </summary>
+        internal static DoubanSubject? SelectSameNameWithinOneYear(IEnumerable<DoubanSubject> candidates, string searchName, int year, string? category)
+        {
+            if (string.IsNullOrEmpty(searchName) || year <= 0)
+            {
+                return null;
+            }
+
+            return candidates.FirstOrDefault(x =>
+                !string.IsNullOrEmpty(x.Sid)
+                && x.Year > 0
+                && Math.Abs(x.Year - year) <= 1
+                && x.Name == searchName
+                && (category == null || x.Category == category));
         }
 
         public async Task<string?> GuestDoubanSeasonByYearAsync(string seriesName, int? year, int? seasonNumber, CancellationToken cancellationToken)
